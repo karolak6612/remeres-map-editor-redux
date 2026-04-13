@@ -5,6 +5,7 @@
 #include "app/main.h"
 
 #include <algorithm>
+#include <numeric>
 #include <vector>
 #undef min
 #undef max
@@ -27,6 +28,15 @@
 #include "ui/gui.h"
 
 namespace {
+	struct CompositeSpriteMetrics {
+		std::vector<int> column_widths;
+		std::vector<int> row_heights;
+		int total_width = TILE_SIZE;
+		int total_height = TILE_SIZE;
+		int left_offset = 0;
+		int top_offset = 0;
+	};
+
 	GameSprite* resolveSprite(const ItemDefinitionView& definition) {
 		if (!definition) {
 			return nullptr;
@@ -38,12 +48,36 @@ namespace {
 		return resolveSprite(g_item_definitions.get(item_id));
 	}
 
-	void registerSpriteLight(LightBuffer& light_buffer, const RenderView& view, const GameSprite& sprite, int screen_x, int screen_y, const SpriteLight& light) {
-		const int left = screen_x - (static_cast<int>(sprite.width) - 1) * TILE_SIZE;
-		const int top = screen_y - (static_cast<int>(sprite.height) - 1) * TILE_SIZE;
-		const int width = std::max(1, static_cast<int>(sprite.width) * TILE_SIZE);
-		const int height = std::max(1, static_cast<int>(sprite.height) * TILE_SIZE);
-		light_buffer.AddScreenLight(left + width / 2, top + height / 2, view, light);
+	CompositeSpriteMetrics computeSpriteMetrics(GameSprite& sprite, int subtype, int pattern_x, int pattern_y, int pattern_z, int frame) {
+		CompositeSpriteMetrics metrics;
+		metrics.column_widths.assign(sprite.width, TILE_SIZE);
+		metrics.row_heights.assign(sprite.height, TILE_SIZE);
+
+		for (int cx = 0; cx != sprite.width; ++cx) {
+			for (int cy = 0; cy != sprite.height; ++cy) {
+				for (int layer = 0; layer != sprite.layers; ++layer) {
+					if (const AtlasRegion* region = sprite.getAtlasRegion(cx, cy, layer, subtype, pattern_x, pattern_y, pattern_z, frame)) {
+						metrics.column_widths[cx] = std::max(metrics.column_widths[cx], region->pixel_width);
+						metrics.row_heights[cy] = std::max(metrics.row_heights[cy], region->pixel_height);
+					}
+				}
+			}
+		}
+
+		metrics.total_width = std::accumulate(metrics.column_widths.begin(), metrics.column_widths.end(), 0);
+		metrics.total_height = std::accumulate(metrics.row_heights.begin(), metrics.row_heights.end(), 0);
+		metrics.left_offset = metrics.total_width - metrics.column_widths.back();
+		metrics.top_offset = metrics.total_height - metrics.row_heights.back();
+		return metrics;
+	}
+
+	void registerSpriteLight(LightBuffer& light_buffer, const RenderView& view, int screen_x, int screen_y, const CompositeSpriteMetrics& metrics, const SpriteLight& light) {
+		light_buffer.AddScreenLight(
+			screen_x - metrics.left_offset + metrics.total_width / 2,
+			screen_y - metrics.top_offset + metrics.total_height / 2,
+			view,
+			light
+		);
 	}
 }
 
@@ -158,10 +192,6 @@ void ItemDrawer::BlitItem(SpriteBatch& sprite_batch, SpriteDrawer* sprite_drawer
 	int screenx = draw_x - draw_offset_x;
 	int screeny = draw_y - draw_offset_y;
 
-	if (light_buffer && view && item->hasLight()) {
-		registerSpriteLight(*light_buffer, *view, *spr, screenx, screeny, item->getLight());
-	}
-
 	// Set the newd drawing height accordingly
 	draw_x -= spr->draw_height;
 	draw_y -= spr->draw_height;
@@ -178,6 +208,11 @@ void ItemDrawer::BlitItem(SpriteBatch& sprite_batch, SpriteDrawer* sprite_drawer
 	int pattern_y = patterns.y;
 	int pattern_z = patterns.z;
 	int frame = patterns.frame;
+	const CompositeSpriteMetrics composite_metrics = computeSpriteMetrics(*spr, subtype, pattern_x, pattern_y, pattern_z, frame);
+
+	if (light_buffer && view && item->hasLight()) {
+		registerSpriteLight(*light_buffer, *view, screenx, screeny, composite_metrics, item->getLight());
+	}
 
 	if (!ephemeral && options.transparent_items && (!it.isGroundTile() || spr->width > 1 || spr->height > 1) && !it.isSplash() && (!it.hasFlag(ItemFlag::IsBorder) || spr->width > 1 || spr->height > 1)) {
 		alpha /= 2;
@@ -221,19 +256,6 @@ void ItemDrawer::BlitItem(SpriteBatch& sprite_batch, SpriteDrawer* sprite_drawer
 				sprite_drawer->glBlitAtlasQuad(sprite_batch, screenx, screeny, region, DrawColor(red, green, blue, alpha));
 			}
 		} else {
-			std::vector<int> column_widths(spr->width, TILE_SIZE);
-			std::vector<int> row_heights(spr->height, TILE_SIZE);
-			for (int cx = 0; cx != spr->width; cx++) {
-				for (int cy = 0; cy != spr->height; cy++) {
-					for (int cf = 0; cf != spr->layers; cf++) {
-						if (const AtlasRegion* region = spr->getAtlasRegion(cx, cy, cf, subtype, pattern_x, pattern_y, pattern_z, frame)) {
-							column_widths[cx] = std::max(column_widths[cx], region->pixel_width);
-							row_heights[cy] = std::max(row_heights[cy], region->pixel_height);
-						}
-					}
-				}
-			}
-
 			int x_offset = 0;
 			for (int cx = 0; cx != spr->width; cx++) {
 				int y_offset = 0;
@@ -244,9 +266,9 @@ void ItemDrawer::BlitItem(SpriteBatch& sprite_batch, SpriteDrawer* sprite_drawer
 							sprite_drawer->glBlitAtlasQuad(sprite_batch, screenx - x_offset, screeny - y_offset, region, DrawColor(red, green, blue, alpha));
 						}
 					}
-					y_offset += row_heights[cy];
+					y_offset += composite_metrics.row_heights[cy];
 				}
-				x_offset += column_widths[cx];
+				x_offset += composite_metrics.column_widths[cx];
 			}
 		}
 	}

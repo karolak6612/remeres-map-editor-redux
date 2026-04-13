@@ -420,7 +420,7 @@ bool IOMapOTBM::loadMap(Map& map, NodeFileReadHandle& f) {
 }
 
 bool IOMapOTBM::saveMapToDisk(Map& map, const FileName& identifier) {
-	if (map.getVersion().otbm < MAP_OTBM_5 && (map.npc_spawns.begin() != map.npc_spawns.end() || !map.zones.empty() || hasZoneAssignments(map))) {
+	if (map.getVersion().otbm < MAP_OTBM_5 && (!map.npc_spawns.empty() || !map.zones.empty() || hasZoneAssignments(map))) {
 		error("OTBM %d cannot store NPC spawn or zone data. Save this map as OTBM 5 or 6.", static_cast<int>(map.getVersion().otbm));
 		return false;
 	}
@@ -445,7 +445,7 @@ bool IOMapOTBM::saveMapToDisk(Map& map, const FileName& identifier) {
 		return false;
 	}
 
-	if (!map.spawnnpcfile.empty() || map.npc_spawns.begin() != map.npc_spawns.end()) {
+	if (!map.spawnnpcfile.empty() || !map.npc_spawns.empty()) {
 		g_gui.SetLoadDone(99, "Saving NPC spawns...");
 		if (!MapXMLIO::saveNpcSpawns(map, identifier)) {
 			spdlog::error("Failed to save NPC spawns!");
@@ -523,8 +523,12 @@ bool IOMapOTBM::saveMap(Map& map, NodeFileWriteHandle& f) {
 
 			addExtFile(OTBM_ATTR_EXT_SPAWN_FILE, map.spawnfile);
 			if (mapVersion.otbm >= MAP_OTBM_5) {
-				addExtFile(OTBM_ATTR_EXT_SPAWN_NPC_FILE, map.spawnnpcfile);
-				addExtFile(OTBM_ATTR_EXT_ZONE_FILE, map.zonefile);
+				if (!map.spawnnpcfile.empty()) {
+					addExtFile(OTBM_ATTR_EXT_SPAWN_NPC_FILE, map.spawnnpcfile);
+				}
+				if (!map.zonefile.empty()) {
+					addExtFile(OTBM_ATTR_EXT_ZONE_FILE, map.zonefile);
+				}
 			}
 			addExtFile(OTBM_ATTR_EXT_HOUSE_FILE, map.housefile);
 

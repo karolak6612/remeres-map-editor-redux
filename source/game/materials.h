@@ -48,7 +48,6 @@ public:
 	}
 
 protected:
-	bool unserializeMaterials(const FileName& filename, pugi::xml_node node, wxString& error, std::vector<std::string>& warnings);
 	bool unserializeTileset(pugi::xml_node node, std::vector<std::string>& warnings);
 
 	MaterialsExtensionList extensions;

@@ -115,7 +115,7 @@ bool VersionManager::LoadDataFiles(wxString& error, std::vector<std::string>& wa
 	wxFileName sprites_path = getLoadedVersion()->getSpritesPath();
 	wxString base_data_path = data_path.GetPath(wxPATH_GET_VOLUME | wxPATH_GET_SEPARATOR);
 	const wxFileName items_xml_path = resolveVersionDataFile(base_data_path, { "items/items.xml", "items.xml" });
-	const wxFileName items_otb_path = resolveVersionDataFile(base_data_path, { "items.otb" });
+	const wxFileName items_otb_path = resolveVersionDataFile(base_data_path, { "items/items.otb", "items.otb" });
 	const wxFileName monsters_xml_path = resolveVersionDataFile(base_data_path, { "creatures/monsters.xml" });
 	const wxFileName npcs_xml_path = resolveVersionDataFile(base_data_path, { "creatures/npcs.xml" });
 	const wxFileName creatures_xml_path = resolveVersionDataFile(base_data_path, { "creatures.xml" });

@@ -154,19 +154,27 @@ wxSize GameSprite::getCompositePixelSize() const {
 	int max_width = std::max<int>(width * SPRITE_PIXELS, SPRITE_PIXELS);
 	int max_height = std::max<int>(height * SPRITE_PIXELS, SPRITE_PIXELS);
 
-	for (int layer = 0; layer < layers; ++layer) {
-		for (int part_x = 0; part_x < width; ++part_x) {
-			for (int part_y = 0; part_y < height; ++part_y) {
-				const size_t index = getIndex(part_x, part_y, layer, 0, 0, 0, 0);
-				if (index >= spriteList.size() || !spriteList[index]) {
-					continue;
-				}
+	for (int frame = 0; frame < frames; ++frame) {
+		for (int pattern_z_index = 0; pattern_z_index < pattern_z; ++pattern_z_index) {
+			for (int pattern_y_index = 0; pattern_y_index < pattern_y; ++pattern_y_index) {
+				for (int pattern_x_index = 0; pattern_x_index < pattern_x; ++pattern_x_index) {
+					for (int layer = 0; layer < layers; ++layer) {
+						for (int part_x = 0; part_x < width; ++part_x) {
+							for (int part_y = 0; part_y < height; ++part_y) {
+								const size_t index = getIndex(part_x, part_y, layer, pattern_x_index, pattern_y_index, pattern_z_index, frame);
+								if (index >= spriteList.size() || !spriteList[index]) {
+									continue;
+								}
 
-				const auto dimensions = spriteList[index]->getDimensions();
-				const int draw_x = (width - part_x - 1) * SPRITE_PIXELS;
-				const int draw_y = (height - part_y - 1) * SPRITE_PIXELS;
-				max_width = std::max(max_width, draw_x + static_cast<int>(dimensions.width));
-				max_height = std::max(max_height, draw_y + static_cast<int>(dimensions.height));
+								const auto dimensions = spriteList[index]->getDimensions();
+								const int draw_x = (width - part_x - 1) * SPRITE_PIXELS;
+								const int draw_y = (height - part_y - 1) * SPRITE_PIXELS;
+								max_width = std::max(max_width, draw_x + static_cast<int>(dimensions.width));
+								max_height = std::max(max_height, draw_y + static_cast<int>(dimensions.height));
+							}
+						}
+					}
+				}
 			}
 		}
 	}

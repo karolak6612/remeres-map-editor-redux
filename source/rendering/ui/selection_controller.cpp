@@ -69,6 +69,8 @@ namespace {
 			return TileSelectionTarget { .kind = TileSelectionTargetKind::Creature, .creature = tile->creature.get() };
 		}
 		if (Item* item = tile->getTopItem()) {
+			// Items remain selectable even when hidden so property editing and recovery workflows
+			// can still target the tile's top item through selection mode.
 			return TileSelectionTarget { .kind = TileSelectionTargetKind::Item, .item = item };
 		}
 		return {};

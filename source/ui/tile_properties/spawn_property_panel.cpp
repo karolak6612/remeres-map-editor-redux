@@ -69,11 +69,16 @@ void SpawnPropertyPanel::OnRadiusChange(wxSpinEvent& event) {
 		}
 
 		if (edited_spawn) {
+			const bool editing_npc_spawn = current_spawn == current_tile->npc_spawn.get();
+			const Position position = new_tile->getPosition();
 			edited_spawn->setSize(radius_spin->GetValue());
 
 			std::unique_ptr<Action> action = editor->actionQueue->createAction(ACTION_CHANGE_PROPERTIES);
 			action->addChange(std::make_unique<Change>(std::move(new_tile)));
 			editor->addAction(std::move(action));
+
+			current_tile = editor->map.getTile(position);
+			current_spawn = current_tile ? (editing_npc_spawn ? current_tile->npc_spawn.get() : current_tile->spawn.get()) : nullptr;
 			g_gui.RefreshView();
 		}
 	}

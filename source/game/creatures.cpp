@@ -24,6 +24,7 @@
 #include "brushes/creature/creature_brush.h"
 #include "io/xml_file_loader.h"
 #include <algorithm>
+#include <format>
 
 CreatureDatabase g_creatures;
 
@@ -405,6 +406,10 @@ bool CreatureDatabase::importXMLFromOT(const FileName& filename, wxString& error
 
 			pugi::xml_attribute attribute;
 			if (!(attribute = npcNode.attribute("file"))) {
+				warnings.push_back(std::format(
+					"Skipping <npc> entry in {} because it is missing a file attribute.",
+					filename.GetFullPath().ToStdString()
+				));
 				continue;
 			}
 
@@ -413,6 +418,13 @@ bool CreatureDatabase::importXMLFromOT(const FileName& filename, wxString& error
 			pugi::xml_document npcDoc;
 			pugi::xml_parse_result npcResult = npcDoc.load_file(npcFile.GetFullPath().mb_str());
 			if (!npcResult) {
+				warnings.push_back(std::format(
+					"Skipping <npc file=\"{}\"> in {} because {} could not be loaded: {}.",
+					attribute.as_string(),
+					filename.GetFullPath().ToStdString(),
+					npcFile.GetFullPath().ToStdString(),
+					npcResult.description()
+				));
 				continue;
 			}
 

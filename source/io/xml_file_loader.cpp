@@ -2,6 +2,8 @@
 
 #include "util/common.h"
 
+#include <algorithm>
+#include <cctype>
 #include <format>
 #include <unordered_set>
 
@@ -14,7 +16,13 @@ namespace {
 	std::string normalizedPathKey(const FileName& filename) {
 		FileName normalized(filename);
 		normalized.Normalize(wxPATH_NORM_ABSOLUTE | wxPATH_NORM_DOTS | wxPATH_NORM_TILDE);
-		return normalized.GetFullPath().ToStdString();
+		std::string path_key = normalized.GetFullPath().ToStdString();
+#ifdef _WIN32
+		std::transform(path_key.begin(), path_key.end(), path_key.begin(), [](unsigned char ch) {
+			return static_cast<char>(std::tolower(ch));
+		});
+#endif
+		return path_key;
 	}
 
 	bool visitFile(const FileName& filename, const char* root_name, const XmlFileLoader::XmlChildVisitor& visitor, XmlVisitState& state, wxString& error, std::vector<std::string>& warnings) {

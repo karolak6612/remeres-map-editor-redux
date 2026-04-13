@@ -5,6 +5,7 @@
 #ifndef RME_UI_ZONE_PROPERTY_PANEL_H_
 #define RME_UI_ZONE_PROPERTY_PANEL_H_
 
+#include <memory>
 #include <wx/combobox.h>
 #include <wx/listbox.h>
 #include <wx/panel.h>
@@ -21,6 +22,7 @@ public:
 	void SetTile(Tile* tile, Map* map);
 
 private:
+	void ApplyTileChange(std::unique_ptr<Tile> new_tile, bool refresh_palettes = false);
 	void RefreshZoneLists();
 	void OnAddZone(wxCommandEvent& event);
 	void OnRemoveZone(wxCommandEvent& event);

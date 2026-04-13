@@ -45,6 +45,26 @@ ZonePropertyPanel::ZonePropertyPanel(wxWindow* parent) :
 ZonePropertyPanel::~ZonePropertyPanel() {
 }
 
+void ZonePropertyPanel::ApplyTileChange(std::unique_ptr<Tile> new_tile, bool refresh_palettes) {
+	Editor* editor = g_gui.GetCurrentEditor();
+	if (!editor || !new_tile) {
+		return;
+	}
+
+	const Position position = new_tile->getPosition();
+	auto action = editor->actionQueue->createAction(ACTION_CHANGE_PROPERTIES);
+	action->addChange(std::make_unique<Change>(std::move(new_tile)));
+	editor->addAction(std::move(action));
+
+	current_map = &editor->map;
+	current_tile = editor->map.getTile(position);
+	RefreshZoneLists();
+	if (refresh_palettes) {
+		g_gui.RefreshPalettes();
+	}
+	g_gui.RefreshView();
+}
+
 void ZonePropertyPanel::SetTile(Tile* tile, Map* map) {
 	current_tile = tile;
 	current_map = map;
@@ -83,8 +103,7 @@ void ZonePropertyPanel::OnAddZone(wxCommandEvent& event) {
 		return;
 	}
 
-	Editor* editor = g_gui.GetCurrentEditor();
-	if (!editor) {
+	if (!g_gui.GetCurrentEditor()) {
 		return;
 	}
 
@@ -98,18 +117,9 @@ void ZonePropertyPanel::OnAddZone(wxCommandEvent& event) {
 	}
 	new_tile->addZone(zone_id);
 
-	const Position position = new_tile->getPosition();
-	auto action = editor->actionQueue->createAction(ACTION_CHANGE_PROPERTIES);
-	action->addChange(std::make_unique<Change>(std::move(new_tile)));
-	editor->addAction(std::move(action));
-
-	current_map = &editor->map;
-	current_tile = editor->map.getTile(position);
+	ApplyTileChange(std::move(new_tile), true);
 	g_brush_manager.SetSelectedZone(zone_name);
 	zone_input->SetValue(wxstr(zone_name));
-	RefreshZoneLists();
-	g_gui.RefreshPalettes();
-	g_gui.RefreshView();
 }
 
 void ZonePropertyPanel::OnRemoveZone(wxCommandEvent& event) {
@@ -123,24 +133,15 @@ void ZonePropertyPanel::OnRemoveZone(wxCommandEvent& event) {
 		return;
 	}
 
-	Editor* editor = g_gui.GetCurrentEditor();
-	if (!editor) {
+	if (!g_gui.GetCurrentEditor()) {
 		return;
 	}
 
 	auto new_tile = TileOperations::deepCopy(current_tile, *current_map);
 	new_tile->removeZone(*zone_id);
 
-	const Position position = new_tile->getPosition();
-	auto action = editor->actionQueue->createAction(ACTION_CHANGE_PROPERTIES);
-	action->addChange(std::make_unique<Change>(std::move(new_tile)));
-	editor->addAction(std::move(action));
-
-	current_map = &editor->map;
-	current_tile = editor->map.getTile(position);
+	ApplyTileChange(std::move(new_tile));
 	zone_input->SetValue(wxstr(zone_name));
-	RefreshZoneLists();
-	g_gui.RefreshView();
 }
 
 void ZonePropertyPanel::OnClearZones(wxCommandEvent& event) {
@@ -148,23 +149,14 @@ void ZonePropertyPanel::OnClearZones(wxCommandEvent& event) {
 		return;
 	}
 
-	Editor* editor = g_gui.GetCurrentEditor();
-	if (!editor) {
+	if (!g_gui.GetCurrentEditor()) {
 		return;
 	}
 
 	auto new_tile = TileOperations::deepCopy(current_tile, *current_map);
 	new_tile->clearZones();
 
-	const Position position = new_tile->getPosition();
-	auto action = editor->actionQueue->createAction(ACTION_CHANGE_PROPERTIES);
-	action->addChange(std::make_unique<Change>(std::move(new_tile)));
-	editor->addAction(std::move(action));
-
-	current_map = &editor->map;
-	current_tile = editor->map.getTile(position);
-	RefreshZoneLists();
-	g_gui.RefreshView();
+	ApplyTileChange(std::move(new_tile));
 }
 
 void ZonePropertyPanel::OnAssignedZoneSelected(wxCommandEvent& event) {
