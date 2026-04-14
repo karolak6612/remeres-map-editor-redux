@@ -11,12 +11,12 @@
 /**
  * Manages Pixel Buffer Objects (PBOs) for asynchronous texture uploads.
  *
- * Uses double-buffering (2 PBOs) to allow CPU to write to one buffer
- * while GPU reads from the other via DMA, preventing stalls.
+ * Uses a small ring of PBOs to allow CPU to write to one buffer
+ * while GPU reads from older buffers via DMA, reducing stalls during bursts.
  */
 class PixelBufferObject {
 public:
-	static constexpr int BUFFER_COUNT = 2;
+	static constexpr int BUFFER_COUNT = 4;
 
 	PixelBufferObject() = default;
 	~PixelBufferObject();

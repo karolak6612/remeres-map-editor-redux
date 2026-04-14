@@ -388,28 +388,30 @@ void MapDrawer::DrawMap() {
 	// Enable texture mode
 
 	for (int map_z = view.start_z; map_z >= view.superend_z; map_z--) {
+		RenderView floor_view = view;
+		const ViewBounds floor_bounds = view.getBoundsForFloor(map_z);
+		floor_view.start_x = floor_bounds.start_x;
+		floor_view.start_y = floor_bounds.start_y;
+		floor_view.end_x = floor_bounds.end_x;
+		floor_view.end_y = floor_bounds.end_y;
+
 		if (options.isDrawLight() && options.draw_floor_shadow && view.end_z >= GROUND_LAYER + 1 && map_z == view.end_z) {
 			if (g_gui.gfx.ensureAtlasManager()) {
-				sprite_batch->drawRect(0.0f, 0.0f, view.screensize_x * view.zoom, view.screensize_y * view.zoom, glm::vec4(0.0f, 0.0f, 0.0f, 0.5f), *g_gui.gfx.getAtlasManager());
+				sprite_batch->drawRect(0.0f, 0.0f, floor_view.screensize_x * floor_view.zoom, floor_view.screensize_y * floor_view.zoom, glm::vec4(0.0f, 0.0f, 0.0f, 0.5f), *g_gui.gfx.getAtlasManager());
 			}
 		}
 
 		if (!options.isDrawLight() && map_z == view.end_z && view.start_z != view.end_z) {
-			shade_drawer->draw(*sprite_batch, view, options);
+			shade_drawer->draw(*sprite_batch, floor_view, options);
 		}
 
 		if (map_z >= view.end_z) {
-			DrawMapLayer(*sprite_batch, map_z, live_client);
+			DrawMapLayer(*sprite_batch, floor_view, map_z, live_client);
 		} else if (options.isDrawLight()) {
-			DrawMapLayer(hidden_floor_light_batch, map_z, live_client, true);
+			DrawMapLayer(hidden_floor_light_batch, floor_view, map_z, live_client, true);
 		}
 
-		preview_drawer->draw(*sprite_batch, canvas, view, map_z, options, editor, item_drawer.get(), sprite_drawer.get(), creature_drawer.get(), options.current_house_id);
-
-		--view.start_x;
-		--view.start_y;
-		++view.end_x;
-		++view.end_y;
+		preview_drawer->draw(*sprite_batch, canvas, floor_view, map_z, options, editor, item_drawer.get(), sprite_drawer.get(), creature_drawer.get(), options.current_house_id);
 	}
 }
 
@@ -439,8 +441,8 @@ void MapDrawer::DrawCreatureNames(NVGcontext* vg) {
 	creature_name_drawer->draw(vg, view);
 }
 
-void MapDrawer::DrawMapLayer(SpriteBatch& batch, int map_z, bool live_client, bool light_collection_only) {
-	map_layer_drawer->Draw(batch, map_z, live_client, view, options, light_buffer, light_collection_only);
+void MapDrawer::DrawMapLayer(SpriteBatch& batch, const RenderView& draw_view, int map_z, bool live_client, bool light_collection_only) {
+	map_layer_drawer->Draw(batch, map_z, live_client, draw_view, options, light_buffer, light_collection_only);
 }
 
 void MapDrawer::DrawLight() {

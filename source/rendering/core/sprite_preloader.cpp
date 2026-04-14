@@ -108,11 +108,14 @@ void SpritePreloader::preload(GameSprite* spr, int pattern_x, int pattern_y, int
 
 	if (!ids_to_enqueue.empty()) {
 		std::lock_guard<std::mutex> lock(queue_mutex);
-		if (task_queue.size() > MAX_QUEUE_SIZE) {
+		if (task_queue.size() >= MAX_QUEUE_SIZE) {
 			return; // Drop requests if queue is slammed
 		}
 
 		for (const auto& pending : ids_to_enqueue) {
+			if (task_queue.size() >= MAX_QUEUE_SIZE) {
+				break;
+			}
 			const PendingSpriteKey pending_key {
 				.key = pending.key,
 				.generation_id = pending.generation_id,
@@ -158,21 +161,25 @@ void SpritePreloader::update() {
 	// CRITICAL: This method MUST only be called from the main GUI/OpenGL thread.
 	assert(wxIsMainThread());
 
-	// Move results to a local queue under lock to minimize holding time.
 	std::queue<Result> results;
 	uint64_t current_epoch = 0;
+	size_t result_count = 0;
 	{
 		std::lock_guard<std::mutex> lock(queue_mutex);
 		if (result_queue.empty()) {
 			return;
 		}
-		results = std::move(result_queue);
 		current_epoch = active_epoch;
+		while (!result_queue.empty() && result_count < MAX_UPLOADS_PER_FRAME) {
+			results.push(std::move(result_queue.front()));
+			result_queue.pop();
+			++result_count;
+		}
 	}
 
 	thread_local std::vector<PendingSpriteKey> keys_processed;
 	keys_processed.clear();
-	keys_processed.reserve(results.size());
+	keys_processed.reserve(result_count);
 
 	const auto current_archive = g_gui.gfx.getSpriteArchive();
 	const bool graphics_unloaded = g_gui.gfx.isUnloaded();

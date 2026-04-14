@@ -91,7 +91,8 @@ bool TextureAtlas::addLayer() {
 	}
 
 	if (layer_count_ >= allocated_layers_) {
-		const int new_allocated = std::min(allocated_layers_ + 4, MAX_LAYERS);
+		const int growth_step = std::max(4, allocated_layers_);
+		const int new_allocated = std::min(allocated_layers_ + growth_step, MAX_LAYERS);
 		spdlog::info("TextureAtlas: Expanding {} -> {} layers", allocated_layers_, new_allocated);
 
 		auto new_texture = std::make_unique<GLTextureResource>(GL_TEXTURE_2D_ARRAY);

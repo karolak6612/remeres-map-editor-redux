@@ -57,6 +57,7 @@ namespace {
 			return item && (item->isTranslucent() || item->hasLensHelp());
 		});
 	}
+
 }
 
 static DrawColor invalidTileOverlayColor(InvalidOTBMItemMarkerColor markerColor, bool selected) {

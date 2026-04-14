@@ -95,6 +95,7 @@ private:
 	static constexpr unsigned int MAX_WORKER_THREADS = 8u;
 
 	static constexpr size_t MAX_QUEUE_SIZE = 50000; // Limit pending tasks to prevent memory blowup
+	static constexpr size_t MAX_UPLOADS_PER_FRAME = 128;
 
 	std::mutex queue_mutex;
 	std::condition_variable cv;
