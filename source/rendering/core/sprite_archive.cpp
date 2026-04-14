@@ -371,14 +371,10 @@ bool SpriteArchive::readProtobufRgba(uint32_t sprite_id, std::unique_ptr<uint8_t
 	}
 
 	std::lock_guard<std::mutex> lock(protobuf_mutex_);
-	if (last_decoded_sheet_index_ >= 0 && last_decoded_sheet_index_ != sheet_index && static_cast<size_t>(last_decoded_sheet_index_) < protobuf_sheets_.size()) {
-		protobuf_sheets_[static_cast<size_t>(last_decoded_sheet_index_)].releaseDecodedPixels();
-	}
 	auto& sheet = protobuf_sheets_[static_cast<size_t>(sheet_index)];
 	if (!loadSheetPixels(sheet) || !sheet.decoded_pixels) {
 		return false;
 	}
-	last_decoded_sheet_index_ = sheet_index;
 
 	const auto [source_width, source_height] = protobufSourceDimensions(sheet.layout);
 	dimensions = ImageDimensions {
