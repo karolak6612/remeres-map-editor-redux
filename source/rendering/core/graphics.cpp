@@ -140,6 +140,18 @@ Sprite* GraphicManager::getSprite(int id) {
 	return sprite_space[id].get();
 }
 
+GameSprite* GraphicManager::getGameSprite(int id) {
+	if (id < 0) {
+		return nullptr;
+	}
+
+	if (static_cast<size_t>(id) >= sprite_space.size()) {
+		return nullptr;
+	}
+
+	return static_cast<GameSprite*>(sprite_space[id].get());
+}
+
 void GraphicManager::insertSprite(int id, std::unique_ptr<Sprite> sprite) {
 	if (id < 0) {
 		editor_sprite_space[id] = std::move(sprite);

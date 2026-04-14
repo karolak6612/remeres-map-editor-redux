@@ -142,8 +142,18 @@ private:
 	};
 
 	void rebuildGeometryCache() const;
-	void rebuildPlainLayoutMetrics(const PlainLayoutCacheKey& key);
-	void rebuildOutfitLayoutMetrics(const OutfitLayoutCacheKey& key);
+	SpriteLayoutMetrics buildPlainLayoutMetrics(const PlainLayoutCacheKey& key) const;
+	SpriteLayoutMetrics buildOutfitLayoutMetrics(const OutfitLayoutCacheKey& key) const;
+
+	struct PlainLayoutCacheEntry {
+		PlainLayoutCacheKey key;
+		SpriteLayoutMetrics metrics;
+	};
+
+	struct OutfitLayoutCacheEntry {
+		OutfitLayoutCacheKey key;
+		SpriteLayoutMetrics metrics;
+	};
 
 protected:
 	wxMemoryDC* getDC(SpriteSize size);
@@ -242,12 +252,8 @@ protected:
 	mutable bool geometry_cache_dirty = true;
 	mutable wxSize cached_composite_size;
 	mutable std::pair<int, int> cached_draw_offset;
-	mutable bool plain_layout_cache_valid = false;
-	mutable PlainLayoutCacheKey plain_layout_cache_key;
-	mutable SpriteLayoutMetrics plain_layout_cache_;
-	mutable bool outfit_layout_cache_valid = false;
-	mutable OutfitLayoutCacheKey outfit_layout_cache_key;
-	mutable SpriteLayoutMetrics outfit_layout_cache_;
+	mutable std::deque<PlainLayoutCacheEntry> plain_layout_cache_entries_;
+	mutable std::deque<OutfitLayoutCacheEntry> outfit_layout_cache_entries_;
 };
 
 #endif

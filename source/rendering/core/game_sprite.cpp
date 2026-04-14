@@ -23,6 +23,8 @@ constexpr int RGB_COMPONENTS = 3;
 constexpr int RGBA_COMPONENTS = 4;
 
 namespace {
+	constexpr size_t LAYOUT_CACHE_ENTRY_LIMIT = 8;
+
 	size_t resolvePlainSpriteIndex(const GameSprite& sprite, int x, int y, int layer, int subtype, int pattern_x, int pattern_y, int pattern_z, int frame) {
 		if (sprite.numsprites == 0) {
 			return 0;
@@ -134,8 +136,8 @@ void GameSprite::invalidateCache(const AtlasRegion* region) {
 
 void GameSprite::invalidateMetricCaches() {
 	geometry_cache_dirty = true;
-	plain_layout_cache_valid = false;
-	outfit_layout_cache_valid = false;
+	plain_layout_cache_entries_.clear();
+	outfit_layout_cache_entries_.clear();
 }
 
 void GameSprite::ColorizeTemplatePixels(uint8_t* dest, const uint8_t* mask, size_t pixelCount, int lookHead, int lookBody, int lookLegs, int lookFeet, bool destHasAlpha) {
@@ -187,7 +189,7 @@ int GameSprite::getDrawHeight() const {
 }
 
 bool GameSprite::isSimpleAndLoaded() const {
-	return is_simple && spriteList[0]->isGLLoaded;
+	return is_simple && !spriteList.empty() && spriteList[0] && spriteList[0]->isGLLoaded;
 }
 
 uint32_t GameSprite::getDebugImageId(size_t index) const {
@@ -273,18 +275,33 @@ const GameSprite::SpriteLayoutMetrics& GameSprite::getPlainLayoutMetrics(int sub
 		.frame = frame,
 	};
 
-	if (!plain_layout_cache_valid || plain_layout_cache_key != key) {
-		rebuildPlainLayoutMetrics(key);
-		plain_layout_cache_key = key;
-		plain_layout_cache_valid = true;
+	auto cached = std::ranges::find_if(plain_layout_cache_entries_, [&](const PlainLayoutCacheEntry& entry) {
+		return entry.key == key;
+	});
+	if (cached != plain_layout_cache_entries_.end()) {
+		if (cached != plain_layout_cache_entries_.begin()) {
+			PlainLayoutCacheEntry entry = std::move(*cached);
+			plain_layout_cache_entries_.erase(cached);
+			plain_layout_cache_entries_.push_front(std::move(entry));
+		}
+		return plain_layout_cache_entries_.front().metrics;
 	}
 
-	return plain_layout_cache_;
+	if (plain_layout_cache_entries_.size() >= LAYOUT_CACHE_ENTRY_LIMIT) {
+		plain_layout_cache_entries_.pop_back();
+	}
+
+	plain_layout_cache_entries_.push_front(PlainLayoutCacheEntry {
+		.key = key,
+		.metrics = buildPlainLayoutMetrics(key),
+	});
+	return plain_layout_cache_entries_.front().metrics;
 }
 
-void GameSprite::rebuildPlainLayoutMetrics(const PlainLayoutCacheKey& key) {
-	plain_layout_cache_.column_widths.assign(width, TILE_SIZE);
-	plain_layout_cache_.row_heights.assign(height, TILE_SIZE);
+GameSprite::SpriteLayoutMetrics GameSprite::buildPlainLayoutMetrics(const PlainLayoutCacheKey& key) const {
+	SpriteLayoutMetrics metrics;
+	metrics.column_widths.assign(width, TILE_SIZE);
+	metrics.row_heights.assign(height, TILE_SIZE);
 
 	for (int cx = 0; cx < width; ++cx) {
 		for (int cy = 0; cy < height; ++cy) {
@@ -295,13 +312,14 @@ void GameSprite::rebuildPlainLayoutMetrics(const PlainLayoutCacheKey& key) {
 				}
 
 				const auto dimensions = spriteList[index]->getDimensions();
-				plain_layout_cache_.column_widths[cx] = std::max(plain_layout_cache_.column_widths[cx], static_cast<int>(dimensions.width));
-				plain_layout_cache_.row_heights[cy] = std::max(plain_layout_cache_.row_heights[cy], static_cast<int>(dimensions.height));
+				metrics.column_widths[cx] = std::max(metrics.column_widths[cx], static_cast<int>(dimensions.width));
+				metrics.row_heights[cy] = std::max(metrics.row_heights[cy], static_cast<int>(dimensions.height));
 			}
 		}
 	}
 
-	finalizeLayoutMetrics(plain_layout_cache_);
+	finalizeLayoutMetrics(metrics);
+	return metrics;
 }
 
 const GameSprite::SpriteLayoutMetrics& GameSprite::getOutfitLayoutMetrics(int dir, int addon, int pattern_z, int frame) {
@@ -312,18 +330,33 @@ const GameSprite::SpriteLayoutMetrics& GameSprite::getOutfitLayoutMetrics(int di
 		.frame = frame,
 	};
 
-	if (!outfit_layout_cache_valid || outfit_layout_cache_key != key) {
-		rebuildOutfitLayoutMetrics(key);
-		outfit_layout_cache_key = key;
-		outfit_layout_cache_valid = true;
+	auto cached = std::ranges::find_if(outfit_layout_cache_entries_, [&](const OutfitLayoutCacheEntry& entry) {
+		return entry.key == key;
+	});
+	if (cached != outfit_layout_cache_entries_.end()) {
+		if (cached != outfit_layout_cache_entries_.begin()) {
+			OutfitLayoutCacheEntry entry = std::move(*cached);
+			outfit_layout_cache_entries_.erase(cached);
+			outfit_layout_cache_entries_.push_front(std::move(entry));
+		}
+		return outfit_layout_cache_entries_.front().metrics;
 	}
 
-	return outfit_layout_cache_;
+	if (outfit_layout_cache_entries_.size() >= LAYOUT_CACHE_ENTRY_LIMIT) {
+		outfit_layout_cache_entries_.pop_back();
+	}
+
+	outfit_layout_cache_entries_.push_front(OutfitLayoutCacheEntry {
+		.key = key,
+		.metrics = buildOutfitLayoutMetrics(key),
+	});
+	return outfit_layout_cache_entries_.front().metrics;
 }
 
-void GameSprite::rebuildOutfitLayoutMetrics(const OutfitLayoutCacheKey& key) {
-	outfit_layout_cache_.column_widths.assign(width, TILE_SIZE);
-	outfit_layout_cache_.row_heights.assign(height, TILE_SIZE);
+GameSprite::SpriteLayoutMetrics GameSprite::buildOutfitLayoutMetrics(const OutfitLayoutCacheKey& key) const {
+	SpriteLayoutMetrics metrics;
+	metrics.column_widths.assign(width, TILE_SIZE);
+	metrics.row_heights.assign(height, TILE_SIZE);
 
 	for (int cx = 0; cx < width; ++cx) {
 		for (int cy = 0; cy < height; ++cy) {
@@ -333,12 +366,13 @@ void GameSprite::rebuildOutfitLayoutMetrics(const OutfitLayoutCacheKey& key) {
 			}
 
 			const auto dimensions = spriteList[index]->getDimensions();
-			outfit_layout_cache_.column_widths[cx] = std::max(outfit_layout_cache_.column_widths[cx], static_cast<int>(dimensions.width));
-			outfit_layout_cache_.row_heights[cy] = std::max(outfit_layout_cache_.row_heights[cy], static_cast<int>(dimensions.height));
+			metrics.column_widths[cx] = std::max(metrics.column_widths[cx], static_cast<int>(dimensions.width));
+			metrics.row_heights[cy] = std::max(metrics.row_heights[cy], static_cast<int>(dimensions.height));
 		}
 	}
 
-	finalizeLayoutMetrics(outfit_layout_cache_);
+	finalizeLayoutMetrics(metrics);
+	return metrics;
 }
 
 size_t GameSprite::getIndex(int width, int height, int layer, int pattern_x, int pattern_y, int pattern_z, int frame) const {

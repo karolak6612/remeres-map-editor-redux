@@ -7,7 +7,6 @@
 #include "app/definitions.h" // For TILE_SIZE, GROUND_LAYER, MAP_MAX_LAYER
 #include "ingame_preview/floor_visibility_calculator.h"
 #include <algorithm> // For std::min
-#include <cmath>
 
 void RenderView::Setup(MapCanvas* canvas, const DrawingOptions& options) {
 	canvas->MouseToMap(&mouse_map_x, &mouse_map_y);
@@ -52,14 +51,23 @@ void RenderView::Setup(MapCanvas* canvas, const DrawingOptions& options) {
 }
 
 ViewBounds RenderView::getBoundsForFloor(int map_z, int extra_margin_tiles) const {
-	const int offset = (map_z <= GROUND_LAYER)
-		? (GROUND_LAYER - map_z) * TILE_SIZE
-		: TILE_SIZE * (floor - map_z);
-	const int margin_pixels = PAINTERS_ALGORITHM_SAFETY_MARGIN_PIXELS + extra_margin_tiles * TILE_SIZE;
-	const int start = static_cast<int>(std::floor((view_scroll_x + offset - margin_pixels) / static_cast<float>(TILE_SIZE)));
-	const int top = static_cast<int>(std::floor((view_scroll_y + offset - margin_pixels) / static_cast<float>(TILE_SIZE)));
-	const int end = static_cast<int>(std::ceil((view_scroll_x + logical_width + offset + margin_pixels) / static_cast<float>(TILE_SIZE)));
-	const int bottom = static_cast<int>(std::ceil((view_scroll_y + logical_height + offset + margin_pixels) / static_cast<float>(TILE_SIZE)));
+	int start = view_scroll_x / TILE_SIZE;
+	int top = view_scroll_y / TILE_SIZE;
+
+	if (floor > GROUND_LAYER) {
+		start -= 2;
+		top -= 2;
+	}
+
+	int end = start + screensize_x / tile_size + 2;
+	int bottom = top + screensize_y / tile_size + 2;
+
+	const int floor_expansion = std::max(0, start_z - map_z) + std::max(0, extra_margin_tiles);
+	start -= floor_expansion;
+	top -= floor_expansion;
+	end += floor_expansion;
+	bottom += floor_expansion;
+
 	return ViewBounds {
 		.start_x = start,
 		.start_y = top,

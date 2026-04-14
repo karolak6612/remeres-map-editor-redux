@@ -198,11 +198,12 @@ void GUI::SetDrawingMode() {
 }
 
 void GUI::RefreshView() {
-	for (int i = 0; i < tabbook->GetTabCount(); ++i) {
-		EditorTab* editorTab = tabbook->GetTab(i);
-		if (editorTab) {
-			editorTab->GetWindow()->Refresh();
-		}
+	if (!tabbook) {
+		return;
+	}
+
+	if (EditorTab* editorTab = tabbook->GetCurrentTab(); editorTab != nullptr) {
+		editorTab->GetWindow()->Refresh(false);
 	}
 }
 

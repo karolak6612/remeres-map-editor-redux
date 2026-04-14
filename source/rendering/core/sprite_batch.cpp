@@ -43,6 +43,7 @@ void main() {
 
 SpriteBatch::SpriteBatch() {
 	pending_sprites_.reserve(MAX_SPRITES_PER_BATCH);
+	used_sections_.reserve(RingBuffer::BUFFER_COUNT);
 }
 
 SpriteBatch::~SpriteBatch() {
@@ -239,24 +240,24 @@ void SpriteBatch::flush(const AtlasManager& atlas_manager) {
 		// DSA handles attribute binding, so we don't need to touch glVertexAttribPointer here.
 		// baseInstance in the Indirect command handles the offset into the buffer.
 
-		std::vector<size_t> used_sections;
 		size_t total = pending_sprites_.size();
 		size_t processed = 0;
 		size_t max_batch = ring_buffer_.getCapacity();
+		used_sections_.clear();
 
 		while (processed < total) {
 			// CHECK FOR OVERFLOW: If we have used all sections, we MUST flush now!
-			if (used_sections.size() >= RingBuffer::BUFFER_COUNT) {
+			if (used_sections_.size() >= RingBuffer::BUFFER_COUNT) {
 				mdi_renderer_.upload();
 				mdi_renderer_.execute();
 				draw_call_count_++;
 
-				for (size_t section_idx : used_sections) {
+				for (size_t section_idx : used_sections_) {
 					ring_buffer_.fence(section_idx);
 				}
 
 				mdi_renderer_.clear();
-				used_sections.clear();
+				used_sections_.clear();
 			}
 
 			size_t batch_size = std::min(total - processed, max_batch);
@@ -281,7 +282,7 @@ void SpriteBatch::flush(const AtlasManager& atlas_manager) {
 			mdi_renderer_.addDrawCommand(6, static_cast<GLuint>(batch_size), 0, 0, baseInstance);
 
 			// Track used section and advance
-			used_sections.push_back(ring_buffer_.getCurrentSectionIndex());
+			used_sections_.push_back(ring_buffer_.getCurrentSectionIndex());
 			ring_buffer_.advance();
 
 			processed += batch_size;
@@ -289,15 +290,17 @@ void SpriteBatch::flush(const AtlasManager& atlas_manager) {
 		}
 
 		// Flush remaining commands
-		if (!used_sections.empty()) {
+		if (!used_sections_.empty()) {
 			mdi_renderer_.upload();
 			mdi_renderer_.execute();
 			draw_call_count_++;
 
-			for (size_t section_idx : used_sections) {
+			for (size_t section_idx : used_sections_) {
 				ring_buffer_.fence(section_idx);
 			}
 		}
+
+		used_sections_.clear();
 
 	} else {
 		// Fallback Path: Standard Instanced Rendering Looping

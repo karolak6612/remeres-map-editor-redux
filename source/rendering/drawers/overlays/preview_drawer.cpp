@@ -12,6 +12,7 @@
 #include "brushes/brush.h"
 #include "editor/copybuffer.h"
 #include "editor/editor.h"
+#include "map/map_region.h"
 #include "ui/map_tab.h"
 
 PreviewDrawer::PreviewDrawer() {
@@ -38,91 +39,102 @@ void PreviewDrawer::draw(SpriteBatch& sprite_batch, MapCanvas* canvas, const Ren
 			normalPos = to;
 		}
 
-		for (int map_x = view.start_x; map_x <= view.end_x; map_x++) {
-			for (int map_y = view.start_y; map_y <= view.end_y; map_y++) {
-				Position final(map_x, map_y, map_z);
-				Position pos = normalPos + final - to;
+		const int source_z = normalPos.z + map_z - to.z;
+		if (source_z >= 0 && source_z < MAP_LAYERS) {
+			const int source_start_x = normalPos.x + view.start_x - to.x;
+			const int source_start_y = normalPos.y + view.start_y - to.y;
+			const int source_end_x = normalPos.x + view.end_x - to.x;
+			const int source_end_y = normalPos.y + view.end_y - to.y;
+			const int offset = map_z <= GROUND_LAYER ? (GROUND_LAYER - map_z) * TILE_SIZE : TILE_SIZE * (view.floor - map_z);
+			const uint8_t base_alpha = canvas->isPasting() ? 128 : 255;
 
-				if (pos.z >= MAP_LAYERS || pos.z < 0) {
-					continue;
-				}
+			auto drawPreviewTile = [&](Tile* tile, int map_x, int map_y) {
+				int draw_x = ((map_x * TILE_SIZE) - view.view_scroll_x) - offset;
+				int draw_y = ((map_y * TILE_SIZE) - view.view_scroll_y) - offset;
 
-				Tile* tile = secondary_map->getTile(pos);
-				if (tile) {
-					// Compensate for underground/overground
-					int offset;
-					if (map_z <= GROUND_LAYER) {
-						offset = (GROUND_LAYER - map_z) * TILE_SIZE;
-					} else {
-						offset = TILE_SIZE * (view.floor - map_z);
+				uint8_t r = 255;
+				uint8_t g = 255;
+				uint8_t b = 255;
+
+				if (tile->ground) {
+					if (tile->isBlocking() && options.show_blocking) {
+						g = g / 3 * 2;
+						b = b / 3 * 2;
 					}
-
-					int draw_x = ((map_x * TILE_SIZE) - view.view_scroll_x) - offset;
-					int draw_y = ((map_y * TILE_SIZE) - view.view_scroll_y) - offset;
-
-					// Draw ground
-					uint8_t r = 255, g = 255, b = 255;
-					uint8_t base_alpha = canvas->isPasting() ? 128 : 255;
-
-					if (tile->ground) {
-						if (tile->isBlocking() && options.show_blocking) {
-							g = g / 3 * 2;
-							b = b / 3 * 2;
-						}
-						if (tile->isHouseTile() && options.show_houses) {
-							if ((int)tile->getHouseID() == current_house_id) {
-								r /= 2;
-							} else {
-								r /= 2;
-								g /= 2;
-							}
-						} else if (options.show_special_tiles && tile->isPZ()) {
+					if (tile->isHouseTile() && options.show_houses) {
+						if (static_cast<int>(tile->getHouseID()) == current_house_id) {
 							r /= 2;
-							b /= 2;
-						}
-						if (options.show_special_tiles && tile->getMapFlags() & TILESTATE_PVPZONE) {
-							r = r / 3 * 2;
-							b = r / 3 * 2;
-						}
-						if (options.show_special_tiles && tile->getMapFlags() & TILESTATE_NOLOGOUT) {
-							b /= 2;
-						}
-						if (options.show_special_tiles && tile->getMapFlags() & TILESTATE_NOPVP) {
+						} else {
+							r /= 2;
 							g /= 2;
 						}
-						if (tile->ground) {
-							BlitItemParams params(tile, tile->ground.get(), options);
-							params.ephemeral = true;
-							params.red = r;
-							params.green = g;
-							params.blue = b;
-							params.alpha = base_alpha;
-							item_drawer->BlitItem(sprite_batch, sprite_drawer, creature_drawer, draw_x, draw_y, params);
-						}
+					} else if (options.show_special_tiles && tile->isPZ()) {
+						r /= 2;
+						b /= 2;
+					}
+					if (options.show_special_tiles && tile->getMapFlags() & TILESTATE_PVPZONE) {
+						r = r / 3 * 2;
+						b = r / 3 * 2;
+					}
+					if (options.show_special_tiles && tile->getMapFlags() & TILESTATE_NOLOGOUT) {
+						b /= 2;
+					}
+					if (options.show_special_tiles && tile->getMapFlags() & TILESTATE_NOPVP) {
+						g /= 2;
 					}
 
-					// Draw items on the tile
-					if (view.zoom <= 10.0 || !options.hide_items_when_zoomed) {
-						for (const auto& item : tile->items) {
-							BlitItemParams params(tile, item.get(), options);
-							params.ephemeral = true;
-							params.alpha = base_alpha;
-							if (item->isBorder()) {
-								params.red = 255;
-								params.green = r;
-								params.blue = g;
-								params.alpha = (base_alpha == 255) ? b : base_alpha;
-								item_drawer->BlitItem(sprite_batch, sprite_drawer, creature_drawer, draw_x, draw_y, params);
-							} else {
-								item_drawer->BlitItem(sprite_batch, sprite_drawer, creature_drawer, draw_x, draw_y, params);
-							}
+					BlitItemParams params(tile, tile->ground.get(), options);
+					params.ephemeral = true;
+					params.red = r;
+					params.green = g;
+					params.blue = b;
+					params.alpha = base_alpha;
+					item_drawer->BlitItem(sprite_batch, sprite_drawer, creature_drawer, draw_x, draw_y, params);
+				}
+
+				if (view.zoom <= 10.0 || !options.hide_items_when_zoomed) {
+					for (const auto& item : tile->items) {
+						BlitItemParams params(tile, item.get(), options);
+						params.ephemeral = true;
+						params.alpha = base_alpha;
+						if (item->isBorder()) {
+							params.red = 255;
+							params.green = r;
+							params.blue = g;
+							params.alpha = base_alpha == 255 ? b : base_alpha;
 						}
-						if (tile->creature && options.show_creatures) {
-							creature_drawer->BlitCreature(sprite_batch, sprite_drawer, draw_x, draw_y, tile->creature.get());
-						}
+						item_drawer->BlitItem(sprite_batch, sprite_drawer, creature_drawer, draw_x, draw_y, params);
+					}
+					if (tile->creature && options.show_creatures) {
+						creature_drawer->BlitCreature(sprite_batch, sprite_drawer, draw_x, draw_y, tile->creature.get());
 					}
 				}
-			}
+			};
+
+			secondary_map->visitLeaves(source_start_x, source_start_y, source_end_x + 1, source_end_y + 1, [&](MapNode* node, int, int) {
+				Floor* floor = node->getFloor(source_z);
+				if (!floor) {
+					return;
+				}
+
+				TileLocation* location = floor->locs.data();
+				for (int local_x = 0; local_x < 4; ++local_x) {
+					for (int local_y = 0; local_y < 4; ++local_y, ++location) {
+						Tile* tile = location->get();
+						if (!tile) {
+							continue;
+						}
+
+						const int map_x = to.x + tile->getX() - normalPos.x;
+						const int map_y = to.y + tile->getY() - normalPos.y;
+						if (map_x < view.start_x || map_x > view.end_x || map_y < view.start_y || map_y > view.end_y) {
+							continue;
+						}
+
+						drawPreviewTile(tile, map_x, map_y);
+					}
+				}
+			});
 		}
 		// Draw highlight on the specific tile under mouse
 		// This helps user see where they are pointing in the "chaos"

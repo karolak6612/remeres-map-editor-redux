@@ -286,8 +286,6 @@ void MapDrawer::Release() {
 }
 
 void MapDrawer::Draw() {
-	g_gui.gfx.updateTime();
-
 	light_buffer.Clear();
 	creature_name_drawer->clear();
 	options.transient_selection_bounds = std::nullopt;

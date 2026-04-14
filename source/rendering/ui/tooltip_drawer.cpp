@@ -137,7 +137,7 @@ int TooltipDrawer::getSpriteImage(NVGcontext* vg, uint16_t itemId) {
 
 	// Resolve Item ID
 	const auto definition = g_item_definitions.get(itemId);
-	GameSprite* gameSprite = definition ? dynamic_cast<GameSprite*>(g_gui.gfx.getSprite(definition.clientId())) : nullptr;
+	GameSprite* gameSprite = definition ? g_gui.gfx.getGameSprite(definition.clientId()) : nullptr;
 	if (!gameSprite) {
 		return 0;
 	}

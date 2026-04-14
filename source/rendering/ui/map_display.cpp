@@ -171,11 +171,7 @@ MapCanvas::~MapCanvas() {
 }
 
 void MapCanvas::Refresh() {
-	if (refresh_watch.Time() > g_settings.getInteger(Config::HARD_REFRESH_RATE)) {
-		refresh_watch.Start();
-		wxGLCanvas::Update();
-	}
-	wxGLCanvas::Refresh();
+	wxGLCanvas::Refresh(false);
 }
 
 void MapCanvas::SetZoom(double value) {

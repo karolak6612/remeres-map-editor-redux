@@ -99,7 +99,7 @@ void CreatureDrawer::BlitCreature(SpriteBatch& sprite_batch, SpriteDrawer* sprit
 
 	if (outfit.lookItem != 0) {
 		if (const auto definition = g_item_definitions.get(outfit.lookItem)) {
-			GameSprite* spr = dynamic_cast<GameSprite*>(g_gui.gfx.getSprite(definition.clientId()));
+			GameSprite* spr = g_gui.gfx.getGameSprite(definition.clientId());
 			if (spr && options.light_buffer && options.view && spr->hasLight()) {
 				registerCreatureSpriteLight(*options.light_buffer, *options.view, *spr, screenx, screeny, spr->getLight(), false);
 			}

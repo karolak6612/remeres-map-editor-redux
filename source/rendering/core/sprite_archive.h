@@ -55,6 +55,10 @@ private:
 		ProtobufSpriteLayout layout = ProtobufSpriteLayout::OneByOne;
 		std::string path;
 		mutable std::shared_ptr<std::vector<uint8_t>> decoded_pixels;
+
+		void releaseDecodedPixels() const {
+			decoded_pixels.reset();
+		}
 	};
 
 	SpriteArchive(std::string filename, bool is_extended, uint32_t sprite_count, std::vector<uint32_t> sprite_offsets);
@@ -71,6 +75,7 @@ private:
 
 	Backend backend_ = Backend::Legacy;
 	mutable std::mutex protobuf_mutex_;
+	mutable int32_t last_decoded_sheet_index_ = -1;
 	std::vector<ProtobufSheet> protobuf_sheets_;
 	std::vector<int32_t> protobuf_sheet_lookup_;
 };

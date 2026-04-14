@@ -235,17 +235,29 @@ void MapWindow::Scroll(int x, int y, bool center) {
 		y -= int((window_size_y * g_gui.GetCurrentZoom()) / 2.0);
 	}
 
+	if (hScroll->GetThumbPosition() == x && vScroll->GetThumbPosition() == y) {
+		return;
+	}
+
 	hScroll->SetThumbPosition(x);
 	vScroll->SetThumbPosition(y);
 	SyncTrackedMinimapViewportToCurrentView();
 	g_gui.UpdateMinimap();
+	canvas->Refresh();
 }
 
 void MapWindow::ScrollRelative(int x, int y, bool immediate_minimap_update) {
-	hScroll->SetThumbPosition(hScroll->GetThumbPosition() + x);
-	vScroll->SetThumbPosition(vScroll->GetThumbPosition() + y);
+	const int next_x = hScroll->GetThumbPosition() + x;
+	const int next_y = vScroll->GetThumbPosition() + y;
+	if (hScroll->GetThumbPosition() == next_x && vScroll->GetThumbPosition() == next_y) {
+		return;
+	}
+
+	hScroll->SetThumbPosition(next_x);
+	vScroll->SetThumbPosition(next_y);
 	SyncTrackedMinimapViewportToCurrentView();
 	g_gui.UpdateMinimap(immediate_minimap_update);
+	canvas->Refresh();
 }
 
 void MapWindow::OnGem(wxCommandEvent& WXUNUSED(event)) {
@@ -269,7 +281,6 @@ void MapWindow::OnScrollLineDown(wxScrollEvent& event) {
 	} else {
 		ScrollRelative(0, 96);
 	}
-	canvas->Refresh();
 }
 
 void MapWindow::OnScrollLineUp(wxScrollEvent& event) {
@@ -278,7 +289,6 @@ void MapWindow::OnScrollLineUp(wxScrollEvent& event) {
 	} else {
 		ScrollRelative(0, -96);
 	}
-	canvas->Refresh();
 }
 
 void MapWindow::OnScrollPageDown(wxScrollEvent& event) {
@@ -287,7 +297,6 @@ void MapWindow::OnScrollPageDown(wxScrollEvent& event) {
 	} else {
 		ScrollRelative(0, 5 * 96);
 	}
-	canvas->Refresh();
 }
 
 void MapWindow::OnScrollPageUp(wxScrollEvent& event) {
@@ -296,6 +305,5 @@ void MapWindow::OnScrollPageUp(wxScrollEvent& event) {
 	} else {
 		ScrollRelative(0, -5 * 96);
 	}
-	canvas->Refresh();
 }
 

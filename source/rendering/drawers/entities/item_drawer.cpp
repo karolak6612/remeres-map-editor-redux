@@ -30,7 +30,7 @@ namespace {
 		if (!definition) {
 			return nullptr;
 		}
-		return dynamic_cast<GameSprite*>(g_gui.gfx.getSprite(definition.clientId()));
+		return g_gui.gfx.getGameSprite(definition.clientId());
 	}
 
 	GameSprite* resolveSprite(ServerItemId item_id) {

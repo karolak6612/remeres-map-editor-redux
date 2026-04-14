@@ -15,6 +15,15 @@ void LiveCursorDrawer::draw(SpriteBatch& sprite_batch, const RenderView& view, E
 		return;
 	}
 
+	if (!g_gui.gfx.ensureAtlasManager()) {
+		return;
+	}
+
+	const AtlasManager* atlas_manager = g_gui.gfx.getAtlasManager();
+	if (!atlas_manager) {
+		return;
+	}
+
 	LiveSocket& live = editor.live_manager.GetSocket();
 	for (LiveCursor& cursor : live.getCursorList()) {
 		if (cursor.pos.z <= GROUND_LAYER && view.floor > GROUND_LAYER) {
@@ -25,12 +34,13 @@ void LiveCursorDrawer::draw(SpriteBatch& sprite_batch, const RenderView& view, E
 			continue;
 		}
 
+		wxColor draw_color = cursor.color;
 		if (cursor.pos.z < view.floor) {
-			cursor.color = wxColor(
-				cursor.color.Red(),
-				cursor.color.Green(),
-				cursor.color.Blue(),
-				std::max<uint8_t>(cursor.color.Alpha() / 2, 64)
+			draw_color = wxColor(
+				draw_color.Red(),
+				draw_color.Green(),
+				draw_color.Blue(),
+				std::max<uint8_t>(static_cast<uint8_t>(draw_color.Alpha() / 2), static_cast<uint8_t>(64))
 			);
 		}
 
@@ -45,15 +55,13 @@ void LiveCursorDrawer::draw(SpriteBatch& sprite_batch, const RenderView& view, E
 		float draw_y = ((cursor.pos.y * TILE_SIZE) - view.view_scroll_y) - offset;
 
 		glm::vec4 color(
-			cursor.color.Red() / 255.0f,
-			cursor.color.Green() / 255.0f,
-			cursor.color.Blue() / 255.0f,
-			cursor.color.Alpha() / 255.0f
+			draw_color.Red() / 255.0f,
+			draw_color.Green() / 255.0f,
+			draw_color.Blue() / 255.0f,
+			draw_color.Alpha() / 255.0f
 		);
 
-		if (g_gui.gfx.ensureAtlasManager()) {
-			sprite_batch.drawRect(draw_x, draw_y, (float)TILE_SIZE, (float)TILE_SIZE, color, *g_gui.gfx.getAtlasManager());
-		}
+		sprite_batch.drawRect(draw_x, draw_y, static_cast<float>(TILE_SIZE), static_cast<float>(TILE_SIZE), color, *atlas_manager);
 	}
 }
 

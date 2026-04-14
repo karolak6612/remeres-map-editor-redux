@@ -12,6 +12,14 @@
 #include <cassert>
 #include <span>
 
+namespace {
+	constexpr size_t RGBA_COMPONENTS = 4;
+
+	[[nodiscard]] size_t resultByteSize(const ImageDimensions& dimensions) {
+		return dimensions.pixelCount() * RGBA_COMPONENTS;
+	}
+}
+
 SpritePreloader& SpritePreloader::get() {
 	static SpritePreloader instance;
 	return instance;
@@ -52,6 +60,7 @@ void SpritePreloader::clear() {
 	task_queue = std::queue<Task>();
 	result_queue = std::queue<Result>();
 	pending_ids.clear();
+	queued_result_bytes = 0;
 }
 
 void SpritePreloader::preload(GameSprite* spr, int pattern_x, int pattern_y, int pattern_z, int frame) {
@@ -142,13 +151,25 @@ void SpritePreloader::workerLoop(std::stop_token stop_token) {
 			task_queue.pop();
 		}
 
+		{
+			std::lock_guard<std::mutex> lock(queue_mutex);
+			if (result_queue.size() >= MAX_RESULT_QUEUE_SIZE || queued_result_bytes >= MAX_RESULT_QUEUE_BYTES) {
+				pending_ids.erase(task.pending);
+				continue;
+			}
+		}
+
 		std::unique_ptr<uint8_t[]> rgba;
 		ImageDimensions dimensions;
-		const bool success = task.archive && task.archive->readRGBA(task.pending.key.id, task.has_transparency, rgba, dimensions);
+		if (!task.archive || !task.archive->readRGBA(task.pending.key.id, task.has_transparency, rgba, dimensions)) {
+			rgba.reset();
+		}
+		const size_t result_bytes = resultByteSize(dimensions);
 
 		{
 			std::lock_guard<std::mutex> lock(queue_mutex);
-			if (rgba) {
+			if (rgba && result_queue.size() < MAX_RESULT_QUEUE_SIZE && queued_result_bytes + result_bytes <= MAX_RESULT_QUEUE_BYTES) {
+				queued_result_bytes += result_bytes;
 				result_queue.push({ task.pending, std::move(rgba), dimensions, std::move(task.archive) });
 			} else {
 				pending_ids.erase(task.pending);
@@ -164,6 +185,7 @@ void SpritePreloader::update() {
 	std::queue<Result> results;
 	uint64_t current_epoch = 0;
 	size_t result_count = 0;
+	size_t upload_bytes = 0;
 	{
 		std::lock_guard<std::mutex> lock(queue_mutex);
 		if (result_queue.empty()) {
@@ -171,6 +193,13 @@ void SpritePreloader::update() {
 		}
 		current_epoch = active_epoch;
 		while (!result_queue.empty() && result_count < MAX_UPLOADS_PER_FRAME) {
+			const size_t next_result_bytes = resultByteSize(result_queue.front().dimensions);
+			if (result_count > 0 && upload_bytes + next_result_bytes > MAX_UPLOAD_BYTES_PER_FRAME) {
+				break;
+			}
+
+			upload_bytes += next_result_bytes;
+			queued_result_bytes = queued_result_bytes > next_result_bytes ? queued_result_bytes - next_result_bytes : 0;
 			results.push(std::move(result_queue.front()));
 			result_queue.pop();
 			++result_count;
