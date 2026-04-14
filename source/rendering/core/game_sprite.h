@@ -72,6 +72,15 @@ class TemplateImage;
 
 class GameSprite : public Sprite {
 public:
+	struct SpriteLayoutMetrics {
+		std::vector<int> column_widths;
+		std::vector<int> row_heights;
+		int total_width = TILE_SIZE;
+		int total_height = TILE_SIZE;
+		int left_offset = 0;
+		int top_offset = 0;
+	};
+
 	GameSprite();
 	~GameSprite() override;
 
@@ -93,6 +102,9 @@ public:
 	int getDrawHeight() const;
 	std::pair<int, int> getDrawOffset() const;
 	uint8_t getMiniMapColor() const;
+	const SpriteLayoutMetrics& getPlainLayoutMetrics(int subtype, int pattern_x, int pattern_y, int pattern_z, int frame);
+	const SpriteLayoutMetrics& getOutfitLayoutMetrics(int dir, int addon, int pattern_z, int frame);
+	void invalidateMetricCaches();
 
 	bool hasLight() const noexcept {
 		return has_light;
@@ -110,6 +122,29 @@ public:
 	void invalidateCache(const AtlasRegion* region);
 
 private:
+	struct PlainLayoutCacheKey {
+		int subtype = 0;
+		int pattern_x = 0;
+		int pattern_y = 0;
+		int pattern_z = 0;
+		int frame = 0;
+
+		bool operator==(const PlainLayoutCacheKey& other) const = default;
+	};
+
+	struct OutfitLayoutCacheKey {
+		int dir = 0;
+		int addon = 0;
+		int pattern_z = 0;
+		int frame = 0;
+
+		bool operator==(const OutfitLayoutCacheKey& other) const = default;
+	};
+
+	void rebuildGeometryCache() const;
+	void rebuildPlainLayoutMetrics(const PlainLayoutCacheKey& key);
+	void rebuildOutfitLayoutMetrics(const OutfitLayoutCacheKey& key);
+
 protected:
 	wxMemoryDC* getDC(SpriteSize size);
 	wxMemoryDC* getDC(SpriteSize size, const Outfit& outfit);
@@ -204,6 +239,15 @@ protected:
 	mutable const AtlasRegion* cached_default_region = nullptr;
 	uint32_t cached_generation_id = 0;
 	uint32_t cached_sprite_id = 0;
+	mutable bool geometry_cache_dirty = true;
+	mutable wxSize cached_composite_size;
+	mutable std::pair<int, int> cached_draw_offset;
+	mutable bool plain_layout_cache_valid = false;
+	mutable PlainLayoutCacheKey plain_layout_cache_key;
+	mutable SpriteLayoutMetrics plain_layout_cache_;
+	mutable bool outfit_layout_cache_valid = false;
+	mutable OutfitLayoutCacheKey outfit_layout_cache_key;
+	mutable SpriteLayoutMetrics outfit_layout_cache_;
 };
 
 #endif

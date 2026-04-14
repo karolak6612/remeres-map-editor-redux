@@ -5,8 +5,6 @@
 #include "app/main.h"
 
 #include <algorithm>
-#include <numeric>
-#include <vector>
 #undef min
 #undef max
 
@@ -28,15 +26,6 @@
 #include "ui/gui.h"
 
 namespace {
-	struct CompositeSpriteMetrics {
-		std::vector<int> column_widths;
-		std::vector<int> row_heights;
-		int total_width = TILE_SIZE;
-		int total_height = TILE_SIZE;
-		int left_offset = 0;
-		int top_offset = 0;
-	};
-
 	GameSprite* resolveSprite(const ItemDefinitionView& definition) {
 		if (!definition) {
 			return nullptr;
@@ -48,30 +37,7 @@ namespace {
 		return resolveSprite(g_item_definitions.get(item_id));
 	}
 
-	CompositeSpriteMetrics computeSpriteMetrics(GameSprite& sprite, int subtype, int pattern_x, int pattern_y, int pattern_z, int frame) {
-		CompositeSpriteMetrics metrics;
-		metrics.column_widths.assign(sprite.width, TILE_SIZE);
-		metrics.row_heights.assign(sprite.height, TILE_SIZE);
-
-		for (int cx = 0; cx != sprite.width; ++cx) {
-			for (int cy = 0; cy != sprite.height; ++cy) {
-				for (int layer = 0; layer != sprite.layers; ++layer) {
-					if (const AtlasRegion* region = sprite.getAtlasRegion(cx, cy, layer, subtype, pattern_x, pattern_y, pattern_z, frame)) {
-						metrics.column_widths[cx] = std::max(metrics.column_widths[cx], region->pixel_width);
-						metrics.row_heights[cy] = std::max(metrics.row_heights[cy], region->pixel_height);
-					}
-				}
-			}
-		}
-
-		metrics.total_width = std::accumulate(metrics.column_widths.begin(), metrics.column_widths.end(), 0);
-		metrics.total_height = std::accumulate(metrics.row_heights.begin(), metrics.row_heights.end(), 0);
-		metrics.left_offset = metrics.total_width - metrics.column_widths.back();
-		metrics.top_offset = metrics.total_height - metrics.row_heights.back();
-		return metrics;
-	}
-
-	void registerSpriteLight(LightBuffer& light_buffer, const RenderView& view, int screen_x, int screen_y, const CompositeSpriteMetrics& metrics, const SpriteLight& light) {
+	void registerSpriteLight(LightBuffer& light_buffer, const RenderView& view, int screen_x, int screen_y, const GameSprite::SpriteLayoutMetrics& metrics, const SpriteLight& light) {
 		light_buffer.AddScreenLight(
 			screen_x - metrics.left_offset + metrics.total_width / 2,
 			screen_y - metrics.top_offset + metrics.total_height / 2,
@@ -208,7 +174,7 @@ void ItemDrawer::BlitItem(SpriteBatch& sprite_batch, SpriteDrawer* sprite_drawer
 	int pattern_y = patterns.y;
 	int pattern_z = patterns.z;
 	int frame = patterns.frame;
-	const CompositeSpriteMetrics composite_metrics = computeSpriteMetrics(*spr, subtype, pattern_x, pattern_y, pattern_z, frame);
+	const auto& composite_metrics = spr->getPlainLayoutMetrics(subtype, pattern_x, pattern_y, pattern_z, frame);
 
 	if (light_buffer && view && item->hasLight()) {
 		registerSpriteLight(*light_buffer, *view, screenx, screeny, composite_metrics, item->getLight());

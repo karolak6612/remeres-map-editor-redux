@@ -199,8 +199,13 @@ void SpritePreloader::update() {
 				// Validate Sprite Identity & Generation
 				// Check ID match, Generation match, and GLLoaded state
 				if (img->id == id && img->generation_id == pending.generation_id && !img->isGLLoaded) {
-					img->pixel_width = res.dimensions.width;
-					img->pixel_height = res.dimensions.height;
+					if (img->pixel_width != res.dimensions.width || img->pixel_height != res.dimensions.height) {
+						img->pixel_width = res.dimensions.width;
+						img->pixel_height = res.dimensions.height;
+						if (img->parent) {
+							img->parent->invalidateMetricCaches();
+						}
+					}
 					img->fulfillPreload(std::move(res.data));
 				}
 			}

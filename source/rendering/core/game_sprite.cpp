@@ -15,11 +15,52 @@
 #include <spdlog/spdlog.h>
 #include <atomic>
 #include <algorithm>
+#include <numeric>
 #include <ranges>
 #include <span>
 
 constexpr int RGB_COMPONENTS = 3;
 constexpr int RGBA_COMPONENTS = 4;
+
+namespace {
+	size_t resolvePlainSpriteIndex(const GameSprite& sprite, int x, int y, int layer, int subtype, int pattern_x, int pattern_y, int pattern_z, int frame) {
+		if (sprite.numsprites == 0) {
+			return 0;
+		}
+
+		uint32_t index = 0;
+		if (subtype >= 0 && sprite.height <= 1 && sprite.width <= 1) {
+			index = static_cast<uint32_t>(subtype);
+		} else {
+			index = static_cast<uint32_t>((((((frame) * sprite.pattern_y + pattern_y) * sprite.pattern_x + pattern_x) * sprite.layers + layer) * sprite.height + y) * sprite.width + x);
+		}
+
+		if (index >= sprite.numsprites) {
+			index = sprite.numsprites == 1 ? 0 : index % sprite.numsprites;
+		}
+
+		return static_cast<size_t>(index);
+	}
+
+	size_t resolveOutfitSpriteIndex(const GameSprite& sprite, int x, int y, int dir, int addon, int pattern_z, int frame) {
+		if (sprite.numsprites == 0) {
+			return 0;
+		}
+
+		size_t index = sprite.getIndex(x, y, 0, dir, addon, pattern_z, frame);
+		if (index >= sprite.numsprites) {
+			index = sprite.numsprites == 1 ? 0 : index % sprite.numsprites;
+		}
+		return index;
+	}
+
+	void finalizeLayoutMetrics(GameSprite::SpriteLayoutMetrics& metrics) {
+		metrics.total_width = std::accumulate(metrics.column_widths.begin(), metrics.column_widths.end(), 0);
+		metrics.total_height = std::accumulate(metrics.row_heights.begin(), metrics.row_heights.end(), 0);
+		metrics.left_offset = metrics.column_widths.empty() ? 0 : metrics.total_width - metrics.column_widths.back();
+		metrics.top_offset = metrics.row_heights.empty() ? 0 : metrics.total_height - metrics.row_heights.back();
+	}
+}
 
 CreatureSprite::CreatureSprite(GameSprite* parent, const Outfit& outfit) :
 	parent(parent),
@@ -91,6 +132,12 @@ void GameSprite::invalidateCache(const AtlasRegion* region) {
 	}
 }
 
+void GameSprite::invalidateMetricCaches() {
+	geometry_cache_dirty = true;
+	plain_layout_cache_valid = false;
+	outfit_layout_cache_valid = false;
+}
+
 void GameSprite::ColorizeTemplatePixels(uint8_t* dest, const uint8_t* mask, size_t pixelCount, int lookHead, int lookBody, int lookLegs, int lookFeet, bool destHasAlpha) {
 	const int dest_step = destHasAlpha ? RGBA_COMPONENTS : RGB_COMPONENTS;
 	const int mask_step = RGB_COMPONENTS;
@@ -151,8 +198,17 @@ uint32_t GameSprite::getDebugImageId(size_t index) const {
 }
 
 wxSize GameSprite::getCompositePixelSize() const {
+	if (geometry_cache_dirty) {
+		rebuildGeometryCache();
+	}
+	return cached_composite_size;
+}
+
+void GameSprite::rebuildGeometryCache() const {
 	int max_width = std::max<int>(width * SPRITE_PIXELS, SPRITE_PIXELS);
 	int max_height = std::max<int>(height * SPRITE_PIXELS, SPRITE_PIXELS);
+	uint16_t max_part_width = 0;
+	uint16_t max_part_height = 0;
 
 	for (int frame = 0; frame < frames; ++frame) {
 		for (int pattern_z_index = 0; pattern_z_index < pattern_z; ++pattern_z_index) {
@@ -167,6 +223,8 @@ wxSize GameSprite::getCompositePixelSize() const {
 								}
 
 								const auto dimensions = spriteList[index]->getDimensions();
+								max_part_width = std::max<uint16_t>(max_part_width, dimensions.width);
+								max_part_height = std::max<uint16_t>(max_part_height, dimensions.height);
 								const int draw_x = (width - part_x - 1) * SPRITE_PIXELS;
 								const int draw_y = (height - part_y - 1) * SPRITE_PIXELS;
 								max_width = std::max(max_width, draw_x + static_cast<int>(dimensions.width));
@@ -179,7 +237,12 @@ wxSize GameSprite::getCompositePixelSize() const {
 		}
 	}
 
-	return wxSize(max_width, max_height);
+	cached_composite_size = wxSize(max_width, max_height);
+	cached_draw_offset = std::make_pair(
+		static_cast<int>(drawoffset_x) + std::max(0, static_cast<int>(max_part_width) - SPRITE_PIXELS),
+		static_cast<int>(drawoffset_y) + std::max(0, static_cast<int>(max_part_height) - SPRITE_PIXELS)
+	);
+	geometry_cache_dirty = false;
 }
 
 uint32_t GameSprite::getSpriteId(int frameIndex, int pattern_x, int pattern_y) const {
@@ -191,25 +254,91 @@ uint32_t GameSprite::getSpriteId(int frameIndex, int pattern_x, int pattern_y) c
 }
 
 std::pair<int, int> GameSprite::getDrawOffset() const {
-	uint16_t max_width = 0;
-	uint16_t max_height = 0;
-	for (const auto* image : spriteList) {
-		if (!image) {
-			continue;
-		}
-
-		const auto dimensions = image->getDimensions();
-		max_width = std::max<uint16_t>(max_width, dimensions.width);
-		max_height = std::max<uint16_t>(max_height, dimensions.height);
+	if (geometry_cache_dirty) {
+		rebuildGeometryCache();
 	}
-
-	const int implicit_offset_x = std::max(0, static_cast<int>(max_width) - SPRITE_PIXELS);
-	const int implicit_offset_y = std::max(0, static_cast<int>(max_height) - SPRITE_PIXELS);
-	return std::make_pair(static_cast<int>(drawoffset_x) + implicit_offset_x, static_cast<int>(drawoffset_y) + implicit_offset_y);
+	return cached_draw_offset;
 }
 
 uint8_t GameSprite::getMiniMapColor() const {
 	return minimap_color;
+}
+
+const GameSprite::SpriteLayoutMetrics& GameSprite::getPlainLayoutMetrics(int subtype, int pattern_x, int pattern_y, int pattern_z, int frame) {
+	const PlainLayoutCacheKey key {
+		.subtype = subtype,
+		.pattern_x = pattern_x,
+		.pattern_y = pattern_y,
+		.pattern_z = pattern_z,
+		.frame = frame,
+	};
+
+	if (!plain_layout_cache_valid || plain_layout_cache_key != key) {
+		rebuildPlainLayoutMetrics(key);
+		plain_layout_cache_key = key;
+		plain_layout_cache_valid = true;
+	}
+
+	return plain_layout_cache_;
+}
+
+void GameSprite::rebuildPlainLayoutMetrics(const PlainLayoutCacheKey& key) {
+	plain_layout_cache_.column_widths.assign(width, TILE_SIZE);
+	plain_layout_cache_.row_heights.assign(height, TILE_SIZE);
+
+	for (int cx = 0; cx < width; ++cx) {
+		for (int cy = 0; cy < height; ++cy) {
+			for (int layer = 0; layer < layers; ++layer) {
+				const size_t index = resolvePlainSpriteIndex(*this, cx, cy, layer, key.subtype, key.pattern_x, key.pattern_y, key.pattern_z, key.frame);
+				if (index >= spriteList.size() || !spriteList[index]) {
+					continue;
+				}
+
+				const auto dimensions = spriteList[index]->getDimensions();
+				plain_layout_cache_.column_widths[cx] = std::max(plain_layout_cache_.column_widths[cx], static_cast<int>(dimensions.width));
+				plain_layout_cache_.row_heights[cy] = std::max(plain_layout_cache_.row_heights[cy], static_cast<int>(dimensions.height));
+			}
+		}
+	}
+
+	finalizeLayoutMetrics(plain_layout_cache_);
+}
+
+const GameSprite::SpriteLayoutMetrics& GameSprite::getOutfitLayoutMetrics(int dir, int addon, int pattern_z, int frame) {
+	const OutfitLayoutCacheKey key {
+		.dir = dir,
+		.addon = addon,
+		.pattern_z = pattern_z,
+		.frame = frame,
+	};
+
+	if (!outfit_layout_cache_valid || outfit_layout_cache_key != key) {
+		rebuildOutfitLayoutMetrics(key);
+		outfit_layout_cache_key = key;
+		outfit_layout_cache_valid = true;
+	}
+
+	return outfit_layout_cache_;
+}
+
+void GameSprite::rebuildOutfitLayoutMetrics(const OutfitLayoutCacheKey& key) {
+	outfit_layout_cache_.column_widths.assign(width, TILE_SIZE);
+	outfit_layout_cache_.row_heights.assign(height, TILE_SIZE);
+
+	for (int cx = 0; cx < width; ++cx) {
+		for (int cy = 0; cy < height; ++cy) {
+			const size_t index = resolveOutfitSpriteIndex(*this, cx, cy, key.dir, key.addon, key.pattern_z, key.frame);
+			if (index >= spriteList.size() || !spriteList[index]) {
+				continue;
+			}
+
+			const auto dimensions = spriteList[index]->getDimensions();
+			outfit_layout_cache_.column_widths[cx] = std::max(outfit_layout_cache_.column_widths[cx], static_cast<int>(dimensions.width));
+			outfit_layout_cache_.row_heights[cy] = std::max(outfit_layout_cache_.row_heights[cy], static_cast<int>(dimensions.height));
+		}
+	}
+
+	finalizeLayoutMetrics(outfit_layout_cache_);
 }
 
 size_t GameSprite::getIndex(int width, int height, int layer, int pattern_x, int pattern_y, int pattern_z, int frame) const {

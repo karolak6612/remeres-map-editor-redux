@@ -5,7 +5,6 @@
 
 #include "ui/gui.h"
 #include <spdlog/spdlog.h>
-#include <vector>
 #include "rendering/core/sprite_batch.h"
 #include "rendering/core/atlas_manager.h"
 
@@ -79,8 +78,9 @@ void SpriteDrawer::BlitSprite(SpriteBatch& sprite_batch, int screenx, int screen
 	if (spr == nullptr) {
 		return;
 	}
-	screenx -= spr->getDrawOffset().first;
-	screeny -= spr->getDrawOffset().second;
+	const auto draw_offset = spr->getDrawOffset();
+	screenx -= draw_offset.first;
+	screeny -= draw_offset.second;
 
 	int tme = 0; // GetTime() % itype->FPA;
 
@@ -88,18 +88,7 @@ void SpriteDrawer::BlitSprite(SpriteBatch& sprite_batch, int screenx, int screen
 	// Note: ensureAtlasManager is called by MapDrawer at frame start usually, but we check here too if needed?
 	// BatchRenderer::SetAtlasManager call removed. Use sprite_batch.
 
-	std::vector<int> column_widths(spr->width, TILE_SIZE);
-	std::vector<int> row_heights(spr->height, TILE_SIZE);
-	for (int cx = 0; cx != spr->width; ++cx) {
-		for (int cy = 0; cy != spr->height; ++cy) {
-			for (int cf = 0; cf != spr->layers; ++cf) {
-				if (const AtlasRegion* region = spr->getAtlasRegion(cx, cy, cf, -1, 0, 0, 0, tme)) {
-					column_widths[cx] = std::max(column_widths[cx], region->pixel_width);
-					row_heights[cy] = std::max(row_heights[cy], region->pixel_height);
-				}
-			}
-		}
-	}
+	const auto& layout_metrics = spr->getPlainLayoutMetrics(-1, 0, 0, 0, tme);
 
 	int x_offset = 0;
 	for (int cx = 0; cx != spr->width; ++cx) {
@@ -112,8 +101,8 @@ void SpriteDrawer::BlitSprite(SpriteBatch& sprite_batch, int screenx, int screen
 				}
 				// No fallback - if region is null, sprite failed to load
 			}
-			y_offset += row_heights[cy];
+			y_offset += layout_metrics.row_heights[cy];
 		}
-		x_offset += column_widths[cx];
+		x_offset += layout_metrics.column_widths[cx];
 	}
 }

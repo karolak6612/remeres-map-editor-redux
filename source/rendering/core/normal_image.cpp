@@ -14,6 +14,18 @@ namespace {
 		const auto archive = g_gui.gfx.getSpriteArchive();
 		return archive && archive->readRGBA(id, g_gui.gfx.hasTransparency(), rgba, dimensions);
 	}
+
+	void updateDimensions(NormalImage& image, const ImageDimensions& dimensions) {
+		if (image.pixel_width == dimensions.width && image.pixel_height == dimensions.height) {
+			return;
+		}
+
+		image.pixel_width = dimensions.width;
+		image.pixel_height = dimensions.height;
+		if (image.parent) {
+			image.parent->invalidateMetricCaches();
+		}
+	}
 }
 
 NormalImage::NormalImage() :
@@ -74,8 +86,7 @@ std::unique_ptr<uint8_t[]> NormalImage::getRGBData() {
 	if (!loadRgbaFromArchive(id, rgba, dimensions) || !rgba) {
 		return nullptr;
 	}
-	pixel_width = dimensions.width;
-	pixel_height = dimensions.height;
+	updateDimensions(*this, dimensions);
 
 	const auto pixels_data_size = static_cast<int>(dimensions.pixelCount() * RGB_COMPONENTS);
 	auto data = std::make_unique<uint8_t[]>(pixels_data_size);
@@ -108,8 +119,7 @@ std::unique_ptr<uint8_t[]> NormalImage::getRGBAData() {
 	if (!loadRgbaFromArchive(id, rgba, dimensions) || !rgba) {
 		return nullptr;
 	}
-	pixel_width = dimensions.width;
-	pixel_height = dimensions.height;
+	updateDimensions(*this, dimensions);
 	return rgba;
 }
 

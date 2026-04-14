@@ -112,6 +112,7 @@ bool GraphicsAssembler::installSpriteEntry(GraphicManager& manager, const DatCat
 			warnings.push_back(std::format("GraphicsAssembler: sprite {} references out-of-range image {}.", entry.client_id, sprite_id));
 			return false;
 		}
+		image->parent = sprite_ptr;
 		sprite_ptr->spriteList.push_back(image);
 	}
 	sprite_ptr->updateSimpleStatus();

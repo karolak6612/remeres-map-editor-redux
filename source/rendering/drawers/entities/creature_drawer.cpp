@@ -17,8 +17,6 @@
 #include "rendering/core/light_buffer.h"
 #include "rendering/core/render_view.h"
 #include <spdlog/spdlog.h>
-#include <numeric>
-#include <vector>
 
 CreatureDrawer::CreatureDrawer() {
 }
@@ -27,36 +25,6 @@ CreatureDrawer::~CreatureDrawer() {
 }
 
 namespace {
-	struct OutfitSpriteMetrics {
-		std::vector<int> column_widths;
-		std::vector<int> row_heights;
-		int total_width = TILE_SIZE;
-		int total_height = TILE_SIZE;
-		int left_offset = 0;
-		int top_offset = 0;
-	};
-
-	OutfitSpriteMetrics computeOutfitSpriteMetrics(GameSprite& sprite, Direction dir, int pattern_y, int pattern_z, const Outfit& outfit, int frame) {
-		OutfitSpriteMetrics metrics;
-		metrics.column_widths.assign(sprite.width, TILE_SIZE);
-		metrics.row_heights.assign(sprite.height, TILE_SIZE);
-
-		for (int cx = 0; cx != sprite.width; ++cx) {
-			for (int cy = 0; cy != sprite.height; ++cy) {
-				if (const AtlasRegion* region = sprite.getAtlasRegion(cx, cy, static_cast<int>(dir), pattern_y, pattern_z, outfit, frame)) {
-					metrics.column_widths[cx] = std::max(metrics.column_widths[cx], region->pixel_width);
-					metrics.row_heights[cy] = std::max(metrics.row_heights[cy], region->pixel_height);
-				}
-			}
-		}
-
-		metrics.total_width = std::accumulate(metrics.column_widths.begin(), metrics.column_widths.end(), 0);
-		metrics.total_height = std::accumulate(metrics.row_heights.begin(), metrics.row_heights.end(), 0);
-		metrics.left_offset = metrics.total_width - metrics.column_widths.back();
-		metrics.top_offset = metrics.total_height - metrics.row_heights.back();
-		return metrics;
-	}
-
 	void registerCreatureSpriteLight(LightBuffer& light_buffer, const RenderView& view, const GameSprite& sprite, int screen_x, int screen_y, SpriteLight light, bool preview_local_player) {
 		if (preview_local_player) {
 			light.intensity = std::max<uint8_t>(light.intensity, 2);
@@ -78,7 +46,7 @@ namespace {
 		light_buffer.AddScreenLight(left + width / 2, top + height / 2, view, light);
 	}
 
-	void registerCreatureSpriteLight(LightBuffer& light_buffer, const RenderView& view, int screen_x, int screen_y, const std::pair<int, int>& draw_offset, const OutfitSpriteMetrics& metrics, SpriteLight light, bool preview_local_player) {
+	void registerCreatureSpriteLight(LightBuffer& light_buffer, const RenderView& view, int screen_x, int screen_y, const std::pair<int, int>& draw_offset, const GameSprite::SpriteLayoutMetrics& metrics, SpriteLight light, bool preview_local_player) {
 		if (preview_local_player) {
 			light.intensity = std::max<uint8_t>(light.intensity, 2);
 			if (light.color == 0 || light.color > 215) {
@@ -174,7 +142,7 @@ void CreatureDrawer::BlitCreature(SpriteBatch& sprite_batch, SpriteDrawer* sprit
 				mountOutfit.lookLegs = outfit.lookMountLegs;
 				mountOutfit.lookFeet = outfit.lookMountFeet;
 				const auto mount_draw_offset = mountSpr->getDrawOffset();
-				const OutfitSpriteMetrics mount_metrics = computeOutfitSpriteMetrics(*mountSpr, dir, 0, 0, mountOutfit, resolvedFrame);
+				const auto& mount_metrics = mountSpr->getOutfitLayoutMetrics(static_cast<int>(dir), 0, 0, resolvedFrame);
 
 				if (options.light_buffer && options.view && mountSpr->hasLight()) {
 					registerCreatureSpriteLight(*options.light_buffer, *options.view, screenx, screeny, mount_draw_offset, mount_metrics, mountSpr->getLight(), false);
@@ -217,7 +185,7 @@ void CreatureDrawer::BlitCreature(SpriteBatch& sprite_batch, SpriteDrawer* sprit
 					}
 				}
 
-				const OutfitSpriteMetrics sprite_metrics = computeOutfitSpriteMetrics(*spr, dir, pattern_y, pattern_z, outfit, resolvedFrame);
+				const auto& sprite_metrics = spr->getOutfitLayoutMetrics(static_cast<int>(dir), pattern_y, pattern_z, resolvedFrame);
 
 				int sprite_x_offset = 0;
 				for (int cx = 0; cx != spr->width; ++cx) {
