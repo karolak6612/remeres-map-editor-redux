@@ -21,6 +21,7 @@
 #include "rendering/core/image.h"
 #include "app/settings.h"
 #include <algorithm>
+#include <chrono>
 
 TextureGarbageCollector::TextureGarbageCollector() :
 	loaded_textures(0),
@@ -34,6 +35,9 @@ void TextureGarbageCollector::Clear() {
 	loaded_textures = 0;
 	lastclean = time(nullptr);
 	cleanup_list.clear();
+	resident_image_cursor = 0;
+	resident_sprite_cursor = 0;
+	sweep_in_progress = false;
 }
 
 void TextureGarbageCollector::NotifyTextureLoaded() {
@@ -63,36 +67,87 @@ void TextureGarbageCollector::AddSpriteToCleanup(GameSprite* spr) {
 }
 
 void TextureGarbageCollector::GarbageCollect(std::vector<GameSprite*>& resident_game_sprites, std::vector<void*>& resident_images, time_t current_time) {
-	if (g_settings.getInteger(Config::TEXTURE_MANAGEMENT)) {
-		if (loaded_textures > g_settings.getInteger(Config::TEXTURE_CLEAN_THRESHOLD) && current_time - lastclean > g_settings.getInteger(Config::TEXTURE_CLEAN_PULSE)) {
+	if (!g_settings.getInteger(Config::TEXTURE_MANAGEMENT)) {
+		sweep_in_progress = false;
+		resident_image_cursor = 0;
+		resident_sprite_cursor = 0;
+		return;
+	}
 
-			int longevity = g_settings.getInteger(Config::TEXTURE_LONGEVITY);
-			for (size_t i = resident_images.size(); i > 0; --i) {
-				Image* img = static_cast<Image*>(resident_images[i - 1]);
-				img->clean(current_time, longevity);
+	const int clean_threshold = g_settings.getInteger(Config::TEXTURE_CLEAN_THRESHOLD);
+	const int clean_pulse = g_settings.getInteger(Config::TEXTURE_CLEAN_PULSE);
+	if (!sweep_in_progress) {
+		if (loaded_textures <= clean_threshold || current_time - lastclean <= clean_pulse) {
+			return;
+		}
 
-				if (!img->isGLLoaded) {
-					// Image evicted itself during clean()
-					if (i - 1 < resident_images.size() - 1) {
-						resident_images[i - 1] = resident_images.back();
-					}
-					resident_images.pop_back();
-				}
+		sweep_in_progress = true;
+		resident_image_cursor = resident_images.size();
+		resident_sprite_cursor = resident_game_sprites.size();
+	}
+
+	const int longevity = g_settings.getInteger(Config::TEXTURE_LONGEVITY);
+	const auto sweep_start = std::chrono::steady_clock::now();
+	constexpr auto TIME_BUDGET = std::chrono::microseconds(1000);
+	constexpr size_t CHECK_INTERVAL = 128;
+	size_t items_since_budget_check = 0;
+
+	const auto budget_exhausted = [&](bool force_check = false) {
+		if (!force_check) {
+			++items_since_budget_check;
+			if (items_since_budget_check < CHECK_INTERVAL) {
+				return false;
 			}
+		}
 
-			// 2. Clean GameSprites (Software caches/animators)
-			for (size_t i = resident_game_sprites.size(); i > 0; --i) {
-				GameSprite* gs = resident_game_sprites[i - 1];
-				gs->clean(current_time, longevity);
+		items_since_budget_check = 0;
+		return std::chrono::steady_clock::now() - sweep_start >= TIME_BUDGET;
+	};
 
-				// Optional: Add logic to check if GameSprite is still "active"
-				// For now, GameSprites stay resident if they have software DC/animator state
-				// This part of the refactor is more subtle; we'll keep it simple first.
+	while (resident_image_cursor > 0) {
+		if (resident_image_cursor > resident_images.size()) {
+			resident_image_cursor = resident_images.size();
+		}
+		if (resident_image_cursor == 0) {
+			break;
+		}
+
+		--resident_image_cursor;
+		Image* img = static_cast<Image*>(resident_images[resident_image_cursor]);
+		img->clean(current_time, longevity);
+
+		const bool evicted = !img->isGLLoaded;
+		if (evicted) {
+			if (resident_image_cursor < resident_images.size() - 1) {
+				resident_images[resident_image_cursor] = resident_images.back();
 			}
+			resident_images.pop_back();
+		}
 
-			lastclean = current_time;
+		if (budget_exhausted(evicted)) {
+			return;
 		}
 	}
+
+	while (resident_sprite_cursor > 0) {
+		if (resident_sprite_cursor > resident_game_sprites.size()) {
+			resident_sprite_cursor = resident_game_sprites.size();
+		}
+		if (resident_sprite_cursor == 0) {
+			break;
+		}
+
+		--resident_sprite_cursor;
+		GameSprite* gs = resident_game_sprites[resident_sprite_cursor];
+		gs->clean(current_time, longevity);
+
+		if (budget_exhausted()) {
+			return;
+		}
+	}
+
+	sweep_in_progress = false;
+	lastclean = current_time;
 }
 
 void TextureGarbageCollector::CleanSoftwareSprites(std::vector<std::unique_ptr<Sprite>>& sprite_space) {

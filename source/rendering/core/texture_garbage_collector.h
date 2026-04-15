@@ -47,6 +47,9 @@ private:
 	int loaded_textures;
 	time_t lastclean;
 	std::deque<GameSprite*> cleanup_list;
+	size_t resident_image_cursor = 0;
+	size_t resident_sprite_cursor = 0;
+	bool sweep_in_progress = false;
 };
 
 #endif
