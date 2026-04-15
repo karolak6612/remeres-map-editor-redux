@@ -22,6 +22,7 @@
 #include <vector>
 #include <memory>
 #include <time.h>
+#include <chrono>
 
 class GameSprite;
 class Sprite;
@@ -45,8 +46,11 @@ public:
 
 private:
 	int loaded_textures;
-	time_t lastclean;
 	std::deque<GameSprite*> cleanup_list;
+
+	size_t image_gc_index = 0;
+	size_t sprite_gc_index = 0;
+	int gc_phase = 0; // 0 for Images, 1 for GameSprites
 };
 
 #endif

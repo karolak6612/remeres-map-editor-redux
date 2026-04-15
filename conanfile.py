@@ -18,6 +18,8 @@ class RMERecipe(ConanFile):
             self.requires("glad/0.1.36")
             self.requires("opengl/system")
             self.requires("tomlplusplus/3.4.0")
+            self.requires("sol2/3.3.0")
+            self.requires("cpr/1.10.5")
             # Note: nanovg is in ext/nanovg
         else:
             # Full dependency tree for Windows/macOS

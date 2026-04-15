@@ -24,7 +24,9 @@
 
 TextureGarbageCollector::TextureGarbageCollector() :
 	loaded_textures(0),
-	lastclean(0) {
+	image_gc_index(0),
+	sprite_gc_index(0),
+	gc_phase(0) {
 }
 
 TextureGarbageCollector::~TextureGarbageCollector() {
@@ -32,7 +34,9 @@ TextureGarbageCollector::~TextureGarbageCollector() {
 
 void TextureGarbageCollector::Clear() {
 	loaded_textures = 0;
-	lastclean = time(nullptr);
+	image_gc_index = 0;
+	sprite_gc_index = 0;
+	gc_phase = 0;
 	cleanup_list.clear();
 }
 
@@ -63,35 +67,105 @@ void TextureGarbageCollector::AddSpriteToCleanup(GameSprite* spr) {
 }
 
 void TextureGarbageCollector::GarbageCollect(std::vector<GameSprite*>& resident_game_sprites, std::vector<void*>& resident_images, time_t current_time) {
-	if (g_settings.getInteger(Config::TEXTURE_MANAGEMENT)) {
-		if (loaded_textures > g_settings.getInteger(Config::TEXTURE_CLEAN_THRESHOLD) && current_time - lastclean > g_settings.getInteger(Config::TEXTURE_CLEAN_PULSE)) {
+	if (!g_settings.getInteger(Config::TEXTURE_MANAGEMENT)) {
+		return;
+	}
 
-			int longevity = g_settings.getInteger(Config::TEXTURE_LONGEVITY);
-			for (size_t i = resident_images.size(); i > 0; --i) {
-				Image* img = static_cast<Image*>(resident_images[i - 1]);
+	if (loaded_textures <= g_settings.getInteger(Config::TEXTURE_CLEAN_THRESHOLD)) {
+		return;
+	}
+
+	// 1.0ms total budget per frame
+	constexpr double MAX_GC_TIME_MS = 1.0;
+	constexpr size_t CHECK_INTERVAL = 256;
+
+	auto start_time = std::chrono::high_resolution_clock::now();
+	int longevity = g_settings.getInteger(Config::TEXTURE_LONGEVITY);
+
+	size_t checks_since_time_read = 0;
+
+	// 1. Clean Images
+	if (gc_phase == 0) {
+		if (!resident_images.empty()) {
+			if (image_gc_index >= resident_images.size()) {
+				image_gc_index = 0;
+			}
+
+			size_t items_checked = 0;
+			size_t current_size = resident_images.size();
+
+			while (items_checked < current_size && !resident_images.empty()) {
+				if (image_gc_index >= resident_images.size()) {
+					image_gc_index = 0;
+				}
+
+				Image* img = static_cast<Image*>(resident_images[image_gc_index]);
 				img->clean(current_time, longevity);
 
 				if (!img->isGLLoaded) {
 					// Image evicted itself during clean()
-					if (i - 1 < resident_images.size() - 1) {
-						resident_images[i - 1] = resident_images.back();
+					if (image_gc_index < resident_images.size() - 1) {
+						resident_images[image_gc_index] = resident_images.back();
 					}
 					resident_images.pop_back();
+
+					// Don't increment index, because we just swapped a new element into this slot.
+					// However, we MUST increment items_checked to ensure we eventually exit the loop.
+				} else {
+					image_gc_index++;
+				}
+
+				items_checked++;
+
+				checks_since_time_read++;
+				if (checks_since_time_read >= CHECK_INTERVAL) {
+					checks_since_time_read = 0;
+					auto now = std::chrono::high_resolution_clock::now();
+					std::chrono::duration<double, std::milli> elapsed = now - start_time;
+					if (elapsed.count() >= MAX_GC_TIME_MS) {
+						return;
+					}
 				}
 			}
+		}
+		gc_phase = 1; // Move to phase 1 (GameSprites) if we finished Phase 0 without hitting the time limit
+	}
 
-			// 2. Clean GameSprites (Software caches/animators)
-			for (size_t i = resident_game_sprites.size(); i > 0; --i) {
-				GameSprite* gs = resident_game_sprites[i - 1];
-				gs->clean(current_time, longevity);
-
-				// Optional: Add logic to check if GameSprite is still "active"
-				// For now, GameSprites stay resident if they have software DC/animator state
-				// This part of the refactor is more subtle; we'll keep it simple first.
+	// 2. Clean GameSprites (Software caches/animators)
+	if (gc_phase == 1) {
+		if (!resident_game_sprites.empty()) {
+			if (sprite_gc_index >= resident_game_sprites.size()) {
+				sprite_gc_index = 0;
 			}
 
-			lastclean = current_time;
+			size_t items_checked = 0;
+			size_t current_size = resident_game_sprites.size();
+
+			while (items_checked < current_size && !resident_game_sprites.empty()) {
+				if (sprite_gc_index >= resident_game_sprites.size()) {
+					sprite_gc_index = 0;
+				}
+
+				GameSprite* gs = resident_game_sprites[sprite_gc_index];
+				gs->clean(current_time, longevity);
+
+				// We don't remove GameSprites from resident_game_sprites here currently
+				// If we ever do, we'd use the same swap-and-pop logic as above
+				sprite_gc_index++;
+				items_checked++;
+
+				checks_since_time_read++;
+				if (checks_since_time_read >= CHECK_INTERVAL) {
+					checks_since_time_read = 0;
+					auto now = std::chrono::high_resolution_clock::now();
+					std::chrono::duration<double, std::milli> elapsed = now - start_time;
+					if (elapsed.count() >= MAX_GC_TIME_MS) {
+						return;
+					}
+				}
+			}
 		}
+		gc_phase = 0; // Reset back to phase 0 if we finished Phase 1 without hitting the time limit
 	}
 }
 
