@@ -87,14 +87,34 @@ void emitBrushChangeIfNeeded(GUI& gui) {
 	return brush && (brush->is<CreatureBrush>() || brush->is<SpawnBrush>() || brush->is<NpcSpawnBrush>());
 }
 
+[[nodiscard]] bool usesNpcSpawnSettings(const Brush* brush) {
+	if (!brush) {
+		return false;
+	}
+
+	if (brush->is<NpcSpawnBrush>()) {
+		return true;
+	}
+
+	if (!brush->is<CreatureBrush>()) {
+		return false;
+	}
+
+	const auto* creature_brush = brush->as<CreatureBrush>();
+	return creature_brush && creature_brush->getType() && creature_brush->getType()->isNpc;
+}
+
 void syncCreatureToolBrushSizeSetting(const GUI& gui) {
 	if (!isCreatureToolBrush(gui.GetCurrentBrush())) {
 		return;
 	}
 
 	const int size = std::max(1, gui.GetBrushSize());
-	g_settings.setInteger(Config::CURRENT_SPAWN_RADIUS, size);
-	g_settings.setInteger(Config::CURRENT_NPC_SPAWN_RADIUS, size);
+	if (usesNpcSpawnSettings(gui.GetCurrentBrush())) {
+		g_settings.setInteger(Config::CURRENT_NPC_SPAWN_RADIUS, size);
+	} else {
+		g_settings.setInteger(Config::CURRENT_SPAWN_RADIUS, size);
+	}
 }
 }
 

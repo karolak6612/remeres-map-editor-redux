@@ -60,12 +60,13 @@ private:
 	[[nodiscard]] Brush* GetSelectedCreatureBrush() const;
 	[[nodiscard]] Brush* GetSelectedSpawnBrush() const;
 	[[nodiscard]] bool IsNpcCreatureSelected() const;
+	[[nodiscard]] bool UseNpcSpawnControls() const;
 	[[nodiscard]] std::vector<Brush*> GetDefaultTools() const;
 	[[nodiscard]] wxBitmap CreateToolBitmap(const ToolButtonEntry& entry) const;
 	[[nodiscard]] wxBitmap CreateBrushBitmap(Brush* brush) const;
 	[[nodiscard]] wxBitmap CreateModeBitmap(std::string_view assetPath, const wxColour& tint) const;
 	void RefreshZoneChoices();
-	void SyncSharedSpawnControls(int time, int size);
+	void SyncSpawnControls(int time, int size);
 
 	void OnToolButton(wxCommandEvent& event);
 	void OnSizeXChanged(wxCommandEvent& event);

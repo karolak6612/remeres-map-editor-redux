@@ -341,7 +341,7 @@ static void ensureCreatureBrush(CreatureType* creatureType) {
 	if (creatureType->isNpc) {
 		tileSet = g_materials.tilesets["NPCs"];
 	} else {
-		tileSet = g_materials.tilesets["Others"];
+		tileSet = g_materials.tilesets["Monsters"];
 	}
 	ASSERT(tileSet != nullptr);
 

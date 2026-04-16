@@ -334,9 +334,14 @@ void ToolOptionsSurface::RefreshFromState() {
 	const int thickness_percent = g_brush_manager.UseCustomThickness() ? std::clamp(static_cast<int>(g_brush_manager.GetCustomThicknessMod() * 100.0f), MIN_THICKNESS, MAX_THICKNESS) : MAX_THICKNESS;
 	thickness_slider->SetValue(thickness_percent);
 	place_spawn_with_creature_checkbox->SetValue(g_settings.getInteger(Config::AUTO_CREATE_SPAWN));
-	spawn_time_spin->SetValue(std::max(MIN_SPAWN_TIME, g_settings.getInteger(Config::DEFAULT_SPAWNTIME)));
+	const bool npc_spawn_controls = UseNpcSpawnControls();
+	const int spawn_time_setting = npc_spawn_controls ? Config::DEFAULT_NPC_SPAWNTIME : Config::DEFAULT_SPAWNTIME;
+	const int spawn_radius_setting = npc_spawn_controls ? Config::CURRENT_NPC_SPAWN_RADIUS : Config::CURRENT_SPAWN_RADIUS;
+	spawn_time_label->SetLabel(npc_spawn_controls ? "NPC Spawntime" : "Monster Spawntime");
+	spawn_size_label->SetLabel(npc_spawn_controls ? "NPC Spawn Size" : "Monster Spawn Size");
+	spawn_time_spin->SetValue(std::max(MIN_SPAWN_TIME, g_settings.getInteger(spawn_time_setting)));
 	spawn_size_spin->SetRange(1, g_settings.getInteger(Config::MAX_SPAWN_RADIUS));
-	spawn_size_spin->SetValue(std::clamp(g_settings.getInteger(Config::CURRENT_SPAWN_RADIUS), 1, g_settings.getInteger(Config::MAX_SPAWN_RADIUS)));
+	spawn_size_spin->SetValue(std::clamp(g_settings.getInteger(spawn_radius_setting), 1, g_settings.getInteger(Config::MAX_SPAWN_RADIUS)));
 	RefreshZoneChoices();
 	UpdateSizeLabels();
 	UpdateModeButtons();
@@ -499,6 +504,19 @@ bool ToolOptionsSurface::IsNpcCreatureSelected() const {
 	return creature_brush && creature_brush->getType() && creature_brush->getType()->isNpc;
 }
 
+bool ToolOptionsSurface::UseNpcSpawnControls() const {
+	if (active_brush && active_brush->is<NpcSpawnBrush>()) {
+		return true;
+	}
+
+	if (active_brush && active_brush->is<CreatureBrush>()) {
+		const auto* creature_brush = active_brush->as<CreatureBrush>();
+		return creature_brush && creature_brush->getType() && creature_brush->getType()->isNpc;
+	}
+
+	return IsNpcCreatureSelected();
+}
+
 std::vector<Brush*> ToolOptionsSurface::GetDefaultTools() const {
 	std::vector<Brush*> brushes;
 
@@ -595,43 +613,57 @@ void ToolOptionsSurface::RefreshZoneChoices() {
 		return;
 	}
 
-	const wxString previous_value = !zone_name_combo->GetValue().IsEmpty()
-		? zone_name_combo->GetValue()
-		: wxstr(std::string { g_brush_manager.GetSelectedZone() });
-
+	const wxString previous_value = zone_name_combo->GetValue();
 	zone_name_combo->Freeze();
 	zone_name_combo->Clear();
 
+	wxString selected_value = DEFAULT_ZONE_NAME;
 	if (Editor* editor = g_gui.GetCurrentEditor()) {
 		for (const auto& [name, id] : editor->map.zones) {
 			(void)id;
 			zone_name_combo->Append(wxstr(name));
 		}
+
+		const std::string manager_zone = std::string { g_brush_manager.GetSelectedZone() };
+		if (!manager_zone.empty() && editor->map.zones.findId(manager_zone)) {
+			selected_value = wxstr(manager_zone);
+		} else if (!previous_value.IsEmpty()) {
+			const std::string combo_zone = nstr(previous_value);
+			if (editor->map.zones.findId(combo_zone)) {
+				selected_value = wxstr(combo_zone);
+			}
+		}
+
+		if (selected_value == DEFAULT_ZONE_NAME && !editor->map.zones.empty()) {
+			selected_value = wxstr(editor->map.zones.begin()->first);
+		}
 	}
 
-	wxString selected_value = previous_value;
-	if (selected_value.IsEmpty()) {
-		selected_value = DEFAULT_ZONE_NAME;
-	}
 	if (zone_name_combo->FindString(selected_value) == wxNOT_FOUND) {
 		zone_name_combo->Append(selected_value);
 	}
 	zone_name_combo->SetValue(selected_value);
-	g_brush_manager.SetSelectedZone(nstr(selected_value));
+	if (!selected_value.IsEmpty()) {
+		g_brush_manager.SetSelectedZone(nstr(selected_value));
+	}
 	zone_name_combo->Thaw();
 }
 
-void ToolOptionsSurface::SyncSharedSpawnControls(int time, int size) {
+void ToolOptionsSurface::SyncSpawnControls(int time, int size) {
 	const int max_spawn_radius = std::max(1, g_settings.getInteger(Config::MAX_SPAWN_RADIUS));
 	const int clamped_time = std::clamp(time, MIN_SPAWN_TIME, MAX_SPAWN_TIME);
 	const int clamped_size = std::clamp(size, 1, max_spawn_radius);
+	const bool npc_spawn_controls = UseNpcSpawnControls();
 
-	g_brush_manager.SetSpawnTime(clamped_time);
-	g_brush_manager.SetNpcSpawnTime(clamped_time);
-	g_settings.setInteger(Config::DEFAULT_SPAWNTIME, clamped_time);
-	g_settings.setInteger(Config::DEFAULT_NPC_SPAWNTIME, clamped_time);
-	g_settings.setInteger(Config::CURRENT_SPAWN_RADIUS, clamped_size);
-	g_settings.setInteger(Config::CURRENT_NPC_SPAWN_RADIUS, clamped_size);
+	if (npc_spawn_controls) {
+		g_brush_manager.SetNpcSpawnTime(clamped_time);
+		g_settings.setInteger(Config::DEFAULT_NPC_SPAWNTIME, clamped_time);
+		g_settings.setInteger(Config::CURRENT_NPC_SPAWN_RADIUS, clamped_size);
+	} else {
+		g_brush_manager.SetSpawnTime(clamped_time);
+		g_settings.setInteger(Config::DEFAULT_SPAWNTIME, clamped_time);
+		g_settings.setInteger(Config::CURRENT_SPAWN_RADIUS, clamped_size);
+	}
 }
 
 void ToolOptionsSurface::OnToolButton(wxCommandEvent& event) {
@@ -660,7 +692,7 @@ void ToolOptionsSurface::OnToolButton(wxCommandEvent& event) {
 			case ToolButtonAction::SelectCreature:
 				if (Brush* creature_brush = GetSelectedCreatureBrush()) {
 					active_brush = creature_brush;
-					SyncSharedSpawnControls(spawn_time_spin->GetValue(), spawn_size_spin->GetValue());
+					SyncSpawnControls(spawn_time_spin->GetValue(), spawn_size_spin->GetValue());
 					g_gui.SelectBrush(creature_brush, TILESET_CREATURE);
 					g_gui.SetStatusText("Selected Tool: Place Creature");
 				}
@@ -668,7 +700,7 @@ void ToolOptionsSurface::OnToolButton(wxCommandEvent& event) {
 			case ToolButtonAction::SelectSpawn:
 				if (Brush* spawn_brush = GetSelectedSpawnBrush()) {
 					active_brush = spawn_brush;
-					SyncSharedSpawnControls(spawn_time_spin->GetValue(), spawn_size_spin->GetValue());
+					SyncSpawnControls(spawn_time_spin->GetValue(), spawn_size_spin->GetValue());
 					g_gui.SetBrushSize(spawn_size_spin->GetValue());
 					g_gui.SelectBrush(spawn_brush, TILESET_CREATURE);
 					g_gui.SetStatusText(spawn_brush == g_brush_manager.npc_spawn_brush ? "Selected Tool: Place NPC Spawn" : "Selected Tool: Place Spawn");
@@ -759,7 +791,7 @@ void ToolOptionsSurface::OnSpawnTimeChanged(wxSpinEvent& event) {
 		return;
 	}
 
-	SyncSharedSpawnControls(event.GetPosition(), spawn_size_spin->GetValue());
+	SyncSpawnControls(event.GetPosition(), spawn_size_spin->GetValue());
 }
 
 void ToolOptionsSurface::OnSpawnSizeChanged(wxSpinEvent& event) {
@@ -767,7 +799,7 @@ void ToolOptionsSurface::OnSpawnSizeChanged(wxSpinEvent& event) {
 		return;
 	}
 
-	SyncSharedSpawnControls(spawn_time_spin->GetValue(), event.GetPosition());
+	SyncSpawnControls(spawn_time_spin->GetValue(), event.GetPosition());
 	g_gui.SetBrushSize(event.GetPosition());
 }
 

@@ -196,6 +196,14 @@ void Map::cleanInvalidZones(bool showdialog) {
 	MapConverter::cleanInvalidZones(*this, showdialog);
 }
 
+void Map::clearZoneAssignments() {
+	for (auto& tile_location : tiles()) {
+		if (Tile* tile = tile_location.get()) {
+			tile->clearZones();
+		}
+	}
+}
+
 void Map::convertHouseTiles(uint32_t fromId, uint32_t toId) {
 	MapConverter::convertHouseTiles(*this, fromId, toId);
 }

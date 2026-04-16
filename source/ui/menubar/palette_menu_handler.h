@@ -21,6 +21,7 @@ public:
 	void OnSelectCreaturePalette(wxCommandEvent& event);
 	void OnSelectWaypointPalette(wxCommandEvent& event);
 	void OnSelectRawPalette(wxCommandEvent& event);
+	void OnSelectZonePalette(wxCommandEvent& event);
 
 protected:
 	MainFrame* frame;

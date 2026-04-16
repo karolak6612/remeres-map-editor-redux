@@ -219,6 +219,7 @@
 			<item name="Creature" hotkey="C" action="SELECT_CREATURE" help="Select the Creature palette."/>
 			<item name="Waypoint" hotkey="W" action="SELECT_WAYPOINT" help="Select the Waypoint palette."/>
 			<item name="RAW" hotkey="R" action="SELECT_RAW" help="Select the RAW palette."/>
+			<item name="Zone" hotkey="Z" action="SELECT_ZONE" help="Select the Zone palette."/>
 		</menu>
 		<menu name="Toolbars">
 			<item name="Brushes" action="VIEW_TOOLBARS_BRUSHES" help="Show or hide the Brushes toolbar."/>

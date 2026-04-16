@@ -70,6 +70,8 @@ std::unique_ptr<Creature> Creature::deepCopy() const {
 	std::unique_ptr<Creature> copy = std::make_unique<Creature>(type_name);
 	copy->spawntime = spawntime;
 	copy->direction = direction;
+	copy->spawn_weight = spawn_weight;
+	copy->spawn_attributes = spawn_attributes;
 	copy->selected = selected;
 	copy->saved = saved;
 	return copy;

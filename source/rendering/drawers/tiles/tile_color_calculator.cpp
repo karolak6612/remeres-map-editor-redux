@@ -4,7 +4,32 @@
 #include "game/item.h"
 #include "rendering/core/drawing_options.h"
 #include "app/definitions.h"
+#include "brushes/managers/brush_manager.h"
+#include "editor/editor.h"
+#include "ui/gui.h"
+
+#include <algorithm>
 #include <array>
+
+namespace {
+[[nodiscard]] bool tileHasSelectedZone(const Tile* tile) {
+	if (!tile || tile->getZones().empty()) {
+		return false;
+	}
+
+	Editor* editor = g_gui.GetCurrentEditor();
+	if (!editor) {
+		return false;
+	}
+
+	const auto selected_zone_id = editor->map.zones.findId(std::string { g_brush_manager.GetSelectedZone() });
+	if (!selected_zone_id) {
+		return false;
+	}
+
+	return std::ranges::find(tile->getZones(), *selected_zone_id) != tile->getZones().end();
+}
+}
 
 void TileColorCalculator::Calculate(const Tile* tile, const DrawingOptions& options, uint32_t current_house_id, int spawn_count, uint8_t& r, uint8_t& g, uint8_t& b) {
 	bool showspecial = options.show_only_colors || options.show_special_tiles;
@@ -76,6 +101,23 @@ void TileColorCalculator::Calculate(const Tile* tile, const DrawingOptions& opti
 
 	if (showspecial && tile->getMapFlags() & TILESTATE_NOPVP) {
 		g >>= 1;
+	}
+
+	if (options.always_show_zones && !tile->getZones().empty()) {
+		const bool selected_zone = tileHasSelectedZone(tile);
+		const bool multiple_zones = tile->getZones().size() > 1;
+
+		if (selected_zone) {
+			b = static_cast<uint8_t>(std::max(0.0f, b / 1.3f));
+			r = static_cast<uint8_t>(std::max(0.0f, r / 1.5f));
+			g >>= 1;
+		}
+
+		if ((!selected_zone) || multiple_zones) {
+			r = static_cast<uint8_t>(std::max(0.0f, r / 1.4f));
+			g = static_cast<uint8_t>(std::max(0.0f, g / 1.6f));
+			b = static_cast<uint8_t>(std::max(0.0f, b / 1.3f));
+		}
 	}
 }
 

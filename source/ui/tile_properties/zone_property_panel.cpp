@@ -72,6 +72,7 @@ void ZonePropertyPanel::SetTile(Tile* tile, Map* map) {
 }
 
 void ZonePropertyPanel::RefreshZoneLists() {
+	const wxString previous_value = zone_input->GetValue();
 	assigned_zones->Clear();
 	assigned_zone_ids.clear();
 	zone_input->Clear();
@@ -90,6 +91,26 @@ void ZonePropertyPanel::RefreshZoneLists() {
 			assigned_zone_ids.push_back(zone_id);
 		}
 	}
+
+	const std::string selected_zone = [&]() -> std::string {
+		const std::string manager_zone = std::string { g_brush_manager.GetSelectedZone() };
+		if (current_map && !manager_zone.empty() && current_map->zones.findId(manager_zone)) {
+			return manager_zone;
+		}
+		if (!previous_value.IsEmpty()) {
+			return nstr(previous_value);
+		}
+		if (current_map && !current_map->zones.empty()) {
+			return current_map->zones.begin()->first;
+		}
+		return "Zone 1";
+	}();
+
+	if (zone_input->FindString(wxstr(selected_zone)) == wxNOT_FOUND) {
+		zone_input->Append(wxstr(selected_zone));
+	}
+	zone_input->SetValue(wxstr(selected_zone));
+	g_brush_manager.SetSelectedZone(selected_zone);
 
 	remove_zone_button->Enable(assigned_zones->GetCount() > 0);
 	clear_zones_button->Enable(assigned_zones->GetCount() > 0);
@@ -175,5 +196,5 @@ void ZonePropertyPanel::OnAssignedZoneSelected(wxCommandEvent& event) {
 	const uint16_t zone_id = assigned_zone_ids[static_cast<size_t>(selection)];
 	const std::string zone_name = current_map ? current_map->zones.findName(zone_id) : std::string {};
 	zone_input->SetValue(wxstr(zone_name.empty() ? std::to_string(zone_id) : zone_name));
-	g_brush_manager.SetSelectedZone(zone_name);
+	g_brush_manager.SetSelectedZone(zone_name.empty() ? std::to_string(zone_id) : zone_name);
 }

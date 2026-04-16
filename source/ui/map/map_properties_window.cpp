@@ -9,6 +9,40 @@
 #include "ui/map_tab.h"
 #include "util/image_manager.h"
 
+#include <array>
+
+namespace {
+struct VersionChoiceEntry {
+	const char* label;
+	MapVersionID version;
+};
+
+constexpr auto kVersionChoices = std::to_array<VersionChoiceEntry>({
+	VersionChoiceEntry { "OTServ 0.5.0", MAP_OTBM_1 },
+	VersionChoiceEntry { "OTServ 0.6.0", MAP_OTBM_2 },
+	VersionChoiceEntry { "OTServ 0.6.1", MAP_OTBM_3 },
+	VersionChoiceEntry { "OTServ 0.7.0 (revscriptsys)", MAP_OTBM_4 },
+	VersionChoiceEntry { "Canary (OTBM 5)", MAP_OTBM_5 },
+	VersionChoiceEntry { "Canary (OTBM 6)", MAP_OTBM_6 },
+});
+
+[[nodiscard]] size_t versionChoiceIndex(MapVersionID version) {
+	for (size_t index = 0; index < kVersionChoices.size(); ++index) {
+		if (kVersionChoices[index].version == version) {
+			return index;
+		}
+	}
+	return 0;
+}
+
+[[nodiscard]] MapVersionID versionChoiceValue(int selection) {
+	if (selection >= 0 && static_cast<size_t>(selection) < kVersionChoices.size()) {
+		return kVersionChoices[selection].version;
+	}
+	return MAP_OTBM_1;
+}
+}
+
 MapPropertiesWindow::MapPropertiesWindow(wxWindow* parent, MapTab* view, Editor& editor) :
 	wxDialog(parent, wxID_ANY, "Map Properties", wxDefaultPosition, FROM_DIP(parent, wxSize(300, 200)), wxRESIZE_BORDER | wxCAPTION),
 	view(view),
@@ -31,27 +65,10 @@ MapPropertiesWindow::MapPropertiesWindow(wxWindow* parent, MapTab* view, Editor&
 	grid_sizer->Add(newd wxStaticText(this, wxID_ANY, "Map Version"));
 	version_choice = newd wxChoice(this, MAP_PROPERTIES_VERSION);
 	version_choice->SetToolTip("Select the OTBM version (Determines feature support)");
-	version_choice->Append("OTServ 0.5.0");
-	version_choice->Append("OTServ 0.6.0");
-	version_choice->Append("OTServ 0.6.1");
-	version_choice->Append("OTServ 0.7.0 (revscriptsys)");
-
-	switch (map.getVersion().otbm) {
-		case MAP_OTBM_1:
-			version_choice->SetSelection(0);
-			break;
-		case MAP_OTBM_2:
-			version_choice->SetSelection(1);
-			break;
-		case MAP_OTBM_3:
-			version_choice->SetSelection(2);
-			break;
-		case MAP_OTBM_4:
-			version_choice->SetSelection(3);
-			break;
-		default:
-			version_choice->SetSelection(0);
+	for (const auto& entry : kVersionChoices) {
+		version_choice->Append(entry.label);
 	}
+	version_choice->SetSelection(static_cast<int>(versionChoiceIndex(map.getVersion().otbm)));
 
 	grid_sizer->Add(version_choice, wxSizerFlags(1).Expand());
 
@@ -97,6 +114,24 @@ MapPropertiesWindow::MapPropertiesWindow(wxWindow* parent, MapTab* view, Editor&
 		spawn_filename_ctrl = newd wxTextCtrl(this, wxID_ANY, wxstr(map.getSpawnFilename())), 1, wxEXPAND
 	);
 	spawn_filename_ctrl->SetToolTip("External spawn XML file (leave empty for internal)");
+
+	grid_sizer->Add(
+		newd wxStaticText(this, wxID_ANY, "External NPC Spawnfile")
+	);
+
+	grid_sizer->Add(
+		spawn_npc_filename_ctrl = newd wxTextCtrl(this, wxID_ANY, wxstr(map.getSpawnNpcFilename())), 1, wxEXPAND
+	);
+	spawn_npc_filename_ctrl->SetToolTip("External NPC spawn XML file (leave empty for internal)");
+
+	grid_sizer->Add(
+		newd wxStaticText(this, wxID_ANY, "External Zonefile")
+	);
+
+	grid_sizer->Add(
+		zone_filename_ctrl = newd wxTextCtrl(this, wxID_ANY, wxstr(map.getZoneFilename())), 1, wxEXPAND
+	);
+	zone_filename_ctrl->SetToolTip("External zone XML file (leave empty for internal)");
 
 	grid_sizer->Add(
 		newd wxStaticText(this, wxID_ANY, "External Waypointfile")
@@ -147,17 +182,7 @@ void MapPropertiesWindow::UpdateProtocolList() {
 	if (g_settings.getInteger(Config::USE_OTBM_4_FOR_ALL_MAPS)) {
 		versions = ClientVersion::getAllVisible();
 	} else {
-		MapVersionID map_version = MAP_OTBM_1;
-		if (ver.Contains("0.5.0")) {
-			map_version = MAP_OTBM_1;
-		} else if (ver.Contains("0.6.0")) {
-			map_version = MAP_OTBM_2;
-		} else if (ver.Contains("0.6.1")) {
-			map_version = MAP_OTBM_3;
-		} else if (ver.Contains("0.7.0")) {
-			map_version = MAP_OTBM_4;
-		}
-
+		MapVersionID map_version = versionChoiceValue(version_choice->GetSelection());
 		ClientVersionList protocols = ClientVersion::getAllForOTBMVersion(map_version);
 		for (ClientVersionList::const_iterator p = protocols.begin(); p != protocols.end(); ++p) {
 			protocol_choice->Append(wxstr((*p)->getName()));
@@ -177,18 +202,8 @@ void MapPropertiesWindow::OnClickOK(wxCommandEvent& WXUNUSED(event)) {
 	MapVersion old_ver = map.getVersion();
 	MapVersion new_ver;
 
-	wxString ver = version_choice->GetStringSelection();
-
 	new_ver.client = ClientVersion::get(nstr(protocol_choice->GetStringSelection()))->getProtocolID();
-	if (ver.Contains("0.5.0")) {
-		new_ver.otbm = MAP_OTBM_1;
-	} else if (ver.Contains("0.6.0")) {
-		new_ver.otbm = MAP_OTBM_2;
-	} else if (ver.Contains("0.6.1")) {
-		new_ver.otbm = MAP_OTBM_3;
-	} else if (ver.Contains("0.7.0")) {
-		new_ver.otbm = MAP_OTBM_4;
-	}
+	new_ver.otbm = versionChoiceValue(version_choice->GetSelection());
 
 	if (!MapVersionChanger::changeMapVersion(this, editor, new_ver)) {
 		return;
@@ -197,6 +212,8 @@ void MapPropertiesWindow::OnClickOK(wxCommandEvent& WXUNUSED(event)) {
 	map.setMapDescription(nstr(description_ctrl->GetValue()));
 	map.setHouseFilename(nstr(house_filename_ctrl->GetValue()));
 	map.setSpawnFilename(nstr(spawn_filename_ctrl->GetValue()));
+	map.setSpawnNpcFilename(nstr(spawn_npc_filename_ctrl->GetValue()));
+	map.setZoneFilename(nstr(zone_filename_ctrl->GetValue()));
 	map.setWaypointFilename(nstr(waypoint_filename_ctrl->GetValue()));
 
 	// Only resize if we have to

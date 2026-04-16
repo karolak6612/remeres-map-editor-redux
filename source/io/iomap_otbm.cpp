@@ -66,6 +66,22 @@ namespace {
 		}
 		return false;
 	}
+
+	bool hasCanarySpawnMetadata(Map& map) {
+		for (MapIterator it = map.begin(); it != map.end(); ++it) {
+			const Tile* tile = it->get();
+			if (!tile || !tile->creature) {
+				continue;
+			}
+
+			const Creature& creature = *tile->creature;
+			if (creature.getSpawnWeight().has_value() || !creature.getSpawnAttributes().empty()) {
+				return true;
+			}
+		}
+
+		return false;
+	}
 }
 
 // Item OTBM operations delegated to ItemSerializationOTBM
@@ -420,8 +436,13 @@ bool IOMapOTBM::loadMap(Map& map, NodeFileReadHandle& f) {
 }
 
 bool IOMapOTBM::saveMapToDisk(Map& map, const FileName& identifier) {
-	if (map.getVersion().otbm < MAP_OTBM_5 && (!map.spawnnpcfile.empty() || !map.zonefile.empty() || !map.npc_spawns.empty() || !map.zones.empty() || hasZoneAssignments(map))) {
-		error("OTBM %d cannot store NPC spawn or zone data. Save this map as OTBM 5 or 6.", static_cast<int>(map.getVersion().otbm));
+	if (map.getVersion().otbm < MAP_OTBM_5 && (!map.spawnnpcfile.empty() || !map.npc_spawns.empty())) {
+		error("OTBM %d cannot store NPC spawn data. Save this map as OTBM 5 or 6.", static_cast<int>(map.getVersion().otbm));
+		return false;
+	}
+
+	if (map.getVersion().otbm < MAP_OTBM_5 && hasCanarySpawnMetadata(map)) {
+		error("OTBM %d cannot store Canary spawn metadata. Save this map as OTBM 5 or 6.", static_cast<int>(map.getVersion().otbm));
 		return false;
 	}
 
@@ -459,7 +480,12 @@ bool IOMapOTBM::saveMapToDisk(Map& map, const FileName& identifier) {
 		return false;
 	}
 
-	if (!map.zonefile.empty() || !map.zones.empty()) {
+	const bool hasZoneData = !map.zones.empty() || hasZoneAssignments(map);
+	const bool saveZones = !map.zonefile.empty() || hasZoneData;
+	if (saveZones) {
+		if (map.zonefile.empty()) {
+			map.zonefile = identifier.GetName() + "-zones.xml";
+		}
 		g_gui.SetLoadDone(99, "Saving zones...");
 		if (!MapXMLIO::saveZones(map, identifier)) {
 			spdlog::error("IOMapOTBM::saveMapToDisk: Failed to save zones");

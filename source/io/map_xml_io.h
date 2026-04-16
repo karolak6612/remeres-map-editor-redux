@@ -13,7 +13,7 @@ class Map;
 class wxFileName;
 
 /**
- * @brief Helper class to handle XML auxiliary map files (Houses, Spawns, Waypoints)
+ * @brief Helper class to handle XML auxiliary map files (Houses, Spawns, Zones, Waypoints)
  */
 class MapXMLIO {
 public:

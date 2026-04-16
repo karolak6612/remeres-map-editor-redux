@@ -51,8 +51,4 @@ void MarkerDrawer::draw(SpriteBatch& sprite_batch, SpriteDrawer* drawer, int dra
 			drawer->BlitSprite(sprite_batch, npc_draw_x, npc_draw_y, SPRITE_SPAWN, DrawColor(96, 208, 255));
 		}
 	}
-
-	if (!tile->getZones().empty() && options.always_show_zones) {
-		drawer->BlitSprite(sprite_batch, draw_x, draw_y, SPRITE_ZONE, DrawColor(255, 214, 96, 210));
-	}
 }

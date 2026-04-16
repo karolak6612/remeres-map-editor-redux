@@ -23,6 +23,8 @@
 #include "palette/panels/brush_panel.h"
 #include "ui/controls/sortable_list_box.h"
 
+class wxSearchCtrl;
+
 class CreaturePalettePanel : public PalettePanel {
 public:
 	CreaturePalettePanel(wxWindow* parent, wxWindowID id = wxID_ANY);
@@ -43,16 +45,21 @@ public:
 
 	void SetListType(BrushListType ltype);
 	void SetListType(wxString ltype);
+	[[nodiscard]] bool IsNpcPageSelected() const;
 
 protected:
 	void SelectTileset(size_t index);
 	void SelectCreature(size_t index);
 	void SelectCreature(std::string name);
+	void SyncSpawnControlsToSelection() const;
+	void SelectCreatureFromSearch(const wxString& query);
 
 public:
 	void OnSwitchingPage(wxChoicebookEvent& event);
 	void OnPageChanged(wxChoicebookEvent& event);
+	void OnSearchChanged(wxCommandEvent& event);
 
+	wxSearchCtrl* search_ctrl = nullptr;
 	wxChoicebook* choicebook = nullptr;
 };
 

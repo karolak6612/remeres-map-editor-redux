@@ -236,12 +236,10 @@ void BrushSelector::SelectZoneBrush(Selection& selection) {
 	if (Editor* editor = g_gui.GetCurrentEditor()) {
 		const uint16_t zone_id = tile->getZones().front();
 		const std::string zone_name = editor->map.zones.findName(zone_id);
-		if (!zone_name.empty()) {
-			g_brush_manager.SetSelectedZone(zone_name);
-		}
+		g_brush_manager.SetSelectedZone(zone_name.empty() ? std::to_string(zone_id) : zone_name);
 	}
 
-	g_gui.SelectBrush(g_brush_manager.zone_brush, TILESET_CREATURE);
+	g_gui.SelectBrush(g_brush_manager.zone_brush, TILESET_ZONES);
 }
 
 void BrushSelector::SelectSmartBrush(Editor& editor, Tile* tile) {

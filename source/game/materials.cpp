@@ -237,6 +237,7 @@ static RAWBrush* ensureRawBrush(ServerItemId item_id) {
 
 void Materials::createOtherTileset() {
 	Tileset* others;
+	Tileset* monster_tileset;
 	Tileset* npc_tileset;
 
 	if (tilesets.find("Others") != tilesets.end()) {
@@ -245,6 +246,14 @@ void Materials::createOtherTileset() {
 	} else {
 		others = newd Tileset(g_brushes, "Others");
 		tilesets["Others"] = others;
+	}
+
+	if (tilesets.find("Monsters") != tilesets.end()) {
+		monster_tileset = tilesets["Monsters"];
+		monster_tileset->clear();
+	} else {
+		monster_tileset = newd Tileset(g_brushes, "Monsters");
+		tilesets["Monsters"] = monster_tileset;
 	}
 
 	if (tilesets.find("NPCs") != tilesets.end()) {
@@ -297,7 +306,7 @@ void Materials::createOtherTileset() {
 		if (type->isNpc) {
 			npc_tileset->getCategory(TILESET_CREATURE)->brushlist.push_back(type->brush);
 		} else {
-			others->getCategory(TILESET_CREATURE)->brushlist.push_back(type->brush);
+			monster_tileset->getCategory(TILESET_CREATURE)->brushlist.push_back(type->brush);
 		}
 	}
 }
