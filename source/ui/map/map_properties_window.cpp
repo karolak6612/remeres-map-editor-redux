@@ -173,7 +173,6 @@ MapPropertiesWindow::MapPropertiesWindow(wxWindow* parent, MapTab* view, Editor&
 }
 
 void MapPropertiesWindow::UpdateProtocolList() {
-	wxString ver = version_choice->GetStringSelection();
 	wxString client = protocol_choice->GetStringSelection();
 
 	protocol_choice->Clear();
@@ -182,14 +181,26 @@ void MapPropertiesWindow::UpdateProtocolList() {
 	if (g_settings.getInteger(Config::USE_OTBM_4_FOR_ALL_MAPS)) {
 		versions = ClientVersion::getAllVisible();
 	} else {
-		MapVersionID map_version = versionChoiceValue(version_choice->GetSelection());
-		ClientVersionList protocols = ClientVersion::getAllForOTBMVersion(map_version);
-		for (ClientVersionList::const_iterator p = protocols.begin(); p != protocols.end(); ++p) {
-			protocol_choice->Append(wxstr((*p)->getName()));
+		const MapVersionID map_version = versionChoiceValue(version_choice->GetSelection());
+		versions = ClientVersion::getAllForOTBMVersion(map_version);
+		if (versions.empty()) {
+			versions = ClientVersion::getAllVisible();
 		}
 	}
+
+	for (const ClientVersion* version : versions) {
+		protocol_choice->Append(wxstr(version->getName()));
+	}
+
+	if (protocol_choice->GetCount() == 0) {
+		return;
+	}
+
 	protocol_choice->SetSelection(0);
 	protocol_choice->SetStringSelection(client);
+	if (protocol_choice->GetSelection() == wxNOT_FOUND) {
+		protocol_choice->SetSelection(0);
+	}
 }
 
 void MapPropertiesWindow::OnChangeVersion(wxCommandEvent&) {
@@ -202,8 +213,16 @@ void MapPropertiesWindow::OnClickOK(wxCommandEvent& WXUNUSED(event)) {
 	MapVersion old_ver = map.getVersion();
 	MapVersion new_ver;
 
-	new_ver.client = ClientVersion::get(nstr(protocol_choice->GetStringSelection()))->getProtocolID();
 	new_ver.otbm = versionChoiceValue(version_choice->GetSelection());
+	ClientVersion* selected_version = ClientVersion::get(nstr(protocol_choice->GetStringSelection()));
+	if (!selected_version) {
+		selected_version = ClientVersion::getBestMatch(old_ver.client);
+	}
+	if (!selected_version) {
+		wxMessageBox("No client version is available for the selected OTBM version.", "Map Properties", wxOK | wxICON_ERROR, this);
+		return;
+	}
+	new_ver.client = selected_version->getProtocolID();
 
 	if (!MapVersionChanger::changeMapVersion(this, editor, new_ver)) {
 		return;

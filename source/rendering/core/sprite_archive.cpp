@@ -8,6 +8,7 @@
 
 #include <format>
 #include <fstream>
+#include <limits>
 #include <spdlog/spdlog.h>
 #include <array>
 #include <span>
@@ -22,6 +23,7 @@ namespace {
 	constexpr int kSheetDimension = 384;
 	constexpr int kSheetBytes = kSheetDimension * kSheetDimension * 4;
 	constexpr int kBmpHeaderPadding = 122;
+	constexpr size_t kDecodedSheetCacheLimit = 64;
 	constexpr std::array<uint8_t, 5> kProtobufSheetMagic { 0x70, 0x0A, 0xFA, 0x80, 0x24 };
 
 	bool readSpriteCount(FileReadHandle& file, bool is_extended, uint32_t& sprite_count) {
@@ -350,7 +352,36 @@ bool SpriteArchive::loadSheetPixels(const ProtobufSheet& sheet) const {
 	}
 
 	sheet.decoded_pixels = std::move(decoded_pixels);
+	++decoded_sheet_count_;
 	return true;
+}
+
+void SpriteArchive::pruneDecodedSheetCache(int32_t keep_sheet_index) const {
+	while (decoded_sheet_count_ > kDecodedSheetCacheLimit) {
+		size_t oldest_index = protobuf_sheets_.size();
+		uint64_t oldest_tick = std::numeric_limits<uint64_t>::max();
+
+		for (size_t index = 0; index < protobuf_sheets_.size(); ++index) {
+			if (static_cast<int32_t>(index) == keep_sheet_index) {
+				continue;
+			}
+
+			const auto& sheet = protobuf_sheets_[index];
+			if (!sheet.decoded_pixels || sheet.last_access_tick == 0 || sheet.last_access_tick >= oldest_tick) {
+				continue;
+			}
+
+			oldest_tick = sheet.last_access_tick;
+			oldest_index = index;
+		}
+
+		if (oldest_index == protobuf_sheets_.size()) {
+			return;
+		}
+
+		protobuf_sheets_[oldest_index].releaseDecodedPixels();
+		--decoded_sheet_count_;
+	}
 }
 
 bool SpriteArchive::readProtobufRgba(uint32_t sprite_id, std::unique_ptr<uint8_t[]>& target, ImageDimensions& dimensions) const {
@@ -371,14 +402,12 @@ bool SpriteArchive::readProtobufRgba(uint32_t sprite_id, std::unique_ptr<uint8_t
 	}
 
 	std::lock_guard<std::mutex> lock(protobuf_mutex_);
-	if (last_decoded_sheet_index_ >= 0 && last_decoded_sheet_index_ != sheet_index && static_cast<size_t>(last_decoded_sheet_index_) < protobuf_sheets_.size()) {
-		protobuf_sheets_[static_cast<size_t>(last_decoded_sheet_index_)].releaseDecodedPixels();
-	}
 	auto& sheet = protobuf_sheets_[static_cast<size_t>(sheet_index)];
 	if (!loadSheetPixels(sheet) || !sheet.decoded_pixels) {
 		return false;
 	}
-	last_decoded_sheet_index_ = sheet_index;
+	sheet.last_access_tick = ++protobuf_sheet_access_tick_;
+	pruneDecodedSheetCache(sheet_index);
 
 	const auto [source_width, source_height] = protobufSourceDimensions(sheet.layout);
 	dimensions = ImageDimensions {

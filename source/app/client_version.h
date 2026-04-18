@@ -319,6 +319,18 @@ public:
 	void setSpritesFile(const std::string& v) {
 		sprites_file = v;
 	}
+	std::string getMonsterLuaPath() const {
+		return monster_lua_path;
+	}
+	void setMonsterLuaPath(const std::string& v) {
+		monster_lua_path = v;
+	}
+	std::string getNpcLuaPath() const {
+		return npc_lua_path;
+	}
+	void setNpcLuaPath(const std::string& v) {
+		npc_lua_path = v;
+	}
 
 	uint32_t getVersion() const {
 		return version;
@@ -457,6 +469,8 @@ private:
 		ItemDefinitionMode item_definition_mode;
 		std::string metadata_file;
 		std::string sprites_file;
+		std::string monster_lua_path;
+		std::string npc_lua_path;
 		bool is_transparent;
 		bool is_extended;
 		bool has_frame_durations;
@@ -482,6 +496,8 @@ private:
 
 	std::string metadata_file;
 	std::string sprites_file;
+	std::string monster_lua_path;
+	std::string npc_lua_path;
 
 	std::vector<MapVersionID> map_versions_supported;
 	MapVersionID preferred_map_version;

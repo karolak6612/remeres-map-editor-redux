@@ -10,6 +10,7 @@
 
 #include <algorithm>
 #include <array>
+#include <cstdlib>
 
 namespace {
 [[nodiscard]] bool tileHasSelectedZone(const Tile* tile) {
@@ -28,6 +29,50 @@ namespace {
 	}
 
 	return std::ranges::find(tile->getZones(), *selected_zone_id) != tile->getZones().end();
+}
+
+[[nodiscard]] uint8_t blendChannel(uint8_t base, uint8_t tint, uint8_t alpha) {
+	const uint16_t inverse_alpha = static_cast<uint16_t>(255 - alpha);
+	return static_cast<uint8_t>((static_cast<uint16_t>(base) * inverse_alpha + static_cast<uint16_t>(tint) * alpha) / 255);
+}
+
+void applyZoneTint(const Tile* tile, uint8_t& r, uint8_t& g, uint8_t& b) {
+	if (!tile || tile->getZones().empty()) {
+		return;
+	}
+
+	uint32_t zone_red = 0;
+	uint32_t zone_green = 0;
+	uint32_t zone_blue = 0;
+
+	for (uint16_t zone_id : tile->getZones()) {
+		uint8_t current_red = 255;
+		uint8_t current_green = 255;
+		uint8_t current_blue = 255;
+		TileColorCalculator::GetZoneColor(zone_id, current_red, current_green, current_blue);
+		zone_red += current_red;
+		zone_green += current_green;
+		zone_blue += current_blue;
+	}
+
+	const auto zone_count = static_cast<uint32_t>(tile->getZones().size());
+	const uint8_t averaged_red = static_cast<uint8_t>(zone_red / zone_count);
+	const uint8_t averaged_green = static_cast<uint8_t>(zone_green / zone_count);
+	const uint8_t averaged_blue = static_cast<uint8_t>(zone_blue / zone_count);
+
+	const bool selected_zone = tileHasSelectedZone(tile);
+	const bool multiple_zones = tile->getZones().size() > 1;
+	const uint8_t alpha = multiple_zones ? uint8_t { 144 } : uint8_t { 120 };
+
+	r = blendChannel(r, averaged_red, alpha);
+	g = blendChannel(g, averaged_green, alpha);
+	b = blendChannel(b, averaged_blue, alpha);
+
+	if (selected_zone) {
+		r = blendChannel(r, 255, 64);
+		g = blendChannel(g, 255, 64);
+		b = blendChannel(b, 255, 64);
+	}
 }
 }
 
@@ -104,20 +149,7 @@ void TileColorCalculator::Calculate(const Tile* tile, const DrawingOptions& opti
 	}
 
 	if (options.always_show_zones && !tile->getZones().empty()) {
-		const bool selected_zone = tileHasSelectedZone(tile);
-		const bool multiple_zones = tile->getZones().size() > 1;
-
-		if (selected_zone) {
-			b = static_cast<uint8_t>(std::max(0.0f, b / 1.3f));
-			r = static_cast<uint8_t>(std::max(0.0f, r / 1.5f));
-			g >>= 1;
-		}
-
-		if ((!selected_zone) || multiple_zones) {
-			r = static_cast<uint8_t>(std::max(0.0f, r / 1.4f));
-			g = static_cast<uint8_t>(std::max(0.0f, g / 1.6f));
-			b = static_cast<uint8_t>(std::max(0.0f, b / 1.3f));
-		}
+		applyZoneTint(tile, r, g, b);
 	}
 }
 
@@ -153,6 +185,41 @@ void TileColorCalculator::GetHouseColor(uint32_t house_id, uint8_t& r, uint8_t& 
 	}
 
 	cached_house_id = house_id;
+	cached_r = r;
+	cached_g = g;
+	cached_b = b;
+}
+
+void TileColorCalculator::GetZoneColor(uint16_t zone_id, uint8_t& r, uint8_t& g, uint8_t& b) {
+	static thread_local uint16_t cached_zone_id = 0xFFFF;
+	static thread_local uint8_t cached_r = 0;
+	static thread_local uint8_t cached_g = 0;
+	static thread_local uint8_t cached_b = 0;
+
+	if (cached_zone_id == zone_id) {
+		r = cached_r;
+		g = cached_g;
+		b = cached_b;
+		return;
+	}
+
+	uint32_t hash = static_cast<uint32_t>(zone_id) * 0x9E3779B9u;
+	hash ^= hash >> 16;
+	hash *= 0x7FEB352Du;
+	hash ^= hash >> 15;
+	hash *= 0x846CA68Bu;
+	hash ^= hash >> 16;
+
+	r = static_cast<uint8_t>(96 + (hash & 0x7F));
+	g = static_cast<uint8_t>(96 + ((hash >> 8) & 0x7F));
+	b = static_cast<uint8_t>(96 + ((hash >> 16) & 0x7F));
+
+	if (std::abs(static_cast<int>(r) - static_cast<int>(g)) < 18
+		&& std::abs(static_cast<int>(g) - static_cast<int>(b)) < 18) {
+		b = static_cast<uint8_t>(std::min(255, static_cast<int>(b) + 48));
+	}
+
+	cached_zone_id = zone_id;
 	cached_r = r;
 	cached_g = g;
 	cached_b = b;

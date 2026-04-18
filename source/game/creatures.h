@@ -58,6 +58,8 @@ public:
 
 	bool loadFromXML(const wxFileName& filename, bool standard, wxString& error, std::vector<std::string>& warnings);
 	bool importXMLFromOT(const wxFileName& filename, wxString& error, std::vector<std::string>& warnings);
+	bool importLuaMonsters(const wxString& directory, size_t& imported_count, wxString& error, std::vector<std::string>& warnings);
+	bool importLuaNpcs(const wxString& directory, size_t& imported_count, wxString& error, std::vector<std::string>& warnings);
 
 	bool saveToXML(const wxFileName& filename);
 };

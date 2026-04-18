@@ -467,6 +467,9 @@ bool IOMapOTBM::saveMapToDisk(Map& map, const FileName& identifier) {
 	}
 
 	if (!map.spawnnpcfile.empty() || !map.npc_spawns.empty()) {
+		if (map.spawnnpcfile.empty()) {
+			map.spawnnpcfile = identifier.GetName() + "-npc.xml";
+		}
 		g_gui.SetLoadDone(99, "Saving NPC spawns...");
 		if (!MapXMLIO::saveNpcSpawns(map, identifier)) {
 			spdlog::error("Failed to save NPC spawns!");

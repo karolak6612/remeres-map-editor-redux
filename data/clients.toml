@@ -1115,20 +1115,20 @@ transparency = true
 version = 1310
 
 [[clients]]
-configType = 'dat_otb'
+configType = 'protobuf'
 datSignature = '4A10'
-dataDirectory = '1320'
+dataDirectory = 'canary'
 description = 'sample description'
 extended = true
 frameDurations = true
 frameGroups = true
-metadataFile = 'Tibia.dat'
-name = '13.20'
+metadataFile = 'appearances-ec29a245e364f190682aa3677ca04f657cb9a2076eca5fc931d039bab8c32887.dat'
+name = 'canary2'
 otbId = 66
 otbMajor = 3
-otbmVersions = [ 3 ]
+otbmVersions = [ 5, 6 ]
 sprSignature = '59E48E02'
-spritesFile = 'Tibia.spr'
+spritesFile = 'assets/catalog-content.json'
 transparency = true
 version = 1320
 
@@ -1219,7 +1219,7 @@ otbMajor = 3
 otbmVersions = [ 3 ]
 sprSignature = '57BBD603'
 spritesFile = 'Tibia.spr'
-transparency = false
+transparency = true
 version = 1098
 
 [[clients]]

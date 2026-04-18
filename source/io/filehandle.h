@@ -195,6 +195,9 @@ public:
 	size_t getReadOffset() const {
 		return read_offset;
 	}
+	void setReadOffset(size_t offset) {
+		read_offset = std::min(offset, data.size());
+	}
 	std::string_view rawData() const {
 		return data;
 	}

@@ -299,6 +299,13 @@ namespace {
 			applyAnimation(sprite_info.animation(), entry);
 		}
 
+		if (appearance.has_flags()) {
+			if (appearance.flags().has_shift()) {
+				entry.drawoffset_x = static_cast<uint16_t>(appearance.flags().shift().x());
+				entry.drawoffset_y = static_cast<uint16_t>(appearance.flags().shift().y());
+			}
+		}
+
 		if (appearance.has_flags() && apply_item_flags) {
 			applyCommonFlags(appearance.flags(), entry);
 			if (appearance.flags().show_off_socket()) {

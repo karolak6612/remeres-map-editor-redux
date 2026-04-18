@@ -55,9 +55,11 @@ private:
 		ProtobufSpriteLayout layout = ProtobufSpriteLayout::OneByOne;
 		std::string path;
 		mutable std::shared_ptr<std::vector<uint8_t>> decoded_pixels;
+		mutable uint64_t last_access_tick = 0;
 
 		void releaseDecodedPixels() const {
 			decoded_pixels.reset();
+			last_access_tick = 0;
 		}
 	};
 
@@ -67,6 +69,7 @@ private:
 	[[nodiscard]] bool readLegacyRgba(uint32_t sprite_id, bool use_alpha, std::unique_ptr<uint8_t[]>& target, ImageDimensions& dimensions) const;
 	[[nodiscard]] bool readProtobufRgba(uint32_t sprite_id, std::unique_ptr<uint8_t[]>& target, ImageDimensions& dimensions) const;
 	[[nodiscard]] bool loadSheetPixels(const ProtobufSheet& sheet) const;
+	void pruneDecodedSheetCache(int32_t keep_sheet_index) const;
 
 	std::string filename_;
 	bool is_extended_ = false;
@@ -75,7 +78,8 @@ private:
 
 	Backend backend_ = Backend::Legacy;
 	mutable std::mutex protobuf_mutex_;
-	mutable int32_t last_decoded_sheet_index_ = -1;
+	mutable uint64_t protobuf_sheet_access_tick_ = 0;
+	mutable size_t decoded_sheet_count_ = 0;
 	std::vector<ProtobufSheet> protobuf_sheets_;
 	std::vector<int32_t> protobuf_sheet_lookup_;
 };

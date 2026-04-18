@@ -63,7 +63,7 @@ void MapPopupMenu::Update() {
 			appendIconItem(MAP_POPUP_MENU_SELECT_NPC_SPAWN_BRUSH, "Select NPC Spawn", "Select the NPC spawn brush", ICON_USER);
 		}
 		if (has_zones) {
-			appendIconItem(MAP_POPUP_MENU_SELECT_ZONE_BRUSH, "Select Zone", "Select the zone brush for this tile", ICON_MARKER);
+			appendIconItem(MAP_POPUP_MENU_SELECT_ZONE_BRUSH, "Select Zone", "Select the zone brush for this tile", "png/zone_brush_small.png");
 		}
 	};
 

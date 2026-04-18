@@ -487,6 +487,10 @@ void ClientVersionPage::RefreshClientEditor() {
 	sprites_property->SetHelpString(IsProtobufConfigType(active_client->getConfigType())
 		? "Auto-detected catalog-content.json file inside the protobuf client root."
 		: "File name of the SPR sprite archive inside the client path.");
+	auto* monster_lua_property = client_prop_grid->Append(new wxDirProperty("Monster Lua Path", "monsterLuaPath", wxstr(active_client->getMonsterLuaPath())));
+	monster_lua_property->SetHelpString("Optional server-data folder containing monster Lua files, for example data-otservbr-global/monster.");
+	auto* npc_lua_property = client_prop_grid->Append(new wxDirProperty("NPC Lua Path", "npcLuaPath", wxstr(active_client->getNpcLuaPath())));
+	npc_lua_property->SetHelpString("Optional server-data folder containing NPC Lua files, for example data-otservbr-global/npc.");
 
 	client_prop_grid->Append(new wxPropertyCategory("Compatibility"));
 	auto* otb_id_property = client_prop_grid->Append(new wxIntProperty("OTB ID", "otbId", active_client->getOtbId()));
@@ -732,6 +736,8 @@ void ClientVersionPage::SyncClientPropertiesToGrid(const ClientVersion& client) 
 	UpdateGridProperty(client_prop_grid, "dataDirectory", wxstr(client.getDataDirectory()));
 	UpdateGridProperty(client_prop_grid, "metadataFile", wxstr(client.getMetadataFile()));
 	UpdateGridProperty(client_prop_grid, "spritesFile", wxstr(client.getSpritesFile()));
+	UpdateGridProperty(client_prop_grid, "monsterLuaPath", wxstr(client.getMonsterLuaPath()));
+	UpdateGridProperty(client_prop_grid, "npcLuaPath", wxstr(client.getNpcLuaPath()));
 	UpdateGridProperty(client_prop_grid, "otbId", static_cast<long>(client.getOtbId()));
 	UpdateGridProperty(client_prop_grid, "otbMajor", static_cast<long>(client.getOtbMajor()));
 
@@ -946,6 +952,10 @@ void ClientVersionPage::OnPropertyChanged(wxPropertyGridEvent& event) {
 		client->setMetadataFile(nstr(value.As<wxString>()));
 	} else if (prop_name == "spritesFile") {
 		client->setSpritesFile(nstr(value.As<wxString>()));
+	} else if (prop_name == "monsterLuaPath") {
+		client->setMonsterLuaPath(nstr(value.As<wxString>()));
+	} else if (prop_name == "npcLuaPath") {
+		client->setNpcLuaPath(nstr(value.As<wxString>()));
 	} else if (prop_name == "otbId") {
 		client->setOtbId(value.As<int>());
 	} else if (prop_name == "otbMajor") {

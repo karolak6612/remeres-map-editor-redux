@@ -27,6 +27,9 @@
 #include "map/basemap.h"
 #include "game/spawn.h"
 
+#include <algorithm>
+#include <optional>
+
 namespace {
 bool usesNpcSpawnSystem(const BaseMap* map, const CreatureType* creature_type) {
 	if (!creature_type || !creature_type->isNpc) {
@@ -130,6 +133,12 @@ void CreatureBrush::draw_creature(BaseMap* map, Tile* tile) {
 			}
 			tile->creature = std::make_unique<Creature>(creature_type);
 			tile->creature->setSpawnTime(use_npc_spawn ? g_brush_manager.GetNpcSpawnTime() : g_gui.GetSpawnTime());
+			if (!use_npc_spawn) {
+				const auto default_weight = static_cast<uint8_t>(std::clamp(g_settings.getInteger(Config::MONSTER_DEFAULT_WEIGHT), 0, 100));
+				tile->creature->setSpawnWeight(default_weight == 0 ? std::nullopt : std::optional<uint8_t>(default_weight));
+			} else {
+				tile->creature->clearSpawnWeight();
+			}
 		}
 	}
 }

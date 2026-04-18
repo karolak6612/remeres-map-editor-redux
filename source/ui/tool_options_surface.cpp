@@ -168,6 +168,44 @@ void ToolOptionsSurface::BuildUi() {
 	spawn_size_panel->SetSizer(spawn_size_row);
 	other_sizer->Add(spawn_size_panel, 0, wxEXPAND | wxLEFT | wxRIGHT | wxTOP, FromDIP(6));
 
+	spawn_density_panel = newd wxPanel(other_sizer->GetStaticBox(), wxID_ANY);
+	auto* spawn_density_row = newd wxBoxSizer(wxHORIZONTAL);
+	spawn_density_label = newd wxStaticText(spawn_density_panel, wxID_ANY, "Spawn Density %");
+	spawn_density_row->Add(spawn_density_label, 0, wxALIGN_CENTER_VERTICAL | wxRIGHT, FromDIP(8));
+	spawn_density_spin = newd wxSpinCtrl(
+		spawn_density_panel,
+		wxID_ANY,
+		wxEmptyString,
+		wxDefaultPosition,
+		FromDIP(wxSize(72, 20)),
+		wxSP_ARROW_KEYS,
+		0,
+		100,
+		g_settings.getInteger(Config::SPAWN_MONSTER_DENSITY)
+	);
+	spawn_density_row->Add(spawn_density_spin, 0, wxALIGN_CENTER_VERTICAL);
+	spawn_density_panel->SetSizer(spawn_density_row);
+	other_sizer->Add(spawn_density_panel, 0, wxEXPAND | wxLEFT | wxRIGHT | wxTOP, FromDIP(6));
+
+	default_weight_panel = newd wxPanel(other_sizer->GetStaticBox(), wxID_ANY);
+	auto* default_weight_row = newd wxBoxSizer(wxHORIZONTAL);
+	default_weight_label = newd wxStaticText(default_weight_panel, wxID_ANY, "Default Weight %");
+	default_weight_row->Add(default_weight_label, 0, wxALIGN_CENTER_VERTICAL | wxRIGHT, FromDIP(8));
+	default_weight_spin = newd wxSpinCtrl(
+		default_weight_panel,
+		wxID_ANY,
+		wxEmptyString,
+		wxDefaultPosition,
+		FromDIP(wxSize(72, 20)),
+		wxSP_ARROW_KEYS,
+		0,
+		100,
+		g_settings.getInteger(Config::MONSTER_DEFAULT_WEIGHT)
+	);
+	default_weight_row->Add(default_weight_spin, 0, wxALIGN_CENTER_VERTICAL);
+	default_weight_panel->SetSizer(default_weight_row);
+	other_sizer->Add(default_weight_panel, 0, wxEXPAND | wxLEFT | wxRIGHT | wxTOP, FromDIP(6));
+
 	zone_name_panel = newd wxPanel(other_sizer->GetStaticBox(), wxID_ANY);
 	auto* zone_name_row = newd wxBoxSizer(wxHORIZONTAL);
 	zone_name_row->Add(newd wxStaticText(zone_name_panel, wxID_ANY, "Zone"), 0, wxALIGN_CENTER_VERTICAL | wxRIGHT, FromDIP(8));
@@ -195,6 +233,8 @@ void ToolOptionsSurface::BuildUi() {
 	place_spawn_with_creature_checkbox->Bind(wxEVT_CHECKBOX, &ToolOptionsSurface::OnPlaceSpawnWithCreatureToggled, this);
 	spawn_time_spin->Bind(wxEVT_SPINCTRL, &ToolOptionsSurface::OnSpawnTimeChanged, this);
 	spawn_size_spin->Bind(wxEVT_SPINCTRL, &ToolOptionsSurface::OnSpawnSizeChanged, this);
+	spawn_density_spin->Bind(wxEVT_SPINCTRL, &ToolOptionsSurface::OnSpawnDensityChanged, this);
+	default_weight_spin->Bind(wxEVT_SPINCTRL, &ToolOptionsSurface::OnDefaultWeightChanged, this);
 	zone_name_combo->Bind(wxEVT_TEXT, &ToolOptionsSurface::OnZoneNameChanged, this);
 }
 
@@ -286,7 +326,7 @@ void ToolOptionsSurface::RebuildToolButtons() {
 			tool_buttons.push_back(ToolButtonEntry {
 				.action = ToolButtonAction::SelectBrush,
 				.brush = brush,
-				.asset_path = brush == g_brush_manager.zone_brush ? ICON_MARKER : std::string_view {},
+				.asset_path = brush == g_brush_manager.zone_brush ? std::string_view { "png/zone_brush.png" } : std::string_view {},
 			});
 		}
 	}
@@ -342,6 +382,8 @@ void ToolOptionsSurface::RefreshFromState() {
 	spawn_time_spin->SetValue(std::max(MIN_SPAWN_TIME, g_settings.getInteger(spawn_time_setting)));
 	spawn_size_spin->SetRange(1, g_settings.getInteger(Config::MAX_SPAWN_RADIUS));
 	spawn_size_spin->SetValue(std::clamp(g_settings.getInteger(spawn_radius_setting), 1, g_settings.getInteger(Config::MAX_SPAWN_RADIUS)));
+	spawn_density_spin->SetValue(std::clamp(g_settings.getInteger(Config::SPAWN_MONSTER_DENSITY), 0, 100));
+	default_weight_spin->SetValue(std::clamp(g_settings.getInteger(Config::MONSTER_DEFAULT_WEIGHT), 0, 100));
 	RefreshZoneChoices();
 	UpdateSizeLabels();
 	UpdateModeButtons();
@@ -360,8 +402,9 @@ void ToolOptionsSurface::UpdateSectionVisibility() {
 	const bool show_preview_border = HasPreviewBorderControl();
 	const bool show_lock_doors = HasLockDoorsControl();
 	const bool show_spawn_controls = HasSpawnControls();
+	const bool show_monster_spawn_extras = HasMonsterSpawnExtras();
 	const bool show_zone_controls = HasZoneControls();
-	const bool show_other = show_thickness || show_preview_border || show_lock_doors || show_spawn_controls || show_zone_controls;
+	const bool show_other = show_thickness || show_preview_border || show_lock_doors || show_spawn_controls || show_monster_spawn_extras || show_zone_controls;
 
 	main_sizer->Show(main_tools_sizer, show_tools, true);
 	main_sizer->Show(size_sizer, show_size, true);
@@ -371,6 +414,8 @@ void ToolOptionsSurface::UpdateSectionVisibility() {
 	DetachWindowIfPresent(other_sizer, spawn_time_panel);
 	DetachWindowIfPresent(other_sizer, place_spawn_with_creature_checkbox);
 	DetachWindowIfPresent(other_sizer, spawn_size_panel);
+	DetachWindowIfPresent(other_sizer, spawn_density_panel);
+	DetachWindowIfPresent(other_sizer, default_weight_panel);
 	DetachWindowIfPresent(other_sizer, zone_name_panel);
 	DetachWindowIfPresent(other_sizer, preview_border_checkbox);
 	DetachWindowIfPresent(other_sizer, lock_doors_checkbox);
@@ -382,6 +427,10 @@ void ToolOptionsSurface::UpdateSectionVisibility() {
 		AddWindowToSizer(other_sizer, spawn_time_panel, 0, wxEXPAND | wxLEFT | wxRIGHT | wxTOP, FromDIP(6));
 		AddWindowToSizer(other_sizer, spawn_size_panel, 0, wxEXPAND | wxLEFT | wxRIGHT | wxTOP, FromDIP(6));
 		AddWindowToSizer(other_sizer, place_spawn_with_creature_checkbox, 0, wxEXPAND | wxLEFT | wxRIGHT | wxTOP, FromDIP(6));
+	}
+	if (show_monster_spawn_extras) {
+		AddWindowToSizer(other_sizer, spawn_density_panel, 0, wxEXPAND | wxLEFT | wxRIGHT | wxTOP, FromDIP(6));
+		AddWindowToSizer(other_sizer, default_weight_panel, 0, wxEXPAND | wxLEFT | wxRIGHT | wxTOP, FromDIP(6));
 	}
 	if (show_zone_controls) {
 		AddWindowToSizer(other_sizer, zone_name_panel, 0, wxEXPAND | wxLEFT | wxRIGHT | wxTOP, FromDIP(6));
@@ -474,6 +523,10 @@ bool ToolOptionsSurface::HasLockDoorsControl() const {
 
 bool ToolOptionsSurface::HasSpawnControls() const {
 	return IsCreatureToolMode();
+}
+
+bool ToolOptionsSurface::HasMonsterSpawnExtras() const {
+	return IsCreatureToolMode() && !UseNpcSpawnControls();
 }
 
 bool ToolOptionsSurface::HasZoneControls() const {
@@ -666,6 +719,11 @@ void ToolOptionsSurface::SyncSpawnControls(int time, int size) {
 	}
 }
 
+void ToolOptionsSurface::SyncMonsterSpawnExtras(int density, int default_weight) {
+	g_settings.setInteger(Config::SPAWN_MONSTER_DENSITY, std::clamp(density, 0, 100));
+	g_settings.setInteger(Config::MONSTER_DEFAULT_WEIGHT, std::clamp(default_weight, 0, 100));
+}
+
 void ToolOptionsSurface::OnToolButton(wxCommandEvent& event) {
 	if (IsMutatingUi()) {
 		return;
@@ -801,6 +859,22 @@ void ToolOptionsSurface::OnSpawnSizeChanged(wxSpinEvent& event) {
 
 	SyncSpawnControls(spawn_time_spin->GetValue(), event.GetPosition());
 	g_gui.SetBrushSize(event.GetPosition());
+}
+
+void ToolOptionsSurface::OnSpawnDensityChanged(wxSpinEvent& event) {
+	if (IsMutatingUi()) {
+		return;
+	}
+
+	SyncMonsterSpawnExtras(event.GetPosition(), default_weight_spin->GetValue());
+}
+
+void ToolOptionsSurface::OnDefaultWeightChanged(wxSpinEvent& event) {
+	if (IsMutatingUi()) {
+		return;
+	}
+
+	SyncMonsterSpawnExtras(spawn_density_spin->GetValue(), event.GetPosition());
 }
 
 void ToolOptionsSurface::OnZoneNameChanged(wxCommandEvent& event) {

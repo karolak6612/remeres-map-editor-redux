@@ -75,6 +75,8 @@ void ClientVersion::loadVersions() {
 				if (version) {
 					// ONLY override the user-specific path
 					version->setClientPath(FileName(client_path));
+					version->setMonsterLuaPath((*client)["monsterLuaPath"].value_or(""));
+					version->setNpcLuaPath((*client)["npcLuaPath"].value_or(""));
 
 					bool isDefault = (*client)["default"].value_or(false);
 					if (isDefault) {
@@ -318,6 +320,8 @@ bool ClientVersion::saveVersions() {
 		} else {
 			config_obj.insert_or_assign("clientPath", "");
 		}
+		config_obj.insert_or_assign("monsterLuaPath", version->monster_lua_path);
+		config_obj.insert_or_assign("npcLuaPath", version->npc_lua_path);
 		config_obj.insert_or_assign("default", version.get() == latest_version);
 		config_clients_array.push_back(std::move(config_obj));
 	}
@@ -665,6 +669,8 @@ void ClientVersion::backup() {
 	backup_data.item_definition_mode = item_definition_mode;
 	backup_data.metadata_file = metadata_file;
 	backup_data.sprites_file = sprites_file;
+	backup_data.monster_lua_path = monster_lua_path;
+	backup_data.npc_lua_path = npc_lua_path;
 	backup_data.is_transparent = is_transparent;
 	backup_data.is_extended = is_extended;
 	backup_data.has_frame_durations = has_frame_durations;
@@ -685,6 +691,8 @@ void ClientVersion::restore() {
 	item_definition_mode = backup_data.item_definition_mode;
 	metadata_file = backup_data.metadata_file;
 	sprites_file = backup_data.sprites_file;
+	monster_lua_path = backup_data.monster_lua_path;
+	npc_lua_path = backup_data.npc_lua_path;
 	is_transparent = backup_data.is_transparent;
 	is_extended = backup_data.is_extended;
 	has_frame_durations = backup_data.has_frame_durations;
@@ -708,6 +716,8 @@ std::unique_ptr<ClientVersion> ClientVersion::clone() const {
 	new_cv->has_frame_groups = has_frame_groups;
 	new_cv->metadata_file = metadata_file;
 	new_cv->sprites_file = sprites_file;
+	new_cv->monster_lua_path = monster_lua_path;
+	new_cv->npc_lua_path = npc_lua_path;
 	new_cv->map_versions_supported = map_versions_supported;
 	new_cv->preferred_map_version = preferred_map_version;
 	new_cv->data_versions = data_versions;
