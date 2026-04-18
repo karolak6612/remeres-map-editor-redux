@@ -3,6 +3,7 @@
 #include <algorithm>
 #include <array>
 #include <format>
+#include <fstream>
 #include <optional>
 #include <span>
 #include <string_view>
@@ -14,6 +15,7 @@
 #include "io/filehandle.h"
 #include "item_definitions/core/item_definition_fragments.h"
 #include "item_definitions/formats/dat/dat_item_parser.h"
+#include "util/json.h"
 
 namespace {
 	constexpr size_t kMaxSampleOffsets = 24;
@@ -313,6 +315,58 @@ ClientAssetDetectionResult ClientAssetDetector::detect(const ClientVersion& clie
 		const auto message = "Client asset detection skipped: selected client path does not exist.";
 		spdlog::warn(message);
 		result.warnings.emplace_back(message);
+		return result;
+	}
+
+	if (client.getItemDefinitionMode() == ItemDefinitionMode::Protobuf) {
+		const wxFileName package_path(client_path.GetFullPath(), "package.json");
+		const wxFileName catalog_path(client_path.GetFullPath() + FileName::GetPathSeparator() + "assets", "catalog-content.json");
+
+		if (!package_path.FileExists()) {
+			result.warnings.emplace_back("Client asset detection failed: package.json was not found in the selected protobuf client root.");
+			return result;
+		}
+		if (!catalog_path.FileExists()) {
+			result.warnings.emplace_back("Client asset detection failed: assets/catalog-content.json was not found in the selected protobuf client root.");
+			return result;
+		}
+
+		std::ifstream catalog_stream(catalog_path.GetFullPath().ToStdString(), std::ios::in | std::ios::binary);
+		if (!catalog_stream.is_open()) {
+			result.warnings.emplace_back("Client asset detection failed: catalog-content.json could not be opened.");
+			return result;
+		}
+
+		json::json catalog = json::json::parse(catalog_stream, nullptr, false);
+		if (catalog.is_discarded() || !catalog.is_array()) {
+			result.warnings.emplace_back("Client asset detection failed: catalog-content.json is invalid.");
+			return result;
+		}
+
+		for (const auto& entry : catalog) {
+			if (!entry.is_object()) {
+				continue;
+			}
+			if (entry.value("type", std::string {}) == "appearances") {
+				const auto filename = entry.value("file", std::string {});
+				const wxFileName metadata_path(catalog_path.GetPath(), wxString::FromUTF8(filename));
+				if (!filename.empty() && metadata_path.FileExists()) {
+					result.metadata_file_name = filename;
+					break;
+				}
+			}
+		}
+
+		if (!result.metadata_file_name.has_value()) {
+			result.warnings.emplace_back("Client asset detection failed: no appearances entry was found in catalog-content.json.");
+			return result;
+		}
+
+		result.sprites_file_name = "assets/catalog-content.json";
+		result.transparency = true;
+		result.extended = true;
+		result.frame_durations = true;
+		result.frame_groups = true;
 		return result;
 	}
 

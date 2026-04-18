@@ -176,6 +176,10 @@ std::unique_ptr<Tile> Tile::deepCopy() const {
 	if (spawn) {
 		copy->spawn = spawn->deepCopy();
 	}
+	if (npc_spawn) {
+		copy->npc_spawn = npc_spawn->deepCopy();
+	}
+	copy->zone_ids = zone_ids;
 	copy->house_id = house_id;
 	copy->mapflags = mapflags;
 	copy->statflags = statflags;
@@ -200,6 +204,10 @@ uint32_t Tile::memsize() const {
 	}
 
 	mem += sizeof(std::unique_ptr<Item>) * items.capacity();
+	if (npc_spawn) {
+		mem += sizeof(*npc_spawn);
+	}
+	mem += static_cast<uint32_t>(zone_ids.capacity() * sizeof(uint16_t));
 	if (invalidZones) {
 		mem += sizeof(InvalidZoneState);
 		mem += static_cast<uint32_t>(invalidZones->opaqueTileAttributes.capacity() * sizeof(OpaqueTileAttributeRecord));
@@ -227,6 +235,12 @@ int Tile::size() const {
 	if (spawn) {
 		++sz;
 	}
+	if (npc_spawn) {
+		++sz;
+	}
+	if (!zone_ids.empty()) {
+		++sz;
+	}
 	if (house_id != 0) {
 		++sz;
 	}
@@ -238,13 +252,16 @@ int Tile::size() const {
 	}
 	const TileLocation* loc = location ? location : ownedLocation;
 	if (loc) {
-		if (loc && loc->getHouseExits()) {
+		if (loc->getHouseExits()) {
 			++sz;
 		}
-		if (loc && loc->getSpawnCount()) {
+		if (loc->getSpawnCount()) {
 			++sz;
 		}
-		if (loc && loc->getWaypointCount()) {
+		if (loc->getNpcSpawnCount()) {
+			++sz;
+		}
+		if (loc->getWaypointCount()) {
 			++sz;
 		}
 	}
@@ -490,7 +507,47 @@ bool Tile::isContentEqual(const Tile* other) const {
 	}
 
 	// Compare items
-	return std::ranges::equal(items, other->items, [](const std::unique_ptr<Item>& it1, const std::unique_ptr<Item>& it2) {
+	if (!std::ranges::equal(items, other->items, [](const std::unique_ptr<Item>& it1, const std::unique_ptr<Item>& it2) {
 		return itemsMatch(it1.get(), it2.get());
-	});
+	})) {
+		return false;
+	}
+
+	const int spawn_size = spawn ? spawn->getSize() : 0;
+	const int other_spawn_size = other->spawn ? other->spawn->getSize() : 0;
+	if (spawn_size != other_spawn_size) {
+		return false;
+	}
+
+	const int npc_spawn_size = npc_spawn ? npc_spawn->getSize() : 0;
+	const int other_npc_spawn_size = other->npc_spawn ? other->npc_spawn->getSize() : 0;
+	if (npc_spawn_size != other_npc_spawn_size) {
+		return false;
+	}
+
+	return zone_ids == other->zone_ids;
+}
+
+void Tile::addZone(uint16_t zone_id) {
+	if (zone_id == 0) {
+		return;
+	}
+
+	const auto insertion_point = std::lower_bound(zone_ids.begin(), zone_ids.end(), zone_id);
+	if (insertion_point != zone_ids.end() && *insertion_point == zone_id) {
+		return;
+	}
+	zone_ids.insert(insertion_point, zone_id);
+}
+
+void Tile::removeZone(uint16_t zone_id) {
+	std::erase(zone_ids, zone_id);
+}
+
+void Tile::clearZones() {
+	zone_ids.clear();
+}
+
+bool Tile::hasZone(uint16_t zone_id) const {
+	return std::ranges::binary_search(zone_ids, zone_id);
 }

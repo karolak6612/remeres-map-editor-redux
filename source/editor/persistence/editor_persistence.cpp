@@ -62,6 +62,10 @@ void EditorPersistence::saveMap(Editor& editor, FileName filename, bool showdial
 		editor.map.setHouseFilename(nstr(_name.GetFullName()));
 		_name.SetName(filename.GetName() + "-waypoint");
 		editor.map.setWaypointFilename(nstr(_name.GetFullName()));
+		_name.SetName(filename.GetName() + "-npc");
+		editor.map.setSpawnNpcFilename(nstr(_name.GetFullName()));
+		_name.SetName(filename.GetName() + "-zones");
+		editor.map.setZoneFilename(nstr(_name.GetFullName()));
 
 		editor.map.unnamed = false;
 	}
@@ -73,10 +77,7 @@ void EditorPersistence::saveMap(Editor& editor, FileName filename, bool showdial
 
 	// Make temporary backups
 	// converter.Assign(wxstr(savefile));
-	std::string backup_otbm;
-	std::string backup_house;
-	std::string backup_spawn;
-	std::string backup_waypoint;
+	std::string backup_otbm, backup_house, backup_spawn, backup_waypoint, backup_spawn_npc, backup_zone;
 
 	if (converter.FileExists()) {
 		backup_otbm = map_path + nstr(converter.GetName()) + ".otbm~";
@@ -105,6 +106,20 @@ void EditorPersistence::saveMap(Editor& editor, FileName filename, bool showdial
 		std::rename((map_path + editor.map.getWaypointFilename()).c_str(), backup_waypoint.c_str());
 	}
 
+	converter.SetFullName(wxstr(editor.map.getSpawnNpcFilename()));
+	if (converter.FileExists()) {
+		backup_spawn_npc = map_path + nstr(converter.GetName()) + ".xml~";
+		std::remove(backup_spawn_npc.c_str());
+		std::rename((map_path + editor.map.getSpawnNpcFilename()).c_str(), backup_spawn_npc.c_str());
+	}
+
+	converter.SetFullName(wxstr(editor.map.getZoneFilename()));
+	if (converter.FileExists()) {
+		backup_zone = map_path + nstr(converter.GetName()) + ".xml~";
+		std::remove(backup_zone.c_str());
+		std::rename((map_path + editor.map.getZoneFilename()).c_str(), backup_zone.c_str());
+	}
+
 	// Save the map
 	{
 		std::string n = nstr(FileSystem::GetLocalDataDirectory()) + ".saving.txt";
@@ -112,7 +127,9 @@ void EditorPersistence::saveMap(Editor& editor, FileName filename, bool showdial
 		f << backup_otbm << '\n'
 		  << backup_house << '\n'
 		  << backup_spawn << '\n'
-		  << backup_waypoint << '\n';
+		  << backup_waypoint << '\n'
+		  << backup_spawn_npc << '\n'
+		  << backup_zone << '\n';
 	}
 
 	{
@@ -159,6 +176,16 @@ void EditorPersistence::saveMap(Editor& editor, FileName filename, bool showdial
 				converter.SetFullName(wxstr(editor.map.getWaypointFilename()));
 				std::string waypoint_filename = map_path + nstr(converter.GetName());
 				std::rename(backup_waypoint.c_str(), std::string(waypoint_filename + ".xml").c_str());
+			}
+			if (!backup_spawn_npc.empty()) {
+				converter.SetFullName(wxstr(editor.map.getSpawnNpcFilename()));
+				std::string spawn_npc_filename = map_path + nstr(converter.GetName());
+				std::rename(backup_spawn_npc.c_str(), std::string(spawn_npc_filename + ".xml").c_str());
+			}
+			if (!backup_zone.empty()) {
+				converter.SetFullName(wxstr(editor.map.getZoneFilename()));
+				std::string zone_filename = map_path + nstr(converter.GetName());
+				std::rename(backup_zone.c_str(), std::string(zone_filename + ".xml").c_str());
 			}
 
 			// Display the error
@@ -220,12 +247,24 @@ void EditorPersistence::saveMap(Editor& editor, FileName filename, bool showdial
 			std::string waypoint_filename = map_path + nstr(converter.GetName());
 			std::rename(backup_waypoint.c_str(), std::string(waypoint_filename + "." + date.str() + ".xml").c_str());
 		}
+		if (!backup_spawn_npc.empty()) {
+			converter.SetFullName(wxstr(editor.map.getSpawnNpcFilename()));
+			std::string spawn_npc_filename = map_path + nstr(converter.GetName());
+			std::rename(backup_spawn_npc.c_str(), std::string(spawn_npc_filename + "." + date.str() + ".xml").c_str());
+		}
+		if (!backup_zone.empty()) {
+			converter.SetFullName(wxstr(editor.map.getZoneFilename()));
+			std::string zone_filename = map_path + nstr(converter.GetName());
+			std::rename(backup_zone.c_str(), std::string(zone_filename + "." + date.str() + ".xml").c_str());
+		}
 	} else {
 		// Delete the temporary files
 		std::remove(backup_otbm.c_str());
 		std::remove(backup_house.c_str());
 		std::remove(backup_spawn.c_str());
 		std::remove(backup_waypoint.c_str());
+		std::remove(backup_spawn_npc.c_str());
+		std::remove(backup_zone.c_str());
 	}
 
 	editor.map.clearChanges();

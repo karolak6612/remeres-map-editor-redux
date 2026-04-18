@@ -30,19 +30,20 @@ namespace {
 		if (!definition) {
 			return nullptr;
 		}
-		return dynamic_cast<GameSprite*>(g_gui.gfx.getSprite(definition.clientId()));
+		return g_gui.gfx.getGameSprite(definition.clientId());
 	}
 
 	GameSprite* resolveSprite(ServerItemId item_id) {
 		return resolveSprite(g_item_definitions.get(item_id));
 	}
 
-	void registerSpriteLight(LightBuffer& light_buffer, const RenderView& view, const GameSprite& sprite, int screen_x, int screen_y, const SpriteLight& light) {
-		const int left = screen_x - (static_cast<int>(sprite.width) - 1) * TILE_SIZE;
-		const int top = screen_y - (static_cast<int>(sprite.height) - 1) * TILE_SIZE;
-		const int width = std::max(1, static_cast<int>(sprite.width) * TILE_SIZE);
-		const int height = std::max(1, static_cast<int>(sprite.height) * TILE_SIZE);
-		light_buffer.AddScreenLight(left + width / 2, top + height / 2, view, light);
+	void registerSpriteLight(LightBuffer& light_buffer, const RenderView& view, int screen_x, int screen_y, const GameSprite::SpriteLayoutMetrics& metrics, const SpriteLight& light) {
+		light_buffer.AddScreenLight(
+			screen_x - metrics.left_offset + metrics.total_width / 2,
+			screen_y - metrics.top_offset + metrics.total_height / 2,
+			view,
+			light
+		);
 	}
 }
 
@@ -153,16 +154,9 @@ void ItemDrawer::BlitItem(SpriteBatch& sprite_batch, SpriteDrawer* sprite_drawer
 		return;
 	}
 
-	// int screenx = draw_x - spr->getDrawOffset().first;
-	// int screeny = draw_y - spr->getDrawOffset().second;
-	// The original code modified draw_x/draw_y AFTER calculating screenx/screeny using the original draw_x/draw_y
-	// screenx use input draw_x
-	int screenx = draw_x - spr->drawoffset_x;
-	int screeny = draw_y - spr->drawoffset_y;
-
-	if (light_buffer && view && item->hasLight()) {
-		registerSpriteLight(*light_buffer, *view, *spr, screenx, screeny, item->getLight());
-	}
+	const auto [draw_offset_x, draw_offset_y] = spr->getDrawOffset();
+	int screenx = draw_x - draw_offset_x;
+	int screeny = draw_y - draw_offset_y;
 
 	// Set the newd drawing height accordingly
 	draw_x -= spr->draw_height;
@@ -180,6 +174,11 @@ void ItemDrawer::BlitItem(SpriteBatch& sprite_batch, SpriteDrawer* sprite_drawer
 	int pattern_y = patterns.y;
 	int pattern_z = patterns.z;
 	int frame = patterns.frame;
+	const auto& composite_metrics = spr->getPlainLayoutMetrics(subtype, pattern_x, pattern_y, pattern_z, frame);
+
+	if (light_buffer && view && item->hasLight()) {
+		registerSpriteLight(*light_buffer, *view, screenx, screeny, composite_metrics, item->getLight());
+	}
 
 	if (!ephemeral && options.transparent_items && (!it.isGroundTile() || spr->width > 1 || spr->height > 1) && !it.isSplash() && (!it.hasFlag(ItemFlag::IsBorder) || spr->width > 1 || spr->height > 1)) {
 		alpha /= 2;
@@ -223,15 +222,19 @@ void ItemDrawer::BlitItem(SpriteBatch& sprite_batch, SpriteDrawer* sprite_drawer
 				sprite_drawer->glBlitAtlasQuad(sprite_batch, screenx, screeny, region, DrawColor(red, green, blue, alpha));
 			}
 		} else {
+			int x_offset = 0;
 			for (int cx = 0; cx != spr->width; cx++) {
+				int y_offset = 0;
 				for (int cy = 0; cy != spr->height; cy++) {
 					for (int cf = 0; cf != spr->layers; cf++) {
 						const AtlasRegion* region = spr->getAtlasRegion(cx, cy, cf, subtype, pattern_x, pattern_y, pattern_z, frame);
 						if (region) {
-							sprite_drawer->glBlitAtlasQuad(sprite_batch, screenx - cx * TILE_SIZE, screeny - cy * TILE_SIZE, region, DrawColor(red, green, blue, alpha));
+							sprite_drawer->glBlitAtlasQuad(sprite_batch, screenx - x_offset, screeny - y_offset, region, DrawColor(red, green, blue, alpha));
 						}
 					}
+					y_offset += composite_metrics.row_heights[cy];
 				}
+				x_offset += composite_metrics.column_widths[cx];
 			}
 		}
 	}

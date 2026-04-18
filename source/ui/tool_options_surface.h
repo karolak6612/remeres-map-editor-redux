@@ -13,6 +13,7 @@ class wxBitmapToggleButton;
 class wxSlider;
 class wxGridSizer;
 class wxSpinCtrl;
+class wxComboBox;
 
 class ToolOptionsSurface : public wxPanel {
 public:
@@ -55,11 +56,19 @@ private:
 	[[nodiscard]] bool HasPreviewBorderControl() const;
 	[[nodiscard]] bool HasLockDoorsControl() const;
 	[[nodiscard]] bool HasSpawnControls() const;
+	[[nodiscard]] bool HasZoneControls() const;
 	[[nodiscard]] Brush* GetSelectedCreatureBrush() const;
+	[[nodiscard]] Brush* GetSelectedSpawnBrush() const;
+	[[nodiscard]] bool IsNpcCreatureSelected() const;
+	[[nodiscard]] bool UseNpcSpawnControls() const;
 	[[nodiscard]] std::vector<Brush*> GetDefaultTools() const;
 	[[nodiscard]] wxBitmap CreateToolBitmap(const ToolButtonEntry& entry) const;
 	[[nodiscard]] wxBitmap CreateBrushBitmap(Brush* brush) const;
 	[[nodiscard]] wxBitmap CreateModeBitmap(std::string_view assetPath, const wxColour& tint) const;
+	void RefreshZoneChoices();
+	void SyncSpawnControls(int time, int size);
+	[[nodiscard]] bool HasMonsterSpawnExtras() const;
+	void SyncMonsterSpawnExtras(int density, int default_weight);
 
 	void OnToolButton(wxCommandEvent& event);
 	void OnSizeXChanged(wxCommandEvent& event);
@@ -72,6 +81,9 @@ private:
 	void OnPlaceSpawnWithCreatureToggled(wxCommandEvent& event);
 	void OnSpawnTimeChanged(wxSpinEvent& event);
 	void OnSpawnSizeChanged(wxSpinEvent& event);
+	void OnSpawnDensityChanged(wxSpinEvent& event);
+	void OnDefaultWeightChanged(wxSpinEvent& event);
+	void OnZoneNameChanged(wxCommandEvent& event);
 
 	Brush* active_brush = nullptr;
 	bool mutating_ui = false;
@@ -85,6 +97,9 @@ private:
 	wxPanel* spawn_time_panel = nullptr;
 	wxCheckBox* place_spawn_with_creature_checkbox = nullptr;
 	wxPanel* spawn_size_panel = nullptr;
+	wxPanel* spawn_density_panel = nullptr;
+	wxPanel* default_weight_panel = nullptr;
+	wxPanel* zone_name_panel = nullptr;
 
 	wxSlider* size_x_slider = nullptr;
 	wxSlider* size_y_slider = nullptr;
@@ -101,6 +116,11 @@ private:
 	wxSpinCtrl* spawn_time_spin = nullptr;
 	wxStaticText* spawn_size_label = nullptr;
 	wxSpinCtrl* spawn_size_spin = nullptr;
+	wxStaticText* spawn_density_label = nullptr;
+	wxSpinCtrl* spawn_density_spin = nullptr;
+	wxStaticText* default_weight_label = nullptr;
+	wxSpinCtrl* default_weight_spin = nullptr;
+	wxComboBox* zone_name_combo = nullptr;
 
 	std::vector<ToolButtonEntry> tool_buttons;
 };

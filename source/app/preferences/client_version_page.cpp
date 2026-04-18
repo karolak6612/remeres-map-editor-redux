@@ -35,6 +35,10 @@ bool IsAutoDetectedProperty(std::string_view property_name) {
 	return std::ranges::find(kAutoDetectedProperties, property_name) != kAutoDetectedProperties.end();
 }
 
+bool IsProtobufConfigType(std::string_view config_type) {
+	return config_type == "protobuf";
+}
+
 unsigned char BlendChannel(unsigned char background, unsigned char overlay, double ratio) {
 	return static_cast<unsigned char>(std::lround((static_cast<double>(background) * (1.0 - ratio)) + (static_cast<double>(overlay) * ratio)));
 }
@@ -462,13 +466,31 @@ void ClientVersionPage::RefreshClientEditor() {
 
 	client_prop_grid->Append(new wxPropertyCategory("Files & Paths"));
 	auto* client_path_property = client_prop_grid->Append(new wxDirProperty("Client Path", "clientPath", active_client->getClientPath().GetFullPath()));
-	client_path_property->SetHelpString("Folder containing the configured client DAT and SPR files.");
+	client_path_property->SetHelpString(IsProtobufConfigType(active_client->getConfigType())
+		? "Folder containing the protobuf client installation. The editor auto-detects package.json, catalog-content.json, and appearances-*.dat from this root."
+		: "Folder containing the configured client DAT and SPR files.");
 	auto* data_directory_property = client_prop_grid->Append(new wxStringProperty("Data Directory", "dataDirectory", wxstr(active_client->getDataDirectory())));
 	data_directory_property->SetHelpString("Editor data folder used for this client version.");
-	auto* metadata_property = client_prop_grid->Append(new wxStringProperty("Metadata File (.dat)", "metadataFile", wxstr(active_client->getMetadataFile())));
-	metadata_property->SetHelpString("File name of the DAT metadata file inside the client path.");
-	auto* sprites_property = client_prop_grid->Append(new wxStringProperty("Sprites File (.spr)", "spritesFile", wxstr(active_client->getSpritesFile())));
-	sprites_property->SetHelpString("File name of the SPR sprite archive inside the client path.");
+	auto* metadata_property = client_prop_grid->Append(new wxStringProperty(
+		IsProtobufConfigType(active_client->getConfigType()) ? "Appearances File (.dat)" : "Metadata File (.dat)",
+		"metadataFile",
+		wxstr(active_client->getMetadataFile())
+	));
+	metadata_property->SetHelpString(IsProtobufConfigType(active_client->getConfigType())
+		? "Auto-detected appearances file, usually a hashed appearances-*.dat entry under the protobuf client root."
+		: "File name of the DAT metadata file inside the client path.");
+	auto* sprites_property = client_prop_grid->Append(new wxStringProperty(
+		IsProtobufConfigType(active_client->getConfigType()) ? "Catalog File (.json)" : "Sprites File (.spr)",
+		"spritesFile",
+		wxstr(active_client->getSpritesFile())
+	));
+	sprites_property->SetHelpString(IsProtobufConfigType(active_client->getConfigType())
+		? "Auto-detected catalog-content.json file inside the protobuf client root."
+		: "File name of the SPR sprite archive inside the client path.");
+	auto* monster_lua_property = client_prop_grid->Append(new wxDirProperty("Monster Lua Path", "monsterLuaPath", wxstr(active_client->getMonsterLuaPath())));
+	monster_lua_property->SetHelpString("Optional server-data folder containing monster Lua files, for example data-otservbr-global/monster.");
+	auto* npc_lua_property = client_prop_grid->Append(new wxDirProperty("NPC Lua Path", "npcLuaPath", wxstr(active_client->getNpcLuaPath())));
+	npc_lua_property->SetHelpString("Optional server-data folder containing NPC Lua files, for example data-otservbr-global/npc.");
 
 	client_prop_grid->Append(new wxPropertyCategory("Compatibility"));
 	auto* otb_id_property = client_prop_grid->Append(new wxIntProperty("OTB ID", "otbId", active_client->getOtbId()));
@@ -483,13 +505,15 @@ void ClientVersionPage::RefreshClientEditor() {
 		otbm_versions_text += wxString::Format("%d", static_cast<int>(version_id) + 1);
 	}
 	auto* otbm_property = client_prop_grid->Append(new wxStringProperty("Supported OTBM Versions", "otbmVersions", otbm_versions_text));
-	otbm_property->SetHelpString("Comma-separated list of supported OTBM versions, usually 1 through 4.");
+	otbm_property->SetHelpString("Comma-separated list of supported OTBM versions, usually 1 through 6.");
 
-	client_prop_grid->Append(new wxPropertyCategory("Signatures"));
-	auto* dat_signature_property = client_prop_grid->Append(new wxStringProperty("DAT Signature", "datSignature", wxString::Format("%X", active_client->getDatSignature())));
-	dat_signature_property->SetHelpString("Expected DAT signature written in hexadecimal.");
-	auto* spr_signature_property = client_prop_grid->Append(new wxStringProperty("SPR Signature", "sprSignature", wxString::Format("%X", active_client->getSprSignature())));
-	spr_signature_property->SetHelpString("Expected SPR signature written in hexadecimal.");
+	if (!IsProtobufConfigType(active_client->getConfigType())) {
+		client_prop_grid->Append(new wxPropertyCategory("Signatures"));
+		auto* dat_signature_property = client_prop_grid->Append(new wxStringProperty("DAT Signature", "datSignature", wxString::Format("%X", active_client->getDatSignature())));
+		dat_signature_property->SetHelpString("Expected DAT signature written in hexadecimal.");
+		auto* spr_signature_property = client_prop_grid->Append(new wxStringProperty("SPR Signature", "sprSignature", wxString::Format("%X", active_client->getSprSignature())));
+		spr_signature_property->SetHelpString("Expected SPR signature written in hexadecimal.");
+	}
 
 	client_prop_grid->Append(new wxPropertyCategory("Features"));
 	client_prop_grid->Append(new wxBoolProperty("Transparency", "transparency", active_client->isTransparent()))->SetHelpString("Enable transparency handling for this client.");
@@ -712,6 +736,8 @@ void ClientVersionPage::SyncClientPropertiesToGrid(const ClientVersion& client) 
 	UpdateGridProperty(client_prop_grid, "dataDirectory", wxstr(client.getDataDirectory()));
 	UpdateGridProperty(client_prop_grid, "metadataFile", wxstr(client.getMetadataFile()));
 	UpdateGridProperty(client_prop_grid, "spritesFile", wxstr(client.getSpritesFile()));
+	UpdateGridProperty(client_prop_grid, "monsterLuaPath", wxstr(client.getMonsterLuaPath()));
+	UpdateGridProperty(client_prop_grid, "npcLuaPath", wxstr(client.getNpcLuaPath()));
 	UpdateGridProperty(client_prop_grid, "otbId", static_cast<long>(client.getOtbId()));
 	UpdateGridProperty(client_prop_grid, "otbMajor", static_cast<long>(client.getOtbMajor()));
 
@@ -916,6 +942,7 @@ void ClientVersionPage::OnPropertyChanged(wxPropertyGridEvent& event) {
 		client->setDescription(nstr(value.As<wxString>()));
 	} else if (prop_name == "configType") {
 		client->setConfigType(ConfigTypeFromSelection(prop->GetValue().GetLong()));
+		RequestClientAssetDetection(*client);
 	} else if (prop_name == "clientPath") {
 		client->setClientPath(FileName(value.As<wxString>()));
 		RequestClientAssetDetection(*client);
@@ -925,6 +952,10 @@ void ClientVersionPage::OnPropertyChanged(wxPropertyGridEvent& event) {
 		client->setMetadataFile(nstr(value.As<wxString>()));
 	} else if (prop_name == "spritesFile") {
 		client->setSpritesFile(nstr(value.As<wxString>()));
+	} else if (prop_name == "monsterLuaPath") {
+		client->setMonsterLuaPath(nstr(value.As<wxString>()));
+	} else if (prop_name == "npcLuaPath") {
+		client->setNpcLuaPath(nstr(value.As<wxString>()));
 	} else if (prop_name == "otbId") {
 		client->setOtbId(value.As<int>());
 	} else if (prop_name == "otbMajor") {
@@ -934,7 +965,7 @@ void ClientVersionPage::OnPropertyChanged(wxPropertyGridEvent& event) {
 		wxStringTokenizer tokenizer(value.As<wxString>(), ", ");
 		while (tokenizer.HasMoreTokens()) {
 			long version = 0;
-			if (tokenizer.GetNextToken().ToLong(&version) && version >= 1 && version <= 4) {
+			if (tokenizer.GetNextToken().ToLong(&version) && version >= 1 && version <= 6) {
 				client->getMapVersionsSupported().push_back(static_cast<MapVersionID>(version - 1));
 			}
 		}
@@ -977,6 +1008,11 @@ void ClientVersionPage::OnPropertyChanged(wxPropertyGridEvent& event) {
 	if (prop_name == "Name" || prop_name == "Version") {
 		PopulateClientTree();
 		SelectClient(client);
+	}
+	if (prop_name == "configType") {
+		RefreshClientEditor();
+		RefreshSummary();
+		return;
 	}
 
 	UpdatePropertyValidation(prop);

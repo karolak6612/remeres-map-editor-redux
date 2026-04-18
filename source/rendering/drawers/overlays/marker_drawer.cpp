@@ -41,4 +41,14 @@ void MarkerDrawer::draw(SpriteBatch& sprite_batch, SpriteDrawer* drawer, int dra
 			drawer->BlitSprite(sprite_batch, draw_x, draw_y, SPRITE_SPAWN, DrawColor(255, 255, 255));
 		}
 	}
+
+	if (tile->npc_spawn && options.show_spawns) {
+		const int npc_draw_x = tile->spawn ? draw_x + TILE_SIZE / 5 : draw_x;
+		const int npc_draw_y = tile->spawn ? draw_y + TILE_SIZE / 5 : draw_y;
+		if (tile->npc_spawn->isSelected()) {
+			drawer->BlitSprite(sprite_batch, npc_draw_x, npc_draw_y, SPRITE_SPAWN, DrawColor(128, 128, 128));
+		} else {
+			drawer->BlitSprite(sprite_batch, npc_draw_x, npc_draw_y, SPRITE_SPAWN, DrawColor(96, 208, 255));
+		}
+	}
 }

@@ -137,9 +137,13 @@ namespace TileOperations {
 		if (tile->spawn) {
 			copy->spawn = tile->spawn->deepCopy();
 		}
+		if (tile->npc_spawn) {
+			copy->npc_spawn = tile->npc_spawn->deepCopy();
+		}
 		if (tile->creature) {
 			copy->creature = tile->creature->deepCopy();
 		}
+		copy->zone_ids = tile->zone_ids;
 		// Spawncount & exits are not transferred on copy!
 		if (tile->ground) {
 			copy->ground = tile->ground->deepCopy();
@@ -172,6 +176,13 @@ namespace TileOperations {
 		if (src->spawn) {
 			dest->spawn = std::move(src->spawn);
 		}
+		if (src->npc_spawn) {
+			dest->npc_spawn = std::move(src->npc_spawn);
+		}
+		for (uint16_t zone_id : src->zone_ids) {
+			dest->addZone(zone_id);
+		}
+		src->zone_ids.clear();
 		if (src->invalidZones) {
 			auto& dest_invalid_zones = dest->getOrCreateInvalidZones();
 			auto& src_invalid_zones = *src->invalidZones;
@@ -270,6 +281,9 @@ namespace TileOperations {
 		if (tile->spawn) {
 			tile->spawn->select();
 		}
+		if (tile->npc_spawn) {
+			tile->npc_spawn->select();
+		}
 		if (tile->creature) {
 			tile->creature->select();
 		}
@@ -287,6 +301,9 @@ namespace TileOperations {
 		}
 		if (tile->spawn) {
 			tile->spawn->deselect();
+		}
+		if (tile->npc_spawn) {
+			tile->npc_spawn->deselect();
 		}
 		if (tile->creature) {
 			tile->creature->deselect();
@@ -429,6 +446,9 @@ namespace TileOperations {
 		tile->statflags &= TILESTATE_MODIFIED;
 
 		if (tile->spawn && tile->spawn->isSelected()) {
+			tile->statflags |= TILESTATE_SELECTED;
+		}
+		if (tile->npc_spawn && tile->npc_spawn->isSelected()) {
 			tile->statflags |= TILESTATE_SELECTED;
 		}
 		if (tile->creature && tile->creature->isSelected()) {

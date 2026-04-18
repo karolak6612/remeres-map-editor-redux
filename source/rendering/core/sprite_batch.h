@@ -112,6 +112,7 @@ private:
 	MultiDrawIndirectRenderer mdi_renderer_;
 
 	std::vector<SpriteInstance> pending_sprites_;
+	std::vector<size_t> used_sections_;
 	glm::mat4 projection_ { 1.0f };
 	glm::vec4 global_tint_ { 1.0f };
 	const AtlasManager* current_atlas_manager_ = nullptr;

@@ -20,6 +20,7 @@
 #include <algorithm>
 #include <iterator>
 #include <format>
+#include <spdlog/spdlog.h>
 #include "map/tileset.h"
 #include "game/creatures.h"
 #include "brushes/creature/creature_brush.h"
@@ -223,11 +224,13 @@ void TilesetCategory::loadBrush(pugi::xml_node node, std::vector<std::string>& w
 		toId = std::max<uint16_t>(fromId, toId);
 
 		std::vector<Brush*> tempBrushVector;
+		std::vector<uint16_t> missing_ids;
 		for (uint16_t id = fromId; id <= toId; ++id) {
 			const auto it = g_item_definitions.get(id);
 			if (!it) {
-				warnings.push_back(std::format("Tileset: {}, Brush: {}, Previous {}, From: {}, To: {}", tileset.name, brushName, tileset.previousId, fromId, toId));
-				warnings.push_back("Unknown item id #" + std::to_string(id) + ".");
+				if (missing_ids.size() < 8) {
+					missing_ids.push_back(id);
+				}
 				continue;
 			}
 
@@ -260,6 +263,28 @@ void TilesetCategory::loadBrush(pugi::xml_node node, std::vector<std::string>& w
 			tempBrushVector.push_back(brush);
 
 			tileset.previousId = id;
+		}
+		if (!missing_ids.empty()) {
+			const auto missing_count = static_cast<uint32_t>(toId - fromId + 1) - static_cast<uint32_t>(tempBrushVector.size());
+			const auto sample = [&missing_ids]() {
+				std::string value;
+				for (size_t index = 0; index < missing_ids.size(); ++index) {
+					if (!value.empty()) {
+						value += ", ";
+					}
+					value += std::to_string(missing_ids[index]);
+				}
+				return value;
+			}();
+			spdlog::warn(
+				"Tileset '{}' skipped {} unknown item ids in range {}..{} after '{}'. Sample ids: {}{}",
+				tileset.name,
+				missing_count,
+				fromId,
+				toId,
+				brushName,
+				sample,
+				missing_count > missing_ids.size() ? ", ..." : "");
 		}
 
 		auto insertPosition = brushlist.end();

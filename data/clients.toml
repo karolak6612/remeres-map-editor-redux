@@ -234,7 +234,7 @@ version = 830
 
 [[clients]]
 configType = 'dat_otb'
-datSignature = '493D607A'
+datSignature = '467FD7E6'
 dataDirectory = '840'
 description = 'sample description'
 extended = false
@@ -245,7 +245,7 @@ name = '8.40'
 otbId = 12
 otbMajor = 3
 otbmVersions = [ 3 ]
-sprSignature = '493D4E7C'
+sprSignature = '467F9E74'
 spritesFile = 'Tibia.spr'
 transparency = false
 version = 840
@@ -342,10 +342,10 @@ version = 855
 
 [[clients]]
 configType = 'dat_otb'
-datSignature = '4C2C7993'
+datSignature = '4C28B721'
 dataDirectory = '860'
 description = 'sample description'
-extended = true
+extended = false
 frameDurations = false
 frameGroups = false
 metadataFile = 'Tibia.dat'
@@ -1115,20 +1115,20 @@ transparency = true
 version = 1310
 
 [[clients]]
-configType = 'dat_otb'
+configType = 'protobuf'
 datSignature = '4A10'
-dataDirectory = '1320'
+dataDirectory = 'canary'
 description = 'sample description'
 extended = true
 frameDurations = true
 frameGroups = true
-metadataFile = 'Tibia.dat'
-name = '13.20'
+metadataFile = 'appearances-ec29a245e364f190682aa3677ca04f657cb9a2076eca5fc931d039bab8c32887.dat'
+name = 'canary2'
 otbId = 66
 otbMajor = 3
-otbmVersions = [ 3 ]
+otbmVersions = [ 5, 6 ]
 sprSignature = '59E48E02'
-spritesFile = 'Tibia.spr'
+spritesFile = 'assets/catalog-content.json'
 transparency = true
 version = 1320
 
@@ -1187,20 +1187,20 @@ transparency = false
 version = 77
 
 [[clients]]
-configType = 'dat_only'
-datSignature = '42A3'
+configType = 'protobuf'
+datSignature = '0'
 dataDirectory = 'canary'
 description = 'sample description'
 extended = true
 frameDurations = true
 frameGroups = true
-metadataFile = 'Tibia.dat'
-name = '10.98dat'
+metadataFile = 'appearances-eb398f6272e1a0bf9e09c8a5754dbdb28017ef303fc3a0859a6b230640d91c9b.dat'
+name = 'canary'
 otbId = 57
 otbMajor = 3
-otbmVersions = [ 3 ]
-sprSignature = '57BBD603'
-spritesFile = 'Tibia.spr'
+otbmVersions = [ 5, 6 ]
+sprSignature = '0'
+spritesFile = 'assets/catalog-content.json'
 transparency = false
 version = 1098
 
@@ -1219,5 +1219,23 @@ otbMajor = 3
 otbmVersions = [ 3 ]
 sprSignature = '57BBD603'
 spritesFile = 'Tibia.spr'
-transparency = false
+transparency = true
 version = 1098
+
+[[clients]]
+configType = 'dat_otb'
+datSignature = '0'
+dataDirectory = '1287'
+description = ''
+extended = false
+frameDurations = false
+frameGroups = false
+metadataFile = 'Tibia.dat'
+name = 'New Client'
+otbId = 0
+otbMajor = 1
+otbmVersions = []
+sprSignature = '0'
+spritesFile = 'Tibia.spr'
+transparency = false
+version = 0

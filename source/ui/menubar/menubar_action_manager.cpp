@@ -151,6 +151,7 @@ void MenuBarActionManager::RegisterActions(MainMenuBar* mb, std::unordered_map<s
 	MAKE_ACTION_ICON(SELECT_HOUSE, wxITEM_NORMAL, ICON_HOUSE, OnSelectHousePalette);
 	MAKE_ACTION_ICON(SELECT_WAYPOINT, wxITEM_NORMAL, ICON_FLAG, OnSelectWaypointPalette);
 	MAKE_ACTION_ICON(SELECT_RAW, wxITEM_NORMAL, ICON_CUBE, OnSelectRawPalette);
+	MAKE_ACTION_ICON(SELECT_ZONE, wxITEM_NORMAL, ICON_MARKER, OnSelectZonePalette);
 
 	MAKE_ACTION_ICON(FLOOR_0, wxITEM_RADIO, ICON_0, OnChangeFloor);
 	MAKE_ACTION_ICON(FLOOR_1, wxITEM_RADIO, ICON_1, OnChangeFloor);
@@ -290,6 +291,7 @@ void MenuBarActionManager::UpdateState(MainMenuBar* mb) {
 	mb->EnableItem(SELECT_CREATURE, loaded);
 	mb->EnableItem(SELECT_WAYPOINT, loaded);
 	mb->EnableItem(SELECT_RAW, loaded);
+	mb->EnableItem(SELECT_ZONE, loaded);
 
 	mb->EnableItem(LIVE_START, is_local);
 	mb->EnableItem(LIVE_JOIN, loaded);

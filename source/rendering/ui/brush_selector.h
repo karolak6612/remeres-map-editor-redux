@@ -41,6 +41,8 @@ public:
 	static void SelectCollectionBrush(Selection& selection);
 	static void SelectCreatureBrush(Selection& selection);
 	static void SelectSpawnBrush();
+	static void SelectNpcSpawnBrush();
+	static void SelectZoneBrush(Selection& selection);
 	static void SelectSmartBrush(Editor& editor, Tile* tile);
 
 private:

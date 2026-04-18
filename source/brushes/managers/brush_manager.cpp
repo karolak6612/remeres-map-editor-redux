@@ -7,7 +7,9 @@
 #include "brushes/managers/brush_manager.h"
 #include "brushes/brush.h"
 #include "brushes/managers/doodad_preview_manager.h"
+#include "brushes/spawn/npc_spawn_brush.h"
 #include "brushes/spawn/spawn_brush.h"
+#include "brushes/zone/zone_brush.h"
 #include "ui/managers/status_manager.h"
 #include "palette/managers/palette_manager.h"
 #include "palette/palette_window.h"
@@ -28,6 +30,9 @@ BrushManager::BrushManager() :
 	waypoint_brush(nullptr),
 	optional_brush(nullptr),
 	eraser(nullptr),
+	spawn_brush(nullptr),
+	npc_spawn_brush(nullptr),
+	zone_brush(nullptr),
 	normal_door_brush(nullptr),
 	locked_door_brush(nullptr),
 	magic_door_brush(nullptr),
@@ -50,6 +55,7 @@ BrushManager::BrushManager() :
 	aspect_ratio_locked(true),
 	brush_variation(0),
 	creature_spawntime(0),
+	npc_spawntime(0),
 	draw_locked_doors(false),
 	use_custom_thickness(false),
 	custom_thickness_mod(0.0),
@@ -133,6 +139,8 @@ void BrushManager::SelectPreviousBrush() {
 void BrushManager::Clear() {
 	current_brush = nullptr;
 	previous_brush = nullptr;
+	npc_spawntime = 0;
+	selected_zone_name.clear();
 
 	house_brush = nullptr;
 	house_exit_brush = nullptr;
@@ -140,6 +148,8 @@ void BrushManager::Clear() {
 	optional_brush = nullptr;
 	eraser = nullptr;
 	spawn_brush = nullptr;
+	npc_spawn_brush = nullptr;
+	zone_brush = nullptr;
 	normal_door_brush = nullptr;
 	locked_door_brush = nullptr;
 	magic_door_brush = nullptr;
@@ -155,7 +165,7 @@ void BrushManager::Clear() {
 }
 
 BrushShape BrushManager::GetBrushShape() const {
-	if (current_brush == spawn_brush) {
+	if (current_brush == spawn_brush || current_brush == npc_spawn_brush) {
 		return BRUSHSHAPE_SQUARE;
 	}
 	return brush_shape;

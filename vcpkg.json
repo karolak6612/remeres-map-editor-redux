@@ -5,6 +5,8 @@
     "glad",
     "glm",
     "asio",
+    "protobuf",
+    "liblzma",
     "nlohmann-json",
     "fmt",
     {

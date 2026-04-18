@@ -9,7 +9,7 @@ bool AtlasManager::ensureInitialized() {
 	}
 
 	// Pre-allocate 16 layers (16 * 16384 = 262K sprites capacity).
-	// This fits in ~1GB VRAM and covers older clients/smaller Tibia 10+ datasets.
+	// This keeps startup memory bounded while still covering typical working sets.
 	// Larger datasets will dynamically expand this via addLayer().
 	static constexpr int INITIAL_LAYERS = 16;
 
@@ -21,8 +21,8 @@ bool AtlasManager::ensureInitialized() {
 	spdlog::info("AtlasManager: Texture array initialized ({}x{}, {} initial layers)", TextureAtlas::ATLAS_SIZE, TextureAtlas::ATLAS_SIZE, INITIAL_LAYERS);
 
 	// Ensure white pixel exists (ID AtlasRegion::INVALID_SENTINEL)
-	std::vector<uint8_t> white_data(32 * 32 * 4, 255);
-	white_pixel_cache_ = addSprite(WHITE_PIXEL_ID, white_data.data());
+	std::vector<uint8_t> white_data(TextureAtlas::BASE_SLOT_SIZE * TextureAtlas::BASE_SLOT_SIZE * 4, 255);
+	white_pixel_cache_ = addSprite(WHITE_PIXEL_ID, white_data.data(), TextureAtlas::BASE_SLOT_SIZE, TextureAtlas::BASE_SLOT_SIZE);
 
 	if (!white_pixel_cache_) {
 		spdlog::error("AtlasManager: Failed to register white pixel sprite");
@@ -32,7 +32,7 @@ bool AtlasManager::ensureInitialized() {
 	return true;
 }
 
-const AtlasRegion* AtlasManager::addSprite(uint32_t sprite_id, const uint8_t* rgba_data) {
+const AtlasRegion* AtlasManager::addSprite(uint32_t sprite_id, const uint8_t* rgba_data, int pixel_width, int pixel_height) {
 	// Fast check via direct lookup for common sprites
 	if (sprite_id < DIRECT_LOOKUP_SIZE && direct_lookup_[sprite_id] != nullptr) {
 		return direct_lookup_[sprite_id];
@@ -54,7 +54,7 @@ const AtlasRegion* AtlasManager::addSprite(uint32_t sprite_id, const uint8_t* rg
 	}
 
 	// Add to texture array
-	auto region = atlas_.addSprite(rgba_data);
+	auto region = atlas_.addSprite(rgba_data, pixel_width, pixel_height);
 	if (!region.has_value()) {
 		spdlog::error("AtlasManager: Failed to add sprite {} to texture array", sprite_id);
 		return nullptr;

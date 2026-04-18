@@ -137,7 +137,7 @@ int TooltipDrawer::getSpriteImage(NVGcontext* vg, uint16_t itemId) {
 
 	// Resolve Item ID
 	const auto definition = g_item_definitions.get(itemId);
-	GameSprite* gameSprite = definition ? dynamic_cast<GameSprite*>(g_gui.gfx.getSprite(definition.clientId())) : nullptr;
+	GameSprite* gameSprite = definition ? g_gui.gfx.getGameSprite(definition.clientId()) : nullptr;
 	if (!gameSprite) {
 		return 0;
 	}
@@ -152,6 +152,7 @@ int TooltipDrawer::getSpriteImage(NVGcontext* vg, uint16_t itemId) {
 		// Use the first frame/part of the sprite
 		NormalImage* img = gameSprite->spriteList[0];
 		if (img) {
+			const auto dimensions = img->getDimensions();
 			std::unique_ptr<uint8_t[]> rgba;
 
 			// For legacy sprites (no transparency), use getRGBData + Magenta Masking
@@ -159,8 +160,8 @@ int TooltipDrawer::getSpriteImage(NVGcontext* vg, uint16_t itemId) {
 			if (!g_gui.gfx.hasTransparency()) {
 				std::unique_ptr<uint8_t[]> rgb = img->getRGBData();
 				if (rgb) {
-					rgba = std::make_unique<uint8_t[]>(32 * 32 * 4);
-					for (int i = 0; i < 32 * 32; ++i) {
+					rgba = std::make_unique<uint8_t[]>(dimensions.pixelCount() * 4);
+					for (size_t i = 0; i < dimensions.pixelCount(); ++i) {
 						uint8_t r = rgb[i * 3 + 0];
 						uint8_t g = rgb[i * 3 + 1];
 						uint8_t b = rgb[i * 3 + 2];
@@ -192,7 +193,7 @@ int TooltipDrawer::getSpriteImage(NVGcontext* vg, uint16_t itemId) {
 			}
 
 			if (rgba) {
-				int image = nvgCreateImageRGBA(vg, 32, 32, 0, rgba.get());
+				int image = nvgCreateImageRGBA(vg, dimensions.width, dimensions.height, 0, rgba.get());
 				if (image == 0) {
 					// nvgCreateImageRGBA failed
 				} else {

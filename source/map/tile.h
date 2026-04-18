@@ -73,6 +73,8 @@ public: // Members
 	std::vector<std::unique_ptr<Item>> items;
 	std::unique_ptr<Creature> creature;
 	std::unique_ptr<Spawn> spawn;
+	std::unique_ptr<Spawn> npc_spawn;
+	std::vector<uint16_t> zone_ids;
 	uint32_t house_id; // House id for this tile (pointer not safe)
 	uint32_t mapflags;
 	uint16_t statflags;
@@ -245,6 +247,14 @@ public: // Functions
 	void setStatFlags(uint16_t _flags);
 	void unsetStatFlags(uint16_t _flags);
 	uint16_t getStatFlags() const;
+
+	void addZone(uint16_t zone_id);
+	void removeZone(uint16_t zone_id);
+	void clearZones();
+	[[nodiscard]] bool hasZone(uint16_t zone_id) const;
+	[[nodiscard]] const std::vector<uint16_t>& getZones() const {
+		return zone_ids;
+	}
 };
 
 bool tilePositionLessThan(const Tile* a, const Tile* b);

@@ -115,6 +115,8 @@ enum MapVersionID {
 	MAP_OTBM_2 = 1,
 	MAP_OTBM_3 = 2,
 	MAP_OTBM_4 = 3,
+	MAP_OTBM_5 = 4,
+	MAP_OTBM_6 = 5,
 };
 
 // The composed version of a otbm file (otbm version, client version)
@@ -317,6 +319,18 @@ public:
 	void setSpritesFile(const std::string& v) {
 		sprites_file = v;
 	}
+	std::string getMonsterLuaPath() const {
+		return monster_lua_path;
+	}
+	void setMonsterLuaPath(const std::string& v) {
+		monster_lua_path = v;
+	}
+	std::string getNpcLuaPath() const {
+		return npc_lua_path;
+	}
+	void setNpcLuaPath(const std::string& v) {
+		npc_lua_path = v;
+	}
 
 	uint32_t getVersion() const {
 		return version;
@@ -441,6 +455,9 @@ public:
 	wxFileName getSpritesPath() const {
 		return sprites_path;
 	}
+	wxFileName getPackagePath() const {
+		return package_path;
+	}
 
 private:
 	bool is_dirty = false;
@@ -452,6 +469,8 @@ private:
 		ItemDefinitionMode item_definition_mode;
 		std::string metadata_file;
 		std::string sprites_file;
+		std::string monster_lua_path;
+		std::string npc_lua_path;
 		bool is_transparent;
 		bool is_extended;
 		bool has_frame_durations;
@@ -477,6 +496,8 @@ private:
 
 	std::string metadata_file;
 	std::string sprites_file;
+	std::string monster_lua_path;
+	std::string npc_lua_path;
 
 	std::vector<MapVersionID> map_versions_supported;
 	MapVersionID preferred_map_version;
@@ -487,6 +508,7 @@ private:
 	FileName client_path;
 	wxFileName metadata_path;
 	wxFileName sprites_path;
+	wxFileName package_path;
 	std::string description;
 	ItemDefinitionMode item_definition_mode = ItemDefinitionMode::DatOtb;
 

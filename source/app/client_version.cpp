@@ -17,9 +17,12 @@
 
 #include <toml++/toml.h>
 #include <charconv>
+#include <format>
+#include <fstream>
 #include <string>
 #include "app/main.h"
 
+#include "app/client_asset_detector.h"
 #include "app/settings.h"
 #include "io/filehandle.h"
 
@@ -72,6 +75,8 @@ void ClientVersion::loadVersions() {
 				if (version) {
 					// ONLY override the user-specific path
 					version->setClientPath(FileName(client_path));
+					version->setMonsterLuaPath((*client)["monsterLuaPath"].value_or(""));
+					version->setNpcLuaPath((*client)["npcLuaPath"].value_or(""));
 
 					bool isDefault = (*client)["default"].value_or(false);
 					if (isDefault) {
@@ -165,7 +170,7 @@ void ClientVersion::loadVersionsFromTOML(const std::string& configName) {
 				auto& otbmVers = *client["otbmVersions"].as_array();
 				for (auto&& v : otbmVers) {
 					int ver = v.value_or(-1);
-					if (ver >= 1 && ver <= 4) {
+					if (ver >= 1 && ver <= 6) {
 						int enumVer = ver - 1;
 						cv_ptr->map_versions_supported.push_back(static_cast<MapVersionID>(enumVer));
 						if (cv_ptr->preferred_map_version == MAP_OTBM_UNKNOWN) {
@@ -315,6 +320,8 @@ bool ClientVersion::saveVersions() {
 		} else {
 			config_obj.insert_or_assign("clientPath", "");
 		}
+		config_obj.insert_or_assign("monsterLuaPath", version->monster_lua_path);
+		config_obj.insert_or_assign("npcLuaPath", version->npc_lua_path);
 		config_obj.insert_or_assign("default", version.get() == latest_version);
 		config_clients_array.push_back(std::move(config_obj));
 	}
@@ -479,6 +486,21 @@ bool ClientVersion::hasValidPaths() {
 		return false;
 	}
 
+	if (item_definition_mode == ItemDefinitionMode::Protobuf) {
+		package_path = wxFileName(client_path.GetFullPath(), "package.json");
+		const ClientAssetDetectionResult detected_assets = ClientAssetDetector::detect(*this);
+		if (!detected_assets.sprites_file_name.has_value() || !detected_assets.metadata_file_name.has_value()) {
+			return false;
+		}
+
+		sprites_path.Assign(client_path.GetFullPath() + FileName::GetPathSeparator() + wxString::FromUTF8(*detected_assets.sprites_file_name));
+		metadata_path = wxFileName(sprites_path.GetPath(), wxString::FromUTF8(*detected_assets.metadata_file_name));
+		if (!package_path.FileExists() || !sprites_path.FileExists()) {
+			return false;
+		}
+		return metadata_path.FileExists();
+	}
+
 	wxDir dir(client_path.GetPath(wxPATH_GET_VOLUME | wxPATH_GET_SEPARATOR));
 
 	// OTFI loading removed (deprecated)
@@ -529,22 +551,41 @@ bool ClientVersion::hasValidPaths() {
 		}
 	}
 
-	wxString message = "Signatures are incorrect.\n";
-	message << "Metadata signature: %X\n";
-	message << "Sprites signature: %X";
-	wxLogError(wxString::Format(message, datSignature, sprSignature));
+	wxLogError("%s", wxString::FromUTF8(std::format(
+		"Signatures are incorrect.\nMetadata signature: {:X}\nSprites signature: {:X}",
+		datSignature,
+		sprSignature
+	)));
 	return false;
 }
 
 bool ClientVersion::loadValidPaths() {
 	while (!hasValidPaths()) {
-		wxString message = "Could not locate metadata and/or sprite files, please navigate to your client assets %s installation folder.\n";
-		message << "Attempted metadata file: %s\n";
-		message << "Attempted sprites file: %s\n";
+		if (item_definition_mode == ItemDefinitionMode::Protobuf) {
+			const auto message = std::format(
+				"Could not locate the protobuf client package, catalog-content.json, or appearances file. Please navigate to the protobuf client root for {}.\n"
+				"Attempted package file: {}\n"
+				"Attempted catalog file: {}\n"
+				"Attempted appearances file: {}\n",
+				name,
+				nstr(package_path.GetFullPath()),
+				nstr(sprites_path.GetFullPath()),
+				nstr(metadata_path.GetFullPath())
+			);
+			DialogUtil::PopupDialog("Error", wxString::FromUTF8(message), wxOK);
+		} else {
+			const auto message = std::format(
+				"Could not locate metadata and/or sprite files, please navigate to your client assets {} installation folder.\n"
+				"Attempted metadata file: {}\n"
+				"Attempted sprites file: {}\n",
+				name,
+				nstr(metadata_path.GetFullPath()),
+				nstr(sprites_path.GetFullPath())
+			);
+			DialogUtil::PopupDialog("Error", wxString::FromUTF8(message), wxOK);
+		}
 
-		DialogUtil::PopupDialog("Error", wxString::Format(message, name, metadata_path.GetFullPath(), sprites_path.GetFullPath()), wxOK);
-
-		wxString dirHelpText("Select assets directory.");
+		wxString dirHelpText(item_definition_mode == ItemDefinitionMode::Protobuf ? "Select protobuf client root." : "Select assets directory.");
 		wxDirDialog file_dlg(nullptr, dirHelpText, "", wxDD_DIR_MUST_EXIST);
 		int ok = file_dlg.ShowModal();
 		if (ok == wxID_CANCEL) {
@@ -628,6 +669,8 @@ void ClientVersion::backup() {
 	backup_data.item_definition_mode = item_definition_mode;
 	backup_data.metadata_file = metadata_file;
 	backup_data.sprites_file = sprites_file;
+	backup_data.monster_lua_path = monster_lua_path;
+	backup_data.npc_lua_path = npc_lua_path;
 	backup_data.is_transparent = is_transparent;
 	backup_data.is_extended = is_extended;
 	backup_data.has_frame_durations = has_frame_durations;
@@ -648,6 +691,8 @@ void ClientVersion::restore() {
 	item_definition_mode = backup_data.item_definition_mode;
 	metadata_file = backup_data.metadata_file;
 	sprites_file = backup_data.sprites_file;
+	monster_lua_path = backup_data.monster_lua_path;
+	npc_lua_path = backup_data.npc_lua_path;
 	is_transparent = backup_data.is_transparent;
 	is_extended = backup_data.is_extended;
 	has_frame_durations = backup_data.has_frame_durations;
@@ -671,6 +716,8 @@ std::unique_ptr<ClientVersion> ClientVersion::clone() const {
 	new_cv->has_frame_groups = has_frame_groups;
 	new_cv->metadata_file = metadata_file;
 	new_cv->sprites_file = sprites_file;
+	new_cv->monster_lua_path = monster_lua_path;
+	new_cv->npc_lua_path = npc_lua_path;
 	new_cv->map_versions_supported = map_versions_supported;
 	new_cv->preferred_map_version = preferred_map_version;
 	new_cv->data_versions = data_versions;

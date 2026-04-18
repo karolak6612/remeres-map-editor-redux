@@ -12,6 +12,14 @@
 #include <cassert>
 #include <span>
 
+namespace {
+	constexpr size_t RGBA_COMPONENTS = 4;
+
+	[[nodiscard]] size_t resultByteSize(const ImageDimensions& dimensions) {
+		return dimensions.pixelCount() * RGBA_COMPONENTS;
+	}
+}
+
 SpritePreloader& SpritePreloader::get() {
 	static SpritePreloader instance;
 	return instance;
@@ -52,6 +60,7 @@ void SpritePreloader::clear() {
 	task_queue = std::queue<Task>();
 	result_queue = std::queue<Result>();
 	pending_ids.clear();
+	queued_result_bytes = 0;
 }
 
 void SpritePreloader::preload(GameSprite* spr, int pattern_x, int pattern_y, int pattern_z, int frame) {
@@ -108,11 +117,14 @@ void SpritePreloader::preload(GameSprite* spr, int pattern_x, int pattern_y, int
 
 	if (!ids_to_enqueue.empty()) {
 		std::lock_guard<std::mutex> lock(queue_mutex);
-		if (task_queue.size() > MAX_QUEUE_SIZE) {
+		if (task_queue.size() >= MAX_QUEUE_SIZE) {
 			return; // Drop requests if queue is slammed
 		}
 
 		for (const auto& pending : ids_to_enqueue) {
+			if (task_queue.size() >= MAX_QUEUE_SIZE) {
+				break;
+			}
 			const PendingSpriteKey pending_key {
 				.key = pending.key,
 				.generation_id = pending.generation_id,
@@ -139,19 +151,26 @@ void SpritePreloader::workerLoop(std::stop_token stop_token) {
 			task_queue.pop();
 		}
 
-		std::unique_ptr<uint8_t[]> dump;
-		uint16_t size = 0;
-		const bool success = task.archive && task.archive->readCompressed(task.pending.key.id, dump, size);
+		{
+			std::lock_guard<std::mutex> lock(queue_mutex);
+			if (result_queue.size() >= MAX_RESULT_QUEUE_SIZE || queued_result_bytes >= MAX_RESULT_QUEUE_BYTES) {
+				pending_ids.erase(task.pending);
+				continue;
+			}
+		}
 
 		std::unique_ptr<uint8_t[]> rgba;
-		if (success && dump) {
-			rgba = GameSprite::Decompress(std::span { dump.get(), size }, task.has_transparency, task.pending.key.id);
+		ImageDimensions dimensions;
+		if (!task.archive || !task.archive->readRGBA(task.pending.key.id, task.has_transparency, rgba, dimensions)) {
+			rgba.reset();
 		}
+		const size_t result_bytes = resultByteSize(dimensions);
 
 		{
 			std::lock_guard<std::mutex> lock(queue_mutex);
-			if (rgba) {
-				result_queue.push({ task.pending, std::move(rgba), std::move(task.archive) });
+			if (rgba && result_queue.size() < MAX_RESULT_QUEUE_SIZE && queued_result_bytes + result_bytes <= MAX_RESULT_QUEUE_BYTES) {
+				queued_result_bytes += result_bytes;
+				result_queue.push({ task.pending, std::move(rgba), dimensions, std::move(task.archive) });
 			} else {
 				pending_ids.erase(task.pending);
 			}
@@ -163,21 +182,33 @@ void SpritePreloader::update() {
 	// CRITICAL: This method MUST only be called from the main GUI/OpenGL thread.
 	assert(wxIsMainThread());
 
-	// Move results to a local queue under lock to minimize holding time.
 	std::queue<Result> results;
 	uint64_t current_epoch = 0;
+	size_t result_count = 0;
+	size_t upload_bytes = 0;
 	{
 		std::lock_guard<std::mutex> lock(queue_mutex);
 		if (result_queue.empty()) {
 			return;
 		}
-		results = std::move(result_queue);
 		current_epoch = active_epoch;
+		while (!result_queue.empty() && result_count < MAX_UPLOADS_PER_FRAME) {
+			const size_t next_result_bytes = resultByteSize(result_queue.front().dimensions);
+			if (result_count > 0 && upload_bytes + next_result_bytes > MAX_UPLOAD_BYTES_PER_FRAME) {
+				break;
+			}
+
+			upload_bytes += next_result_bytes;
+			queued_result_bytes = queued_result_bytes > next_result_bytes ? queued_result_bytes - next_result_bytes : 0;
+			results.push(std::move(result_queue.front()));
+			result_queue.pop();
+			++result_count;
+		}
 	}
 
 	thread_local std::vector<PendingSpriteKey> keys_processed;
 	keys_processed.clear();
-	keys_processed.reserve(results.size());
+	keys_processed.reserve(result_count);
 
 	const auto current_archive = g_gui.gfx.getSpriteArchive();
 	const bool graphics_unloaded = g_gui.gfx.isUnloaded();
@@ -204,6 +235,13 @@ void SpritePreloader::update() {
 				// Validate Sprite Identity & Generation
 				// Check ID match, Generation match, and GLLoaded state
 				if (img->id == id && img->generation_id == pending.generation_id && !img->isGLLoaded) {
+					if (img->pixel_width != res.dimensions.width || img->pixel_height != res.dimensions.height) {
+						img->pixel_width = res.dimensions.width;
+						img->pixel_height = res.dimensions.height;
+						if (img->parent) {
+							img->parent->invalidateMetricCaches();
+						}
+					}
 					img->fulfillPreload(std::move(res.data));
 				}
 			}

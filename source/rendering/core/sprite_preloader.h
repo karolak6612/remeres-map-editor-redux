@@ -6,6 +6,7 @@
 #define RME_RENDERING_CORE_SPRITE_PRELOADER_H_
 
 #include "rendering/core/game_sprite.h"
+#include "rendering/core/image.h"
 #include <functional>
 #include <memory>
 #include <mutex>
@@ -84,6 +85,7 @@ private:
 	struct Result {
 		PendingSpriteKey pending;
 		std::unique_ptr<uint8_t[]> data;
+		ImageDimensions dimensions;
 		std::shared_ptr<SpriteArchive> archive;
 	};
 
@@ -93,6 +95,10 @@ private:
 	static constexpr unsigned int MAX_WORKER_THREADS = 8u;
 
 	static constexpr size_t MAX_QUEUE_SIZE = 50000; // Limit pending tasks to prevent memory blowup
+	static constexpr size_t MAX_RESULT_QUEUE_SIZE = 4096;
+	static constexpr size_t MAX_RESULT_QUEUE_BYTES = 64ull * 1024ull * 1024ull;
+	static constexpr size_t MAX_UPLOADS_PER_FRAME = 2048;
+	static constexpr size_t MAX_UPLOAD_BYTES_PER_FRAME = 16ull * 1024ull * 1024ull;
 
 	std::mutex queue_mutex;
 	std::condition_variable cv;
@@ -102,6 +108,7 @@ private:
 	std::queue<Task> task_queue;
 	std::queue<Result> result_queue;
 	std::unordered_set<PendingSpriteKey, PendingSpriteKeyHash> pending_ids; // To avoid duplicate tasks for the same archive/id/generation/epoch
+	size_t queued_result_bytes = 0;
 	uint64_t active_epoch = 0;
 };
 

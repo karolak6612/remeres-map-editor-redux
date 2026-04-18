@@ -57,6 +57,7 @@ namespace {
 			return item && (item->isTranslucent() || item->hasLensHelp());
 		});
 	}
+
 }
 
 static DrawColor invalidTileOverlayColor(InvalidOTBMItemMarkerColor markerColor, bool selected) {
@@ -381,8 +382,6 @@ void TileRenderer::DrawTile(SpriteBatch& sprite_batch, const TileLocation* locat
 			}
 		} else if (unresolved_invalid_ground) {
 			// Missing-definition ground placeholders are represented by the tile-level invalid overlay.
-		} else if (options.always_show_zones && (r != 255 || g != 255 || b != 255)) {
-			item_drawer->DrawRawBrush(sprite_batch, sprite_drawer, draw_x, draw_y, SPRITE_ZONE, r, g, b, 60);
 		}
 	}
 

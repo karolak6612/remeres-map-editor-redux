@@ -43,6 +43,7 @@ set(rme_H
     ${CMAKE_CURRENT_LIST_DIR}/brushes/house/house_brush.h
     ${CMAKE_CURRENT_LIST_DIR}/brushes/house/house_exit_brush.h
     ${CMAKE_CURRENT_LIST_DIR}/brushes/raw/raw_brush.h
+    ${CMAKE_CURRENT_LIST_DIR}/brushes/spawn/npc_spawn_brush.h
     ${CMAKE_CURRENT_LIST_DIR}/brushes/spawn/spawn_brush.h
     ${CMAKE_CURRENT_LIST_DIR}/brushes/table/table_border_calculator.h
     ${CMAKE_CURRENT_LIST_DIR}/brushes/table/table_brush.h
@@ -53,6 +54,7 @@ set(rme_H
     ${CMAKE_CURRENT_LIST_DIR}/brushes/wall/wall_brush_items.h
     ${CMAKE_CURRENT_LIST_DIR}/brushes/wall/wall_brush_loader.h
     ${CMAKE_CURRENT_LIST_DIR}/brushes/waypoint/waypoint_brush.h
+    ${CMAKE_CURRENT_LIST_DIR}/brushes/zone/zone_brush.h
     ${CMAKE_CURRENT_LIST_DIR}/editor/action.h
     ${CMAKE_CURRENT_LIST_DIR}/editor/action_queue.h
     ${CMAKE_CURRENT_LIST_DIR}/editor/copybuffer.h
@@ -102,6 +104,7 @@ set(rme_H
     ${CMAKE_CURRENT_LIST_DIR}/item_definitions/formats/dat/dat_item_parser.h
     ${CMAKE_CURRENT_LIST_DIR}/item_definitions/formats/otb/otb_item_format.h
     ${CMAKE_CURRENT_LIST_DIR}/item_definitions/formats/otb/otb_item_parser.h
+    ${CMAKE_CURRENT_LIST_DIR}/item_definitions/formats/protobuf/protobuf_item_parser.h
     ${CMAKE_CURRENT_LIST_DIR}/item_definitions/formats/xml/xml_item_parser.h
 
     ${CMAKE_CURRENT_LIST_DIR}/ingame_preview/floor_visibility_calculator.h
@@ -117,6 +120,7 @@ set(rme_H
     ${CMAKE_CURRENT_LIST_DIR}/io/iomap.h
     ${CMAKE_CURRENT_LIST_DIR}/io/iomap_otbm.h
     ${CMAKE_CURRENT_LIST_DIR}/io/map_xml_io.h
+    ${CMAKE_CURRENT_LIST_DIR}/io/xml_file_loader.h
     ${CMAKE_CURRENT_LIST_DIR}/io/otbm/item_serialization_otbm.h
     ${CMAKE_CURRENT_LIST_DIR}/io/otbm/header_serialization_otbm.h
     ${CMAKE_CURRENT_LIST_DIR}/io/otbm/waypoint_serialization_otbm.h
@@ -152,6 +156,7 @@ set(rme_H
     ${CMAKE_CURRENT_LIST_DIR}/palette/palette_common.h
     ${CMAKE_CURRENT_LIST_DIR}/palette/palette_creature.h
     ${CMAKE_CURRENT_LIST_DIR}/palette/palette_waypoints.h
+    ${CMAKE_CURRENT_LIST_DIR}/palette/palette_zone.h
     ${CMAKE_CURRENT_LIST_DIR}/palette/house/house_palette.h
     ${CMAKE_CURRENT_LIST_DIR}/palette/house/edit_house_dialog.h
     ${CMAKE_CURRENT_LIST_DIR}/palette/palette_window.h
@@ -274,6 +279,7 @@ set(rme_H
     ${CMAKE_CURRENT_LIST_DIR}/ui/tile_properties/door_property_panel.h
     ${CMAKE_CURRENT_LIST_DIR}/ui/tile_properties/spawn_property_panel.h
     ${CMAKE_CURRENT_LIST_DIR}/ui/tile_properties/creature_property_panel.h
+    ${CMAKE_CURRENT_LIST_DIR}/ui/tile_properties/zone_property_panel.h
     ${CMAKE_CURRENT_LIST_DIR}/ui/dat_debug_view.h
     ${CMAKE_CURRENT_LIST_DIR}/ui/dcbutton.h
     ${CMAKE_CURRENT_LIST_DIR}/ui/dialog_helper.h
@@ -433,6 +439,7 @@ set(rme_SRC
     ${CMAKE_CURRENT_LIST_DIR}/brushes/house/house_brush.cpp
     ${CMAKE_CURRENT_LIST_DIR}/brushes/house/house_exit_brush.cpp
     ${CMAKE_CURRENT_LIST_DIR}/brushes/raw/raw_brush.cpp
+    ${CMAKE_CURRENT_LIST_DIR}/brushes/spawn/npc_spawn_brush.cpp
     ${CMAKE_CURRENT_LIST_DIR}/brushes/spawn/spawn_brush.cpp
     ${CMAKE_CURRENT_LIST_DIR}/brushes/table/table_border_calculator.cpp
     ${CMAKE_CURRENT_LIST_DIR}/brushes/table/table_brush.cpp
@@ -445,6 +452,7 @@ set(rme_SRC
     ${CMAKE_CURRENT_LIST_DIR}/brushes/wall/wall_brush_loader.cpp
     ${CMAKE_CURRENT_LIST_DIR}/brushes/wall/wall_brush_arrays.cpp
     ${CMAKE_CURRENT_LIST_DIR}/brushes/waypoint/waypoint_brush.cpp
+    ${CMAKE_CURRENT_LIST_DIR}/brushes/zone/zone_brush.cpp
     ${CMAKE_CURRENT_LIST_DIR}/editor/action.cpp
     ${CMAKE_CURRENT_LIST_DIR}/editor/action_queue.cpp
     ${CMAKE_CURRENT_LIST_DIR}/editor/copybuffer.cpp
@@ -482,6 +490,7 @@ set(rme_SRC
     ${CMAKE_CURRENT_LIST_DIR}/item_definitions/core/item_definitions_loader.cpp
     ${CMAKE_CURRENT_LIST_DIR}/item_definitions/formats/dat/dat_item_parser.cpp
     ${CMAKE_CURRENT_LIST_DIR}/item_definitions/formats/otb/otb_item_parser.cpp
+    ${CMAKE_CURRENT_LIST_DIR}/item_definitions/formats/protobuf/protobuf_item_parser.cpp
     ${CMAKE_CURRENT_LIST_DIR}/item_definitions/formats/xml/xml_item_parser.cpp
 
     ${CMAKE_CURRENT_LIST_DIR}/ingame_preview/floor_visibility_calculator.cpp
@@ -497,6 +506,7 @@ set(rme_SRC
     ${CMAKE_CURRENT_LIST_DIR}/io/iomap.cpp
     ${CMAKE_CURRENT_LIST_DIR}/io/iomap_otbm.cpp
     ${CMAKE_CURRENT_LIST_DIR}/io/map_xml_io.cpp
+    ${CMAKE_CURRENT_LIST_DIR}/io/xml_file_loader.cpp
     ${CMAKE_CURRENT_LIST_DIR}/io/otbm/item_serialization_otbm.cpp
     ${CMAKE_CURRENT_LIST_DIR}/io/otbm/header_serialization_otbm.cpp
     ${CMAKE_CURRENT_LIST_DIR}/io/otbm/waypoint_serialization_otbm.cpp
@@ -528,6 +538,7 @@ set(rme_SRC
     ${CMAKE_CURRENT_LIST_DIR}/palette/palette_common.cpp
     ${CMAKE_CURRENT_LIST_DIR}/palette/palette_creature.cpp
     ${CMAKE_CURRENT_LIST_DIR}/palette/palette_waypoints.cpp
+    ${CMAKE_CURRENT_LIST_DIR}/palette/palette_zone.cpp
     ${CMAKE_CURRENT_LIST_DIR}/palette/house/house_palette.cpp
     ${CMAKE_CURRENT_LIST_DIR}/palette/house/edit_house_dialog.cpp
     ${CMAKE_CURRENT_LIST_DIR}/palette/palette_window.cpp
@@ -650,6 +661,7 @@ set(rme_SRC
     ${CMAKE_CURRENT_LIST_DIR}/ui/tile_properties/door_property_panel.cpp
     ${CMAKE_CURRENT_LIST_DIR}/ui/tile_properties/spawn_property_panel.cpp
     ${CMAKE_CURRENT_LIST_DIR}/ui/tile_properties/creature_property_panel.cpp
+    ${CMAKE_CURRENT_LIST_DIR}/ui/tile_properties/zone_property_panel.cpp
     ${CMAKE_CURRENT_LIST_DIR}/ui/dat_debug_view.cpp
     ${CMAKE_CURRENT_LIST_DIR}/ui/dcbutton.cpp
     ${CMAKE_CURRENT_LIST_DIR}/ui/dialog_helper.cpp

@@ -3,8 +3,11 @@
 #include "item_definitions/core/item_definitions_loader.h"
 #include "item_definitions/core/item_definition_store_builder.h"
 #include "item_definitions/formats/dat/dat_item_parser.h"
+#include "item_definitions/formats/protobuf/protobuf_item_parser.h"
 #include "rendering/core/graphics_assembler.h"
 #include "rendering/core/sprite_archive.h"
+
+#include <format>
 
 namespace {
 	ItemDefinitionLoadInput toDefinitionInput(const AssetLoadRequest& request, const DatCatalog& dat_catalog) {
@@ -23,7 +26,6 @@ namespace {
 bool AssetBundleLoader::load(const AssetLoadRequest& request, AssetBundle& bundle, wxString& error, std::vector<std::string>& warnings) const {
 	bundle = {};
 
-	DatItemParser dat_parser;
 	const auto definition_input = ItemDefinitionLoadInput {
 		.mode = request.mode,
 		.dat_path = request.dat_path,
@@ -33,13 +35,37 @@ bool AssetBundleLoader::load(const AssetLoadRequest& request, AssetBundle& bundl
 		.graphics = nullptr,
 		.dat_catalog = nullptr,
 	};
-	if (!dat_parser.parseCatalog(definition_input, bundle.dat_catalog, error, warnings)) {
-		return false;
-	}
 
-	bundle.sprite_archive = SpriteArchive::load(request.spr_path, bundle.dat_catalog.is_extended, error, warnings);
-	if (!bundle.sprite_archive) {
-		return false;
+	switch (request.mode) {
+		case ItemDefinitionMode::Protobuf: {
+			ProtobufItemParser protobuf_parser;
+			if (!protobuf_parser.parseCatalog(definition_input, bundle.dat_catalog, error, warnings)) {
+				return false;
+			}
+
+			bundle.sprite_archive = SpriteArchive::loadProtobuf(request.spr_path, error, warnings);
+			if (!bundle.sprite_archive) {
+				return false;
+			}
+			break;
+		}
+		case ItemDefinitionMode::DatOtb:
+		case ItemDefinitionMode::DatOnly:
+		case ItemDefinitionMode::DatSrv: {
+			DatItemParser dat_parser;
+			if (!dat_parser.parseCatalog(definition_input, bundle.dat_catalog, error, warnings)) {
+				return false;
+			}
+
+			bundle.sprite_archive = SpriteArchive::load(request.spr_path, bundle.dat_catalog.is_extended, error, warnings);
+			if (!bundle.sprite_archive) {
+				return false;
+			}
+			break;
+		}
+		default:
+			error = wxString::FromUTF8(std::format("Unsupported item definition mode {}.", static_cast<int>(request.mode)));
+			return false;
 	}
 
 	ItemDefinitionsLoader definitions_loader;

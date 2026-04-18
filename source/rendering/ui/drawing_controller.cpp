@@ -23,6 +23,7 @@
 #include "brushes/house/house_brush.h"
 #include "brushes/house/house_exit_brush.h"
 #include "brushes/raw/raw_brush.h"
+#include "brushes/spawn/npc_spawn_brush.h"
 #include "brushes/spawn/spawn_brush.h"
 #include "brushes/table/table_brush.h"
 #include "brushes/wall/wall_brush.h"
@@ -103,7 +104,7 @@ void DrawingController::HandleClick(const Position& mouse_map_pos, bool shift_do
 				} else {
 					editor.draw(tilestodraw, tilestoborder, alt_down);
 				}
-			} else if (brush->is<DoodadBrush>() || brush->is<SpawnBrush>() || brush->is<CreatureBrush>()) {
+			} else if (brush->is<DoodadBrush>() || brush->is<SpawnBrush>() || brush->is<NpcSpawnBrush>() || brush->is<CreatureBrush>()) {
 				if (ctrl_down) {
 					if (brush->is<DoodadBrush>()) {
 						PositionVector tilestodraw;
@@ -114,10 +115,10 @@ void DrawingController::HandleClick(const Position& mouse_map_pos, bool shift_do
 					}
 				} else {
 					bool will_show_spawn = false;
-					if (brush->is<SpawnBrush>() || brush->is<CreatureBrush>()) {
+					if (brush->is<SpawnBrush>() || brush->is<NpcSpawnBrush>() || brush->is<CreatureBrush>()) {
 						if (!g_settings.getBoolean(Config::SHOW_SPAWNS)) {
 							Tile* tile = editor.map.getTile(mouse_map_pos);
-							if (!tile || !tile->spawn) {
+							if (!tile || (!tile->spawn && !tile->npc_spawn)) {
 								will_show_spawn = true;
 							}
 						}
@@ -127,7 +128,7 @@ void DrawingController::HandleClick(const Position& mouse_map_pos, bool shift_do
 
 					if (will_show_spawn) {
 						Tile* tile = editor.map.getTile(mouse_map_pos);
-						if (tile && tile->spawn) {
+						if (tile && (tile->spawn || tile->npc_spawn)) {
 							g_settings.setInteger(Config::SHOW_SPAWNS, true);
 							g_gui.UpdateMenubar();
 						}
@@ -270,7 +271,7 @@ void DrawingController::HandleRelease(const Position& mouse_map_pos, bool shift_
 	if (dragging_draw) {
 		Brush* brush = g_gui.GetCurrentBrush();
 		if (brush) {
-			if (brush->is<SpawnBrush>()) {
+			if (brush->is<SpawnBrush>() || brush->is<NpcSpawnBrush>()) {
 				int start_map_x = std::min(canvas->last_click_map_x, mouse_map_pos.x);
 				int start_map_y = std::min(canvas->last_click_map_y, mouse_map_pos.y);
 				int end_map_x = std::max(canvas->last_click_map_x, mouse_map_pos.x);

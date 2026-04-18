@@ -23,6 +23,8 @@
 #include "palette/panels/brush_panel.h"
 #include "ui/controls/sortable_list_box.h"
 
+class wxSearchCtrl;
+
 class CreaturePalettePanel : public PalettePanel {
 public:
 	CreaturePalettePanel(wxWindow* parent, wxWindowID id = wxID_ANY);
@@ -31,37 +33,34 @@ public:
 	PaletteType GetType() const override;
 	[[nodiscard]] Brush* GetSelectedCreatureBrush() const;
 
-	// Select the first brush
 	void SelectFirstBrush() override;
-	// Returns the currently selected brush (first brush if panel is not loaded)
 	Brush* GetSelectedBrush() const override;
-	// Returns the currently selected brush size
 	int GetSelectedBrushSize() const override;
-	// Select the brush in the parameter, this only changes the look of the panel
 	bool SelectBrush(const Brush* whatbrush) override;
 
-	// Updates the palette window to use the current brush size
 	void OnUpdateBrushSize(BrushShape shape, int size) override;
-	// Called when this page is displayed
 	void OnSwitchIn() override;
-	// Called sometimes?
 	void OnUpdate() override;
 	void OnRefreshTilesets();
 
 	void SetListType(BrushListType ltype);
 	void SetListType(wxString ltype);
+	[[nodiscard]] bool IsNpcPageSelected() const;
 
 protected:
 	void SelectTileset(size_t index);
 	void SelectCreature(size_t index);
 	void SelectCreature(std::string name);
+	void SyncSpawnControlsToSelection() const;
+	void SelectCreatureFromSearch(const wxString& query);
 
 public:
-	// Event handling
 	void OnSwitchingPage(wxChoicebookEvent& event);
 	void OnPageChanged(wxChoicebookEvent& event);
+	void OnSearchChanged(wxCommandEvent& event);
 
-	wxChoicebook* choicebook;
+	wxSearchCtrl* search_ctrl = nullptr;
+	wxChoicebook* choicebook = nullptr;
 };
 
 #endif

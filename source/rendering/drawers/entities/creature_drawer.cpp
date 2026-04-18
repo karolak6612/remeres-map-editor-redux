@@ -37,11 +37,33 @@ namespace {
 			return;
 		}
 
-		const int left = screen_x - sprite.getDrawOffset().first - (static_cast<int>(sprite.width) - 1) * TILE_SIZE;
-		const int top = screen_y - sprite.getDrawOffset().second - (static_cast<int>(sprite.height) - 1) * TILE_SIZE;
-		const int width = std::max(1, static_cast<int>(sprite.width) * TILE_SIZE);
-		const int height = std::max(1, static_cast<int>(sprite.height) * TILE_SIZE);
+		const auto draw_offset = sprite.getDrawOffset();
+		const wxSize composite_size = sprite.GetSize();
+		const int left = screen_x - draw_offset.first;
+		const int top = screen_y - draw_offset.second;
+		const int width = std::max(1, composite_size.GetWidth());
+		const int height = std::max(1, composite_size.GetHeight());
 		light_buffer.AddScreenLight(left + width / 2, top + height / 2, view, light);
+	}
+
+	void registerCreatureSpriteLight(LightBuffer& light_buffer, const RenderView& view, int screen_x, int screen_y, const std::pair<int, int>& draw_offset, const GameSprite::SpriteLayoutMetrics& metrics, SpriteLight light, bool preview_local_player) {
+		if (preview_local_player) {
+			light.intensity = std::max<uint8_t>(light.intensity, 2);
+			if (light.color == 0 || light.color > 215) {
+				light.color = 215;
+			}
+		}
+
+		if (light.intensity == 0) {
+			return;
+		}
+
+		light_buffer.AddScreenLight(
+			screen_x - draw_offset.first - metrics.left_offset + metrics.total_width / 2,
+			screen_y - draw_offset.second - metrics.top_offset + metrics.total_height / 2,
+			view,
+			light
+		);
 	}
 
 	void registerCreatureCenterLight(LightBuffer& light_buffer, const RenderView& view, int screen_x, int screen_y, const GameSprite* displacement_sprite, SpriteLight light, bool preview_local_player) {
@@ -77,7 +99,7 @@ void CreatureDrawer::BlitCreature(SpriteBatch& sprite_batch, SpriteDrawer* sprit
 
 	if (outfit.lookItem != 0) {
 		if (const auto definition = g_item_definitions.get(outfit.lookItem)) {
-			GameSprite* spr = dynamic_cast<GameSprite*>(g_gui.gfx.getSprite(definition.clientId()));
+			GameSprite* spr = g_gui.gfx.getGameSprite(definition.clientId());
 			if (spr && options.light_buffer && options.view && spr->hasLight()) {
 				registerCreatureSpriteLight(*options.light_buffer, *options.view, *spr, screenx, screeny, spr->getLight(), false);
 			}
@@ -112,26 +134,38 @@ void CreatureDrawer::BlitCreature(SpriteBatch& sprite_batch, SpriteDrawer* sprit
 		GameSprite* mountSpr = nullptr;
 		if (outfit.lookMount != 0) {
 			if ((mountSpr = g_gui.gfx.getCreatureSprite(outfit.lookMount))) {
+				// Generate mount colors and metrics once so rendering and light placement stay aligned.
+				Outfit mountOutfit;
+				mountOutfit.lookType = outfit.lookMount;
+				mountOutfit.lookHead = outfit.lookMountHead;
+				mountOutfit.lookBody = outfit.lookMountBody;
+				mountOutfit.lookLegs = outfit.lookMountLegs;
+				mountOutfit.lookFeet = outfit.lookMountFeet;
+				const auto mount_draw_offset = mountSpr->getDrawOffset();
+				const auto& mount_metrics = mountSpr->getOutfitLayoutMetrics(static_cast<int>(dir), 0, 0, resolvedFrame);
+
 				if (options.light_buffer && options.view && mountSpr->hasLight()) {
-					registerCreatureSpriteLight(*options.light_buffer, *options.view, *mountSpr, screenx, screeny, mountSpr->getLight(), false);
+					registerCreatureSpriteLight(*options.light_buffer, *options.view, screenx, screeny, mount_draw_offset, mount_metrics, mountSpr->getLight(), false);
 				}
 
 				if (draw_visuals) {
-					// generate mount colors
-					Outfit mountOutfit;
-					mountOutfit.lookType = outfit.lookMount;
-					mountOutfit.lookHead = outfit.lookMountHead;
-					mountOutfit.lookBody = outfit.lookMountBody;
-					mountOutfit.lookLegs = outfit.lookMountLegs;
-					mountOutfit.lookFeet = outfit.lookMountFeet;
-
+					int mount_x_offset = 0;
 					for (int cx = 0; cx != mountSpr->width; ++cx) {
+						int mount_y_offset = 0;
 						for (int cy = 0; cy != mountSpr->height; ++cy) {
 							const AtlasRegion* region = mountSpr->getAtlasRegion(cx, cy, static_cast<int>(dir), 0, 0, mountOutfit, resolvedFrame);
 							if (region) {
-								sprite_drawer->glBlitAtlasQuad(sprite_batch, screenx - cx * TILE_SIZE - mountSpr->getDrawOffset().first, screeny - cy * TILE_SIZE - mountSpr->getDrawOffset().second, region, options.color);
+								sprite_drawer->glBlitAtlasQuad(
+									sprite_batch,
+									screenx - mount_x_offset - mount_draw_offset.first,
+									screeny - mount_y_offset - mount_draw_offset.second,
+									region,
+									options.color
+								);
 							}
+							mount_y_offset += mount_metrics.row_heights[cy];
 						}
+						mount_x_offset += mount_metrics.column_widths[cx];
 					}
 				}
 
@@ -141,6 +175,7 @@ void CreatureDrawer::BlitCreature(SpriteBatch& sprite_batch, SpriteDrawer* sprit
 
 		// pattern_y => creature addon
 		if (draw_visuals) {
+			const auto sprite_draw_offset = spr->getDrawOffset();
 			for (int pattern_y = 0; pattern_y < spr->pattern_y; pattern_y++) {
 
 				// continue if we dont have this addon
@@ -150,13 +185,25 @@ void CreatureDrawer::BlitCreature(SpriteBatch& sprite_batch, SpriteDrawer* sprit
 					}
 				}
 
+				const auto& sprite_metrics = spr->getOutfitLayoutMetrics(static_cast<int>(dir), pattern_y, pattern_z, resolvedFrame);
+
+				int sprite_x_offset = 0;
 				for (int cx = 0; cx != spr->width; ++cx) {
+					int sprite_y_offset = 0;
 					for (int cy = 0; cy != spr->height; ++cy) {
 						const AtlasRegion* region = spr->getAtlasRegion(cx, cy, static_cast<int>(dir), pattern_y, pattern_z, outfit, resolvedFrame);
 						if (region) {
-							sprite_drawer->glBlitAtlasQuad(sprite_batch, screenx - cx * TILE_SIZE - spr->getDrawOffset().first, screeny - cy * TILE_SIZE - spr->getDrawOffset().second, region, options.color);
+							sprite_drawer->glBlitAtlasQuad(
+								sprite_batch,
+								screenx - sprite_x_offset - sprite_draw_offset.first,
+								screeny - sprite_y_offset - sprite_draw_offset.second,
+								region,
+								options.color
+							);
 						}
+						sprite_y_offset += sprite_metrics.row_heights[cy];
 					}
+					sprite_x_offset += sprite_metrics.column_widths[cx];
 				}
 			}
 		}

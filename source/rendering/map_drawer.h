@@ -161,7 +161,7 @@ public:
 	}
 
 private:
-	void DrawMapLayer(SpriteBatch& batch, int map_z, bool live_client, bool light_collection_only = false);
+	void DrawMapLayer(SpriteBatch& batch, const RenderView& draw_view, int map_z, bool live_client, bool light_collection_only = false);
 	bool renderers_initialized = false;
 };
 

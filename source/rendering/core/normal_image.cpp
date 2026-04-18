@@ -4,13 +4,27 @@
 #include "rendering/core/sprite_archive.h"
 #include "ui/gui.h"
 #include <spdlog/spdlog.h>
+#include <cstring>
+#include <ranges>
 
 constexpr int RGB_COMPONENTS = 3;
 
 namespace {
-	bool loadDumpFromArchive(uint32_t id, std::unique_ptr<uint8_t[]>& dump, uint16_t& size) {
+	bool loadRgbaFromArchive(uint32_t id, std::unique_ptr<uint8_t[]>& rgba, ImageDimensions& dimensions) {
 		const auto archive = g_gui.gfx.getSpriteArchive();
-		return archive && archive->readCompressed(id, dump, size);
+		return archive && archive->readRGBA(id, g_gui.gfx.hasTransparency(), rgba, dimensions);
+	}
+
+	void updateDimensions(NormalImage& image, const ImageDimensions& dimensions) {
+		if (image.pixel_width == dimensions.width && image.pixel_height == dimensions.height) {
+			return;
+		}
+
+		image.pixel_width = dimensions.width;
+		image.pixel_height = dimensions.height;
+		if (image.parent) {
+			image.parent->invalidateMetricCaches();
+		}
 	}
 }
 
@@ -31,7 +45,7 @@ NormalImage::~NormalImage() {
 }
 
 void NormalImage::fulfillPreload(std::unique_ptr<uint8_t[]> data) {
-	atlas_region = EnsureAtlasSprite(id, std::move(data));
+	atlas_region = EnsureAtlasSprite(id, std::move(data), getDimensions());
 }
 
 void NormalImage::clean(time_t time, int longevity) {
@@ -62,65 +76,32 @@ void NormalImage::clean(time_t time, int longevity) {
 }
 std::unique_ptr<uint8_t[]> NormalImage::getRGBData() {
 	if (id == 0) {
-		const int pixels_data_size = SPRITE_PIXELS * SPRITE_PIXELS * RGB_COMPONENTS;
+		const auto dimensions = getDimensions();
+		const auto pixels_data_size = static_cast<int>(dimensions.pixelCount() * RGB_COMPONENTS);
 		return std::make_unique<uint8_t[]>(pixels_data_size); // Value-initialized (zeroed)
 	}
 
-	if (!dump) {
-		if (!loadDumpFromArchive(id, dump, size)) {
-			return nullptr;
-		}
+	std::unique_ptr<uint8_t[]> rgba;
+	ImageDimensions dimensions;
+	if (!loadRgbaFromArchive(id, rgba, dimensions) || !rgba) {
+		return nullptr;
 	}
+	updateDimensions(*this, dimensions);
 
-	const int pixels_data_size = SPRITE_PIXELS * SPRITE_PIXELS * RGB_COMPONENTS;
+	const auto pixels_data_size = static_cast<int>(dimensions.pixelCount() * RGB_COMPONENTS);
 	auto data = std::make_unique<uint8_t[]>(pixels_data_size);
-	uint8_t bpp = g_gui.gfx.hasTransparency() ? 4 : RGB_COMPONENTS;
-	size_t write = 0;
-	size_t read = 0;
-
-	// decompress pixels
-	while (read < size && write < static_cast<size_t>(pixels_data_size)) {
-		if (read + 1 >= size) {
-			spdlog::warn("NormalImage::getRGBData: Transparency header truncated (read={}, size={})", read, size);
-			break;
+	for (size_t index = 0; index < dimensions.pixelCount(); ++index) {
+		const size_t rgba_offset = index * 4;
+		const size_t rgb_offset = index * RGB_COMPONENTS;
+		if (rgba[rgba_offset + 3] == 0) {
+			data[rgb_offset + 0] = 0xFF;
+			data[rgb_offset + 1] = 0x00;
+			data[rgb_offset + 2] = 0xFF;
+			continue;
 		}
-		int transparent = dump[read] | dump[read + 1] << 8;
-		read += 2;
-		for (int cnt = 0; cnt < transparent && write < static_cast<size_t>(pixels_data_size); ++cnt) {
-			data[write + 0] = 0xFF; // red
-			data[write + 1] = 0x00; // green
-			data[write + 2] = 0xFF; // blue
-			write += RGB_COMPONENTS;
-		}
-
-		if (read + 1 >= size) {
-			spdlog::warn("NormalImage::getRGBData: Colored header truncated (read={}, size={})", read, size);
-			break;
-		}
-
-		int colored = dump[read] | dump[read + 1] << 8;
-		read += 2;
-
-		if (read + static_cast<size_t>(colored) * bpp > size) {
-			spdlog::warn("NormalImage::getRGBData: Read buffer overrun (colored={}, bpp={}, read={}, size={})", colored, bpp, read, size);
-			break;
-		}
-
-		for (int cnt = 0; cnt < colored && write < static_cast<size_t>(pixels_data_size); ++cnt) {
-			data[write + 0] = dump[read + 0]; // red
-			data[write + 1] = dump[read + 1]; // green
-			data[write + 2] = dump[read + 2]; // blue
-			write += RGB_COMPONENTS;
-			read += bpp;
-		}
-	}
-
-	// fill remaining pixels
-	while (write < static_cast<size_t>(pixels_data_size)) {
-		data[write + 0] = 0xFF; // red
-		data[write + 1] = 0x00; // green
-		data[write + 2] = 0xFF; // blue
-		write += RGB_COMPONENTS;
+		data[rgb_offset + 0] = rgba[rgba_offset + 0];
+		data[rgb_offset + 1] = rgba[rgba_offset + 1];
+		data[rgb_offset + 2] = rgba[rgba_offset + 2];
 	}
 	return data;
 }
@@ -128,19 +109,18 @@ std::unique_ptr<uint8_t[]> NormalImage::getRGBData() {
 std::unique_ptr<uint8_t[]> NormalImage::getRGBAData() {
 	// Robust ID 0 handling
 	if (id == 0) {
-		const int pixels_data_size = SPRITE_PIXELS_SIZE * 4;
+		const auto dimensions = getDimensions();
+		const auto pixels_data_size = static_cast<int>(dimensions.pixelCount() * 4);
 		return std::make_unique<uint8_t[]>(pixels_data_size); // Value-initialized (zeroed)
 	}
 
-	if (!dump) {
-		if (!loadDumpFromArchive(id, dump, size)) {
-			// This is the only case where we return nullptr for non-zero ID
-			// effectively warning the caller that the sprite is missing from file
-			return nullptr;
-		}
+	std::unique_ptr<uint8_t[]> rgba;
+	ImageDimensions dimensions;
+	if (!loadRgbaFromArchive(id, rgba, dimensions) || !rgba) {
+		return nullptr;
 	}
-
-	return GameSprite::Decompress(std::span { dump.get(), size }, g_gui.gfx.hasTransparency(), id);
+	updateDimensions(*this, dimensions);
+	return rgba;
 }
 
 const AtlasRegion* NormalImage::getAtlasRegion() {

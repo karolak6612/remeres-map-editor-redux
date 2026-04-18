@@ -26,10 +26,12 @@
 #include "brushes/house/house_brush.h"
 #include "brushes/house/house_exit_brush.h"
 #include "brushes/raw/raw_brush.h"
+#include "brushes/spawn/npc_spawn_brush.h"
 #include "brushes/spawn/spawn_brush.h"
 #include "brushes/table/table_brush.h"
 #include "brushes/wall/wall_brush.h"
 #include "brushes/waypoint/waypoint_brush.h"
+#include "brushes/zone/zone_brush.h"
 #include "brushes/managers/brush_manager.h"
 
 #include "brushes/flag/flag_brush.h"
@@ -81,6 +83,8 @@ void Brushes::init() {
 	addManagedBrush(g_brush_manager.optional_brush);
 	addManagedBrush(g_brush_manager.eraser);
 	addManagedBrush(g_brush_manager.spawn_brush);
+	addManagedBrush(g_brush_manager.npc_spawn_brush);
+	addManagedBrush(g_brush_manager.zone_brush);
 
 	addManagedBrush(g_brush_manager.normal_door_brush, WALL_DOOR_NORMAL);
 	addManagedBrush(g_brush_manager.locked_door_brush, WALL_DOOR_LOCKED);

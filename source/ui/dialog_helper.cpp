@@ -32,6 +32,8 @@ void DialogHelper::OpenProperties(Editor& editor, Tile* tile) {
 
 	if (new_tile->spawn && g_settings.getInteger(Config::SHOW_SPAWNS)) {
 		w = newd SpawnPropertiesWindow(g_gui.root, &editor.map, new_tile.get(), new_tile->spawn.get());
+	} else if (new_tile->npc_spawn && g_settings.getInteger(Config::SHOW_SPAWNS)) {
+		w = newd SpawnPropertiesWindow(g_gui.root, &editor.map, new_tile.get(), new_tile->npc_spawn.get());
 	} else if (new_tile->creature && g_settings.getInteger(Config::SHOW_CREATURES)) {
 		w = newd CreaturePropertiesWindow(g_gui.root, &editor.map, new_tile.get(), new_tile->creature.get());
 	} else {

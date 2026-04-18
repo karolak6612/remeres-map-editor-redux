@@ -19,6 +19,7 @@
 #include "ui/tile_properties/door_property_panel.h"
 #include "ui/tile_properties/spawn_property_panel.h"
 #include "ui/tile_properties/creature_property_panel.h"
+#include "ui/tile_properties/zone_property_panel.h"
 #include "map/tile.h"
 #include "game/spawn.h"
 #include "game/creature.h"
@@ -42,8 +43,14 @@ TilePropertiesPanel::TilePropertiesPanel(wxWindow* parent) :
 	spawn_creature_panel->SetOnSpawnSelectedCallback([this]() {
 		OnSpawnSelected();
 	});
+	spawn_creature_panel->SetOnNpcSpawnSelectedCallback([this]() {
+		OnNpcSpawnSelected();
+	});
 	spawn_creature_panel->SetOnCreatureSelectedCallback([this]() {
 		OnCreatureSelected();
+	});
+	spawn_creature_panel->SetOnZoneSelectedCallback([this]() {
+		OnZoneSelected();
 	});
 	left_sizer->Add(spawn_creature_panel, wxSizerFlags(0).Expand().Border(wxALL, 2));
 
@@ -76,6 +83,9 @@ TilePropertiesPanel::TilePropertiesPanel(wxWindow* parent) :
 	creature_property_panel = newd CreaturePropertyPanel(right_panel);
 	right_sizer->Add(creature_property_panel, wxSizerFlags(0).Expand().Border(wxALL, 2));
 
+	zone_property_panel = newd ZonePropertyPanel(right_panel);
+	right_sizer->Add(zone_property_panel, wxSizerFlags(0).Expand().Border(wxALL, 2));
+
 	placeholder_text = newd wxStaticText(right_panel, wxID_ANY, "Select an item to view properties");
 	right_sizer->Add(placeholder_text, wxSizerFlags(1).Center().Border(wxALL, 10));
 	right_panel->SetSizer(right_sizer);
@@ -99,7 +109,7 @@ void TilePropertiesPanel::SetTile(Tile* tile, Map* map) {
 	current_map = map;
 
 	browse_field_list->SetTile(tile, map);
-	spawn_creature_panel->SetTile(tile);
+	spawn_creature_panel->SetTile(tile, map);
 	map_flags_panel->SetTile(tile, map);
 
 	if (tile) {
@@ -148,7 +158,19 @@ void TilePropertiesPanel::OnSpawnSelected() {
 	HideAllPropertyPanels();
 
 	if (current_tile && current_tile->spawn) {
-		spawn_property_panel->SetSpawn(current_tile->spawn.get(), current_tile, current_map);
+		spawn_property_panel->SetSpawn(current_tile->spawn.get(), current_tile, current_map, "Spawn Radius");
+		spawn_property_panel->Show();
+	} else {
+		placeholder_text->Show();
+	}
+	right_panel->Layout();
+}
+
+void TilePropertiesPanel::OnNpcSpawnSelected() {
+	HideAllPropertyPanels();
+
+	if (current_tile && current_tile->npc_spawn) {
+		spawn_property_panel->SetSpawn(current_tile->npc_spawn.get(), current_tile, current_map, "NPC Spawn Radius");
 		spawn_property_panel->Show();
 	} else {
 		placeholder_text->Show();
@@ -168,6 +190,18 @@ void TilePropertiesPanel::OnCreatureSelected() {
 	right_panel->Layout();
 }
 
+void TilePropertiesPanel::OnZoneSelected() {
+	HideAllPropertyPanels();
+
+	if (current_tile && !current_tile->getZones().empty()) {
+		zone_property_panel->SetTile(current_tile, current_map);
+		zone_property_panel->Show();
+	} else {
+		placeholder_text->Show();
+	}
+	right_panel->Layout();
+}
+
 void TilePropertiesPanel::HideAllPropertyPanels() {
 	item_property_panel->Hide();
 	container_property_panel->Hide();
@@ -176,6 +210,7 @@ void TilePropertiesPanel::HideAllPropertyPanels() {
 	door_property_panel->Hide();
 	spawn_property_panel->Hide();
 	creature_property_panel->Hide();
+	zone_property_panel->Hide();
 	placeholder_text->Hide();
 }
 
@@ -196,6 +231,10 @@ void TilePropertiesPanel::UpdateFromEditor(Editor* editor) {
 				OnCreatureSelected();
 			} else if (tile->spawn && tile->spawn->isSelected()) {
 				OnSpawnSelected();
+			} else if (tile->npc_spawn && tile->npc_spawn->isSelected()) {
+				OnNpcSpawnSelected();
+			} else if (!tile->getZones().empty()) {
+				OnZoneSelected();
 			} else {
 				SelectItem(nullptr);
 			}

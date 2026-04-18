@@ -11,6 +11,8 @@
 
 class Tile;
 class Map;
+class Item;
+class Editor;
 class BrowseFieldList;
 class SpawnCreaturePanel;
 class MapFlagsPanel;
@@ -21,6 +23,7 @@ class TeleportPropertyPanel;
 class DoorPropertyPanel;
 class SpawnPropertyPanel;
 class CreaturePropertyPanel;
+class ZonePropertyPanel;
 
 class TilePropertiesPanel : public wxPanel {
 public:
@@ -31,7 +34,9 @@ public:
 	void SelectItem(Item* item);
 	void OnItemSelected(Item* item);
 	void OnSpawnSelected();
+	void OnNpcSpawnSelected();
 	void OnCreatureSelected();
+	void OnZoneSelected();
 	void UpdateFromEditor(Editor* editor);
 	void HideAllPropertyPanels();
 
@@ -52,6 +57,7 @@ protected:
 	DoorPropertyPanel* door_property_panel;
 	SpawnPropertyPanel* spawn_property_panel;
 	CreaturePropertyPanel* creature_property_panel;
+	ZonePropertyPanel* zone_property_panel;
 	wxStaticText* placeholder_text;
 
 	Tile* current_tile;

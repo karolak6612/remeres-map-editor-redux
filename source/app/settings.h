@@ -225,6 +225,10 @@ namespace Config {
 
 		// Add new settings at the end to preserve enum ordering for persisted settings
 		SHOW_MISSING_ITEMS_WARNING,
+		DEFAULT_NPC_SPAWNTIME,
+		CURRENT_NPC_SPAWN_RADIUS,
+		SPAWN_MONSTER_DENSITY,
+		MONSTER_DEFAULT_WEIGHT,
 
 		LAST,
 	};

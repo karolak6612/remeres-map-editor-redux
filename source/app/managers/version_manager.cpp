@@ -20,9 +20,57 @@
 #include "app/settings.h"
 
 #include <format>
+#include <array>
 #include <ranges>
 
 VersionManager g_version;
+
+namespace {
+	wxFileName resolveVersionDataFile(const wxString& base_data_path, const std::initializer_list<const char*>& candidates) {
+		for (const auto* candidate : candidates) {
+			wxFileName path(base_data_path + wxString::FromUTF8(candidate));
+			if (path.FileExists()) {
+				return path;
+			}
+		}
+		return {};
+	}
+
+	wxString resolveLuaCreatureDir(const ClientVersion& client, const std::string& configured_path, const char* leaf_directory, std::vector<std::string>& warnings) {
+		if (!configured_path.empty()) {
+			wxFileName configured(wxstr(configured_path));
+			configured.Normalize();
+			if (configured.DirExists()) {
+				return configured.GetFullPath();
+			}
+
+			warnings.push_back(std::format("Configured {} Lua directory does not exist: {}", leaf_directory, configured_path));
+			return {};
+		}
+
+		if (!client.hasConfiguredClientPath()) {
+			return {};
+		}
+
+		const wxString client_root = client.getClientPath().GetFullPath();
+		const auto candidates = std::to_array<std::string>({
+			std::format("data-otservbr-global/{}", leaf_directory),
+			std::format("data/{}", leaf_directory),
+			std::string { leaf_directory },
+			std::format("../data-otservbr-global/{}", leaf_directory),
+		});
+
+		for (const auto& candidate : candidates) {
+			wxFileName path(client_root + FileName::GetPathSeparator() + wxString::FromUTF8(candidate));
+			path.Normalize();
+			if (path.DirExists()) {
+				return path.GetFullPath();
+			}
+		}
+
+		return {};
+	}
+}
 
 VersionManager::VersionManager() :
 	loaded_version(CLIENT_VERSION_NONE) {
@@ -101,17 +149,30 @@ bool VersionManager::LoadDataFiles(wxString& error, std::vector<std::string>& wa
 	wxFileName metadata_path = getLoadedVersion()->getMetadataPath();
 	wxFileName sprites_path = getLoadedVersion()->getSpritesPath();
 	wxString base_data_path = data_path.GetPath(wxPATH_GET_VOLUME | wxPATH_GET_SEPARATOR);
+	const wxFileName items_xml_path = resolveVersionDataFile(base_data_path, { "items/items.xml", "items.xml" });
+	const wxFileName items_otb_path = resolveVersionDataFile(base_data_path, { "items/items.otb", "items.otb" });
+	const wxFileName monsters_xml_path = resolveVersionDataFile(base_data_path, { "creatures/monsters.xml" });
+	const wxFileName npcs_xml_path = resolveVersionDataFile(base_data_path, { "creatures/npcs.xml" });
+	const wxFileName creatures_xml_path = resolveVersionDataFile(base_data_path, { "creatures.xml" });
+	const wxFileName materials_xml_path = resolveVersionDataFile(base_data_path, { "materials/materials.xml", "materials.xml" });
 
 	AssetLoadRequest asset_request;
 	asset_request.mode = getLoadedVersion()->getItemDefinitionMode();
 	asset_request.client_version = getLoadedVersion();
 	asset_request.dat_path = metadata_path;
 	asset_request.spr_path = sprites_path;
-	asset_request.otb_path = wxFileName(base_data_path + "items.otb");
-	asset_request.xml_path = wxFileName(base_data_path + "items.xml");
+	asset_request.otb_path = items_otb_path;
+	asset_request.xml_path = items_xml_path;
 
-	// Track whether this mode uses OTB
-	last_load_has_otb = (asset_request.mode != ItemDefinitionMode::DatOnly);
+	if (asset_request.xml_path.GetFullPath().empty()) {
+		error = "Couldn't locate items.xml for the selected client version.";
+		g_loading.DestroyLoadBar();
+		UnloadVersion();
+		return false;
+	}
+
+	// Track whether this mode uses OTB-backed definitions.
+	last_load_has_otb = (asset_request.mode == ItemDefinitionMode::DatOtb);
 
 	AssetBundle bundle;
 	AssetBundleLoader bundle_loader;
@@ -205,9 +266,76 @@ bool VersionManager::LoadDataFiles(wxString& error, std::vector<std::string>& wa
 		}
 	}
 
-	g_loading.SetLoadDone(35, "Loading creatures.xml ...");
-	if (!g_creatures.loadFromXML(base_data_path + "creatures.xml", true, error, warnings)) {
-		warnings.push_back(std::format("Couldn't load creatures.xml: {}", error.ToStdString()));
+	g_loading.SetLoadDone(35, "Loading creatures...");
+	wxString creatures_error;
+	const bool has_ot_creature_indexes = monsters_xml_path.FileExists() || npcs_xml_path.FileExists();
+	const bool has_unified_creatures_xml = creatures_xml_path.FileExists();
+	bool monsters_ok = false;
+	bool npcs_ok = false;
+
+	if (has_ot_creature_indexes) {
+		monsters_ok = !monsters_xml_path.FileExists();
+		npcs_ok = !npcs_xml_path.FileExists();
+		if (monsters_xml_path.FileExists()) {
+			monsters_ok = g_creatures.importXMLFromOT(monsters_xml_path, creatures_error, warnings);
+			if (!monsters_ok) {
+				warnings.push_back(std::format("Couldn't load {}: {}", monsters_xml_path.GetFullPath().ToStdString(), creatures_error.ToStdString()));
+			}
+		}
+		if (npcs_xml_path.FileExists()) {
+			npcs_ok = g_creatures.importXMLFromOT(npcs_xml_path, creatures_error, warnings);
+			if (!npcs_ok) {
+				warnings.push_back(std::format("Couldn't load {}: {}", npcs_xml_path.GetFullPath().ToStdString(), creatures_error.ToStdString()));
+			}
+		}
+		if ((!monsters_ok || !npcs_ok) && creatures_xml_path.FileExists()) {
+			if (!g_creatures.loadFromXML(creatures_xml_path, true, creatures_error, warnings)) {
+				warnings.push_back(std::format("Couldn't load {}: {}", creatures_xml_path.GetFullPath().ToStdString(), creatures_error.ToStdString()));
+			} else {
+				monsters_ok = true;
+				npcs_ok = true;
+			}
+		}
+	} else if (has_unified_creatures_xml) {
+		if (!g_creatures.loadFromXML(creatures_xml_path, true, creatures_error, warnings)) {
+			warnings.push_back(std::format("Couldn't load {}: {}", creatures_xml_path.GetFullPath().ToStdString(), creatures_error.ToStdString()));
+		} else {
+			monsters_ok = true;
+			npcs_ok = true;
+		}
+	}
+
+	const wxString monster_lua_dir = resolveLuaCreatureDir(*getLoadedVersion(), getLoadedVersion()->getMonsterLuaPath(), "monster", warnings);
+	if (!monster_lua_dir.empty()) {
+		size_t imported_count = 0;
+		if (!g_creatures.importLuaMonsters(monster_lua_dir, imported_count, creatures_error, warnings)) {
+			warnings.push_back(std::format("Couldn't load monster Lua directory {}: {}", monster_lua_dir.ToStdString(), creatures_error.ToStdString()));
+		} else if (imported_count > 0) {
+			monsters_ok = true;
+		}
+	}
+
+	const wxString npc_lua_dir = resolveLuaCreatureDir(*getLoadedVersion(), getLoadedVersion()->getNpcLuaPath(), "npc", warnings);
+	if (!npc_lua_dir.empty()) {
+		size_t imported_count = 0;
+		if (!g_creatures.importLuaNpcs(npc_lua_dir, imported_count, creatures_error, warnings)) {
+			warnings.push_back(std::format("Couldn't load NPC Lua directory {}: {}", npc_lua_dir.ToStdString(), creatures_error.ToStdString()));
+		} else if (imported_count > 0) {
+			npcs_ok = true;
+		}
+	}
+
+	if (has_ot_creature_indexes && !monsters_ok && !npcs_ok) {
+		error = "Couldn't load monsters.xml, npcs.xml, creatures.xml, or Lua creature directories for the selected client version.";
+		g_loading.DestroyLoadBar();
+		last_missing_items = {};
+		last_load_has_otb = true;
+		UnloadVersion();
+		return false;
+	}
+
+	if (!has_ot_creature_indexes && !has_unified_creatures_xml && !monsters_ok && !npcs_ok) {
+		warnings.push_back("Couldn't locate creatures XML or Lua creature directories for the selected client version.");
 	}
 
 	// g_loading.SetLoadDone(45, "Loading user creatures.xml ...");
@@ -226,9 +354,13 @@ bool VersionManager::LoadDataFiles(wxString& error, std::vector<std::string>& wa
 	// 	}
 	// }
 
-	g_loading.SetLoadDone(50, "Loading materials.xml ...");
-	if (!g_materials.loadMaterials(base_data_path + "materials.xml", error, warnings)) {
-		warnings.push_back("Couldn't load materials.xml: " + std::string(error.mb_str()));
+	g_loading.SetLoadDone(50, "Loading materials...");
+	if (materials_xml_path.FileExists()) {
+		if (!g_materials.loadMaterials(materials_xml_path, error, warnings)) {
+			warnings.push_back("Couldn't load materials XML: " + std::string(error.mb_str()));
+		}
+	} else {
+		warnings.push_back("Couldn't locate materials XML for the selected client version.");
 	}
 
 	g_loading.SetLoadDone(70, "Loading extensions...");

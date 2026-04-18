@@ -475,6 +475,10 @@ void Settings::IO(IOMode mode) {
 	// Missing items report (added at end to preserve enum stability)
 	section("Editor");
 	Bool(SHOW_MISSING_ITEMS_WARNING, false);
+	Int(DEFAULT_NPC_SPAWNTIME, 60);
+	Int(CURRENT_NPC_SPAWN_RADIUS, 5);
+	Int(SPAWN_MONSTER_DENSITY, 10);
+	Int(MONSTER_DEFAULT_WEIGHT, 25);
 
 	if (mode == SAVE) {
 		std::ofstream file("config.toml");

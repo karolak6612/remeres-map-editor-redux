@@ -94,6 +94,9 @@ public:
 	SpawnPositionList::iterator find(Position& pos) {
 		return spawns.find(pos);
 	}
+	[[nodiscard]] bool empty() const {
+		return spawns.empty();
+	}
 
 private:
 	SpawnPositionList spawns;

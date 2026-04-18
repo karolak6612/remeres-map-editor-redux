@@ -30,9 +30,11 @@
 #include "brushes/table/table_brush.h"
 #include "brushes/raw/raw_brush.h"
 #include "brushes/house/house_brush.h"
+#include "brushes/spawn/npc_spawn_brush.h"
 #include "brushes/spawn/spawn_brush.h"
 #include "brushes/creature/creature_brush.h"
 #include "brushes/door/door_brush.h"
+#include "brushes/zone/zone_brush.h"
 
 void BrushSelector::SelectRAWBrush(Selection& selection) {
 	if (selection.size() != 1) {
@@ -219,6 +221,25 @@ void BrushSelector::SelectCreatureBrush(Selection& selection) {
 
 void BrushSelector::SelectSpawnBrush() {
 	g_gui.SelectBrush(g_brush_manager.spawn_brush, TILESET_CREATURE);
+}
+
+void BrushSelector::SelectNpcSpawnBrush() {
+	g_gui.SelectBrush(g_brush_manager.npc_spawn_brush, TILESET_CREATURE);
+}
+
+void BrushSelector::SelectZoneBrush(Selection& selection) {
+	Tile* tile = selection.getSelectedTile();
+	if (!tile || tile->getZones().empty()) {
+		return;
+	}
+
+	if (Editor* editor = g_gui.GetCurrentEditor()) {
+		const uint16_t zone_id = tile->getZones().front();
+		const std::string zone_name = editor->map.zones.findName(zone_id);
+		g_brush_manager.SetSelectedZone(zone_name.empty() ? std::to_string(zone_id) : zone_name);
+	}
+
+	g_gui.SelectBrush(g_brush_manager.zone_brush, TILESET_ZONES);
 }
 
 void BrushSelector::SelectSmartBrush(Editor& editor, Tile* tile) {

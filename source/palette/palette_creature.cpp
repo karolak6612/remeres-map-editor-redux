@@ -1,30 +1,19 @@
-//////////////////////////////////////////////////////////////////////
-// This file is part of Remere's Map Editor
-//////////////////////////////////////////////////////////////////////
-// Remere's Map Editor is free software: you can redistribute it and/or modify
-// it under the terms of the GNU General Public License as published by
-// the Free Software Foundation, either version 3 of the License, or
-// (at your option) any later version.
-//
-// Remere's Map Editor is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-// GNU General Public License for more details.
-//
-// You should have received a copy of the GNU General Public License
-// along with this program. If not, see <http://www.gnu.org/licenses/>.
-//////////////////////////////////////////////////////////////////////
-
 #include "palette/palette_creature.h"
+
 #include "palette/panels/brush_panel.h"
 #include "brushes/creature/creature_brush.h"
+#include "brushes/spawn/npc_spawn_brush.h"
+#include "brushes/spawn/spawn_brush.h"
 #include "game/creatures.h"
 
 #include "app/settings.h"
 #include "brushes/brush.h"
-#include "ui/gui.h"
-#include "brushes/spawn/spawn_brush.h"
+#include "brushes/managers/brush_manager.h"
 #include "game/materials.h"
+#include "ui/gui.h"
+
+#include <array>
+#include <wx/srchctrl.h>
 
 // ============================================================================
 // Creature palette
@@ -33,11 +22,18 @@ CreaturePalettePanel::CreaturePalettePanel(wxWindow* parent, wxWindowID id) :
 	PalettePanel(parent, id) {
 	wxSizer* topsizer = newd wxBoxSizer(wxVERTICAL);
 
+	search_ctrl = newd wxSearchCtrl(this, wxID_ANY);
+	search_ctrl->SetDescriptiveText("Search monsters or NPCs");
+	search_ctrl->ShowCancelButton(true);
+	topsizer->Add(search_ctrl, 0, wxEXPAND | wxBOTTOM, FromDIP(4));
+
 	choicebook = newd wxChoicebook(this, wxID_ANY);
 	topsizer->Add(choicebook, 1, wxEXPAND);
 
 	SetSizerAndFit(topsizer);
 
+	search_ctrl->Bind(wxEVT_TEXT, &CreaturePalettePanel::OnSearchChanged, this);
+	search_ctrl->Bind(wxEVT_SEARCHCTRL_CANCEL_BTN, &CreaturePalettePanel::OnSearchChanged, this);
 	Bind(wxEVT_CHOICEBOOK_PAGE_CHANGING, &CreaturePalettePanel::OnSwitchingPage, this);
 	Bind(wxEVT_CHOICEBOOK_PAGE_CHANGED, &CreaturePalettePanel::OnPageChanged, this);
 
@@ -83,17 +79,18 @@ bool CreaturePalettePanel::SelectBrush(const Brush* whatbrush) {
 
 	if (whatbrush->is<CreatureBrush>()) {
 		for (size_t i = 0; i < choicebook->GetPageCount(); ++i) {
-			BrushPanel* bp = reinterpret_cast<BrushPanel*>(choicebook->GetPage(i));
-			if (bp->SelectBrush(whatbrush)) {
+			auto* panel = reinterpret_cast<BrushPanel*>(choicebook->GetPage(i));
+			if (panel->SelectBrush(whatbrush)) {
 				if (choicebook->GetSelection() != i) {
 					choicebook->SetSelection(i);
 				}
 				return true;
 			}
 		}
-	} else if (whatbrush->is<SpawnBrush>()) {
+	} else if (whatbrush->is<SpawnBrush>() || whatbrush->is<NpcSpawnBrush>()) {
 		return true;
 	}
+
 	return false;
 }
 
@@ -105,18 +102,30 @@ void CreaturePalettePanel::OnUpdate() {
 	choicebook->DeleteAllPages();
 	g_materials.createOtherTileset();
 
-	const BrushListType ltype = (BrushListType)g_settings.getInteger(Config::PALETTE_CREATURE_STYLE);
+	const BrushListType ltype = static_cast<BrushListType>(g_settings.getInteger(Config::PALETTE_CREATURE_STYLE));
+	constexpr auto preferred_tilesets = std::to_array<std::string_view>({
+		"Monsters",
+		"NPCs",
+	});
 
-	for (const auto& tileset : GetSortedTilesets(g_materials.tilesets)) {
-		const TilesetCategory* tsc = tileset->getCategory(TILESET_CREATURE);
-		if ((tsc && tsc->size() > 0) || tileset->name == "NPCs" || tileset->name == "Others") {
-			BrushPanel* bp = newd BrushPanel(choicebook);
-			bp->SetListType(ltype);
-			bp->AssignTileset(tsc);
-			bp->LoadContents();
-			choicebook->AddPage(bp, wxstr(tileset->name));
+	for (const std::string_view tileset_name : preferred_tilesets) {
+		auto it = g_materials.tilesets.find(std::string { tileset_name });
+		if (it == g_materials.tilesets.end()) {
+			continue;
 		}
+
+		const TilesetCategory* category = it->second->getCategory(TILESET_CREATURE);
+		if (!category) {
+			continue;
+		}
+
+		auto* panel = newd BrushPanel(choicebook);
+		panel->SetListType(ltype);
+		panel->AssignTileset(category);
+		panel->LoadContents();
+		choicebook->AddPage(panel, wxstr(it->second->name));
 	}
+
 	if (choicebook->GetPageCount() > 0) {
 		choicebook->SetSelection(0);
 	}
@@ -129,8 +138,7 @@ void CreaturePalettePanel::OnUpdateBrushSize(BrushShape shape, int size) {
 
 void CreaturePalettePanel::OnSwitchIn() {
 	g_gui.ActivatePalette(GetParentPalette());
-	g_gui.SetSpawnTime(g_settings.getInteger(Config::DEFAULT_SPAWNTIME));
-	g_gui.SetBrushSize(g_settings.getInteger(Config::CURRENT_SPAWN_RADIUS));
+	SyncSpawnControlsToSelection();
 }
 
 void CreaturePalettePanel::SelectTileset(size_t index) {
@@ -158,30 +166,72 @@ void CreaturePalettePanel::SetListType(wxString ltype) {
 }
 
 void CreaturePalettePanel::SelectCreature(size_t index) {
+	(void)index;
 	if (choicebook->GetPageCount() > 0) {
-		BrushPanel* bp = reinterpret_cast<BrushPanel*>(choicebook->GetPage(choicebook->GetSelection()));
-		// BrushPanel doesn't easily expose selection by index,
-		// but since this is usually used for "SelectFirstBrush" (index 0),
-		// we can just select the first brush if bp is valid.
-		bp->SelectFirstBrush();
+		auto* panel = reinterpret_cast<BrushPanel*>(choicebook->GetPage(choicebook->GetSelection()));
+		panel->SelectFirstBrush();
 	}
 }
 
 void CreaturePalettePanel::SelectCreature(std::string name) {
-	// Better approach: use g_creatures to find the brush
-	// and then call the existing SelectBrush(Brush*)
-	if (CreatureType* ct = g_creatures[name]) {
-		if (ct->brush) {
-			SelectBrush(ct->brush);
+	if (CreatureType* creature_type = g_creatures[name]) {
+		if (creature_type->brush) {
+			SelectBrush(creature_type->brush);
 		}
 	}
 }
 
+void CreaturePalettePanel::SelectCreatureFromSearch(const wxString& query) {
+	const std::string filter = as_lower_str(nstr(query));
+	if (filter.empty()) {
+		return;
+	}
+
+	for (const auto& [_, creature_type] : g_creatures) {
+		if (!creature_type || !creature_type->brush) {
+			continue;
+		}
+
+		if (!wxstr(as_lower_str(creature_type->name)).Contains(wxstr(filter))) {
+			continue;
+		}
+
+		SelectBrush(creature_type->brush);
+		return;
+	}
+}
+
+bool CreaturePalettePanel::IsNpcPageSelected() const {
+	const int selection = choicebook ? choicebook->GetSelection() : wxNOT_FOUND;
+	if (!choicebook || selection == wxNOT_FOUND) {
+		return false;
+	}
+
+	return choicebook->GetPageText(static_cast<size_t>(selection)).CmpNoCase("NPCs") == 0;
+}
+
+void CreaturePalettePanel::SyncSpawnControlsToSelection() const {
+	if (IsNpcPageSelected()) {
+		g_brush_manager.SetNpcSpawnTime(g_settings.getInteger(Config::DEFAULT_NPC_SPAWNTIME));
+		g_gui.SetBrushSize(g_settings.getInteger(Config::CURRENT_NPC_SPAWN_RADIUS));
+		return;
+	}
+
+	g_brush_manager.SetSpawnTime(g_settings.getInteger(Config::DEFAULT_SPAWNTIME));
+	g_gui.SetBrushSize(g_settings.getInteger(Config::CURRENT_SPAWN_RADIUS));
+}
+
 void CreaturePalettePanel::OnSwitchingPage(wxChoicebookEvent& event) {
-	// Do nothing
+	(void)event;
 }
 
 void CreaturePalettePanel::OnPageChanged(wxChoicebookEvent& event) {
+	(void)event;
+	SyncSpawnControlsToSelection();
 	g_gui.ActivatePalette(GetParentPalette());
 	g_gui.SelectBrush();
+}
+
+void CreaturePalettePanel::OnSearchChanged(wxCommandEvent& event) {
+	SelectCreatureFromSearch(event.GetString());
 }

@@ -42,6 +42,7 @@ protected:
 	std::unique_ptr<Tile> tile;
 	Position position;
 	uint16_t spawn_count;
+	uint16_t npc_spawn_count;
 	uint16_t waypoint_count;
 	uint16_t town_count;
 	std::unique_ptr<HouseExitList> house_exits; // Any house exits pointing here
@@ -85,6 +86,15 @@ public:
 	}
 	void decreaseSpawnCount() {
 		spawn_count--;
+	}
+	uint16_t getNpcSpawnCount() const {
+		return npc_spawn_count;
+	}
+	void increaseNpcSpawnCount() {
+		npc_spawn_count++;
+	}
+	void decreaseNpcSpawnCount() {
+		npc_spawn_count--;
 	}
 	uint16_t getWaypointCount() const {
 		return waypoint_count;

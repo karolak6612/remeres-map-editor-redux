@@ -23,7 +23,7 @@ const ItemDefinitionRecipe& ItemDefinitionRecipeRegistry::get(ItemDefinitionMode
 		.mode = ItemDefinitionMode::Protobuf,
 		.sources = { ItemDefinitionSourceKind::Protobuf, ItemDefinitionSourceKind::Xml, ItemDefinitionSourceKind::Xml },
 		.source_count = 2,
-		.runnable = false,
+		.runnable = true,
 	};
 
 	switch (mode) {

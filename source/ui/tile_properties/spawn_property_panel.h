@@ -16,7 +16,7 @@ public:
 	virtual ~SpawnPropertyPanel();
 
 	void SetItem(Item* item, Tile* tile, Map* map) override;
-	void SetSpawn(Spawn* spawn, Tile* tile, Map* map);
+	void SetSpawn(Spawn* spawn, Tile* tile, Map* map, const wxString& title = "Spawn Radius");
 
 	void OnRadiusChange(wxSpinEvent& event);
 

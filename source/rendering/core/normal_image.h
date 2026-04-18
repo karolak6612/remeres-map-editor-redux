@@ -23,11 +23,16 @@ public:
 	// This contains the pixel data
 	uint16_t size;
 	std::unique_ptr<uint8_t[]> dump;
+	uint16_t pixel_width = TextureAtlas::BASE_SLOT_SIZE;
+	uint16_t pixel_height = TextureAtlas::BASE_SLOT_SIZE;
 
 	void clean(time_t time, int longevity) override;
 
 	std::unique_ptr<uint8_t[]> getRGBData() override;
 	std::unique_ptr<uint8_t[]> getRGBAData() override;
+	ImageDimensions getDimensions() const override {
+		return ImageDimensions { pixel_width, pixel_height };
+	}
 
 	void fulfillPreload(std::unique_ptr<uint8_t[]> preloaded_data);
 

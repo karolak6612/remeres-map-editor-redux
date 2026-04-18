@@ -40,6 +40,7 @@
 #include "brushes/doodad/doodad_brush.h"
 #include "lua/lua_script_manager.h"
 #include "brushes/creature/creature_brush.h"
+#include "brushes/spawn/npc_spawn_brush.h"
 #include "brushes/spawn/spawn_brush.h"
 
 #include "ui/controls/item_buttons.h"
@@ -83,7 +84,24 @@ void emitBrushChangeIfNeeded(GUI& gui) {
 }
 
 [[nodiscard]] bool isCreatureToolBrush(const Brush* brush) {
-	return brush && (brush->is<CreatureBrush>() || brush->is<SpawnBrush>());
+	return brush && (brush->is<CreatureBrush>() || brush->is<SpawnBrush>() || brush->is<NpcSpawnBrush>());
+}
+
+[[nodiscard]] bool usesNpcSpawnSettings(const Brush* brush) {
+	if (!brush) {
+		return false;
+	}
+
+	if (brush->is<NpcSpawnBrush>()) {
+		return true;
+	}
+
+	if (!brush->is<CreatureBrush>()) {
+		return false;
+	}
+
+	const auto* creature_brush = brush->as<CreatureBrush>();
+	return creature_brush && creature_brush->getType() && creature_brush->getType()->isNpc;
 }
 
 void syncCreatureToolBrushSizeSetting(const GUI& gui) {
@@ -91,7 +109,12 @@ void syncCreatureToolBrushSizeSetting(const GUI& gui) {
 		return;
 	}
 
-	g_settings.setInteger(Config::CURRENT_SPAWN_RADIUS, std::max(1, gui.GetBrushSize()));
+	const int size = std::max(1, gui.GetBrushSize());
+	if (usesNpcSpawnSettings(gui.GetCurrentBrush())) {
+		g_settings.setInteger(Config::CURRENT_NPC_SPAWN_RADIUS, size);
+	} else {
+		g_settings.setInteger(Config::CURRENT_SPAWN_RADIUS, size);
+	}
 }
 }
 
@@ -195,11 +218,12 @@ void GUI::SetDrawingMode() {
 }
 
 void GUI::RefreshView() {
-	for (int i = 0; i < tabbook->GetTabCount(); ++i) {
-		EditorTab* editorTab = tabbook->GetTab(i);
-		if (editorTab) {
-			editorTab->GetWindow()->Refresh();
-		}
+	if (!tabbook) {
+		return;
+	}
+
+	if (EditorTab* editorTab = tabbook->GetCurrentTab(); editorTab != nullptr) {
+		editorTab->GetWindow()->Refresh(false);
 	}
 }
 
@@ -373,7 +397,9 @@ int GUI::GetSpawnTime() const {
 }
 void GUI::SetSpawnTime(int time) {
 	g_brush_manager.SetSpawnTime(time);
+	g_brush_manager.SetNpcSpawnTime(time);
 	g_settings.setInteger(Config::DEFAULT_SPAWNTIME, time);
+	g_settings.setInteger(Config::DEFAULT_NPC_SPAWNTIME, time);
 	if (tool_options) {
 		tool_options->ReloadSettings();
 	}

@@ -144,6 +144,7 @@ namespace MenuBar {
 		SELECT_HOUSE,
 		SELECT_WAYPOINT,
 		SELECT_RAW,
+		SELECT_ZONE,
 		FLOOR_0,
 		FLOOR_1,
 		FLOOR_2,
@@ -308,6 +309,7 @@ public:
 	void OnSelectCreaturePalette(wxCommandEvent& event);
 	void OnSelectWaypointPalette(wxCommandEvent& event);
 	void OnSelectRawPalette(wxCommandEvent& event);
+	void OnSelectZonePalette(wxCommandEvent& event);
 
 	void OnScriptsOpenFolder(wxCommandEvent& event);
 	void OnScriptsReload(wxCommandEvent& event);

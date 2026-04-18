@@ -45,6 +45,10 @@ struct ItemTextTable {
 	std::vector<std::string> descriptions;
 };
 
+struct ItemPassiveMetadataTable {
+	std::vector<std::string> json_blobs;
+};
+
 struct ItemVisualTable {
 	std::vector<ClientItemId> client_ids;
 };
@@ -69,6 +73,7 @@ public:
 	std::string_view name() const;
 	std::string_view editorSuffix() const;
 	std::string_view description() const;
+	std::string_view passiveMetadataJson() const;
 	bool hasFlag(ItemFlag flag) const;
 	int64_t attribute(ItemAttributeKey key) const;
 	const ItemEditorData& editorData() const;
@@ -152,6 +157,7 @@ private:
 	ItemFlagTable flags_;
 	ItemAttributeTable attributes_;
 	ItemTextTable text_;
+	ItemPassiveMetadataTable passive_metadata_;
 	ItemVisualTable visual_;
 	ItemEditorTable editor_;
 

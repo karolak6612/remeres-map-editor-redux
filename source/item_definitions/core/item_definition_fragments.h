@@ -19,6 +19,9 @@ struct DatItemFragment {
 	uint64_t flags = 0;
 	uint16_t way_speed = 100;
 	int always_on_top_order = 0;
+	std::optional<uint16_t> max_text_len;
+	std::optional<uint16_t> slot_position;
+	std::string passive_metadata_json;
 };
 
 struct OtbItemFragment {
@@ -94,6 +97,7 @@ struct ResolvedItemDefinitionRow {
 	std::string name;
 	std::string editor_suffix;
 	std::string description;
+	std::string passive_metadata_json;
 };
 
 struct ItemDefinitionVersionInfo {

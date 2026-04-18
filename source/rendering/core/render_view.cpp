@@ -39,20 +39,41 @@ void RenderView::Setup(MapCanvas* canvas, const DrawingOptions& options) {
 
 	end_z = floor;
 
-	start_x = view_scroll_x / TILE_SIZE;
-	start_y = view_scroll_y / TILE_SIZE;
-
-	if (floor > GROUND_LAYER) {
-		start_x -= 2;
-		start_y -= 2;
-	}
-
-	end_x = start_x + screensize_x / tile_size + 2;
-	end_y = start_y + screensize_y / tile_size + 2;
-
 	// Calculate logical dimensions
 	logical_width = screensize_x * zoom;
 	logical_height = screensize_y * zoom;
+
+	const ViewBounds bounds = getBoundsForFloor(floor);
+	start_x = bounds.start_x;
+	start_y = bounds.start_y;
+	end_x = bounds.end_x;
+	end_y = bounds.end_y;
+}
+
+ViewBounds RenderView::getBoundsForFloor(int map_z, int extra_margin_tiles) const {
+	int start = view_scroll_x / TILE_SIZE;
+	int top = view_scroll_y / TILE_SIZE;
+
+	if (floor > GROUND_LAYER) {
+		start -= 2;
+		top -= 2;
+	}
+
+	int end = start + screensize_x / tile_size + 2;
+	int bottom = top + screensize_y / tile_size + 2;
+
+	const int floor_expansion = std::max(0, start_z - map_z) + std::max(0, extra_margin_tiles);
+	start -= floor_expansion;
+	top -= floor_expansion;
+	end += floor_expansion;
+	bottom += floor_expansion;
+
+	return ViewBounds {
+		.start_x = start,
+		.start_y = top,
+		.end_x = end,
+		.end_y = bottom,
+	};
 }
 
 int RenderView::getFloorAdjustment() const {

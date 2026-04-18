@@ -20,6 +20,11 @@
 
 #include "game/creatures.h"
 
+#include <cstdint>
+#include <map>
+#include <optional>
+#include <string>
+
 enum Direction {
 	NORTH = 0,
 	EAST = 1,
@@ -79,10 +84,35 @@ public:
 		this->direction = direction;
 	}
 
+	[[nodiscard]] std::optional<uint8_t> getSpawnWeight() const {
+		return spawn_weight;
+	}
+	void setSpawnWeight(std::optional<uint8_t> weight) {
+		spawn_weight = weight;
+	}
+	void clearSpawnWeight() {
+		spawn_weight.reset();
+	}
+
+	[[nodiscard]] const std::map<std::string, std::string>& getSpawnAttributes() const {
+		return spawn_attributes;
+	}
+	void setSpawnAttribute(std::string key, std::string value) {
+		spawn_attributes[std::move(key)] = std::move(value);
+	}
+	void setSpawnAttributes(std::map<std::string, std::string> attributes) {
+		spawn_attributes = std::move(attributes);
+	}
+	void clearSpawnAttributes() {
+		spawn_attributes.clear();
+	}
+
 protected:
 	std::string type_name;
 	Direction direction;
 	int spawntime;
+	std::optional<uint8_t> spawn_weight;
+	std::map<std::string, std::string> spawn_attributes;
 	bool saved;
 	bool selected;
 };

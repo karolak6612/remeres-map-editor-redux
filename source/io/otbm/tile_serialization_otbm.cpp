@@ -92,6 +92,44 @@ namespace {
 	bool shouldTreatInlineItemAsGround(const Tile& tile) {
 		return !tile.hasGround() && tile.items.empty();
 	}
+
+	bool isInlineItemAttribute(uint8_t attribute) {
+		return attribute == OTBM_ATTR_COUNT ||
+			attribute == OTBM_ATTR_ACTION_ID ||
+			attribute == OTBM_ATTR_UNIQUE_ID ||
+			attribute == OTBM_ATTR_CHARGES ||
+			attribute == OTBM_ATTR_TEXT ||
+			attribute == OTBM_ATTR_DESC ||
+			attribute == OTBM_ATTR_TELE_DEST ||
+			attribute == OTBM_ATTR_DEPOT_ID ||
+			attribute == OTBM_ATTR_HOUSEDOORID ||
+			attribute == OTBM_ATTR_PODIUMOUTFIT ||
+			attribute == OTBM_ATTR_TIER ||
+			attribute == OTBM_ATTR_ATTRIBUTE_MAP;
+	}
+
+	std::optional<size_t> findRecoverableTileAttributeOffset(std::string_view raw_data, size_t search_start) {
+		if (search_start >= raw_data.size()) {
+			return std::nullopt;
+		}
+
+		for (size_t offset = search_start; offset + 2 < raw_data.size(); ++offset) {
+			const auto attribute = static_cast<uint8_t>(raw_data[offset]);
+			if (attribute != OTBM_ATTR_ITEM) {
+				continue;
+			}
+
+			const uint16_t server_id = static_cast<uint16_t>(
+				static_cast<uint8_t>(raw_data[offset + 1]) |
+				(static_cast<uint16_t>(static_cast<uint8_t>(raw_data[offset + 2])) << 8)
+			);
+			if (server_id != 0 && g_item_definitions.get(server_id)) {
+				return offset;
+			}
+		}
+
+		return std::nullopt;
+	}
 }
 
 void TileSerializationOTBM::readTileArea(IOMapOTBM& iomap, Map& map, BinaryNode* mapNode) {
@@ -139,6 +177,7 @@ void TileSerializationOTBM::readTileArea(IOMapOTBM& iomap, Map& map, BinaryNode*
 		}
 
 		uint8_t attribute;
+		Item* inline_item = nullptr;
 		bool stop_attributes = false;
 		while (!stop_attributes) {
 			const size_t attributeOffset = tileNode->getReadOffset();
@@ -162,6 +201,7 @@ void TileSerializationOTBM::readTileArea(IOMapOTBM& iomap, Map& map, BinaryNode*
 					auto item = ItemSerializationOTBM::createFromStream(iomap, tileNode);
 					const auto rawItemBytes = copyRawBytes(tileNode->rawData(), attributeOffset, tileNode->getReadOffset());
 					if (hasResolvedDefinition(item)) {
+						inline_item = item.get();
 						tile->addItem(std::move(item));
 					} else {
 						const bool treatAsGround = shouldTreatInlineItemAsGround(*tile);
@@ -174,6 +214,7 @@ void TileSerializationOTBM::readTileArea(IOMapOTBM& iomap, Map& map, BinaryNode*
 								.kind = treatAsGround ? InvalidOTBMItemKind::MissingGround : InvalidOTBMItemKind::MissingItem,
 								.rawInlineBytes = rawItemBytes,
 							});
+							inline_item = item.get();
 							tile->addItem(std::move(item));
 						} else if (!rawItemBytes.empty()) {
 							tile->addOpaqueTileAttribute(OpaqueTileAttributeRecord {
@@ -184,6 +225,27 @@ void TileSerializationOTBM::readTileArea(IOMapOTBM& iomap, Map& map, BinaryNode*
 					break;
 				}
 				default: {
+					if (inline_item && isInlineItemAttribute(attribute)) {
+						bool read_ok = false;
+						if (attribute == OTBM_ATTR_ATTRIBUTE_MAP) {
+							read_ok = inline_item->unserializeAttributeMap(iomap, tileNode);
+						} else {
+							read_ok = ItemSerializationOTBM::readAttribute(iomap, static_cast<OTBM_ItemAttribute>(attribute), tileNode, *inline_item);
+						}
+
+						if (read_ok) {
+							break;
+						}
+					}
+
+					if (const auto recovered_offset = findRecoverableTileAttributeOffset(tileNode->rawData(), attributeOffset + 1)) {
+						tile->addOpaqueTileAttribute(OpaqueTileAttributeRecord {
+							.rawBytes = copyRawBytes(tileNode->rawData(), attributeOffset, *recovered_offset),
+						});
+						tileNode->setReadOffset(*recovered_offset);
+						break;
+					}
+
 					tile->addOpaqueTileAttribute(OpaqueTileAttributeRecord {
 						.rawBytes = copyRawBytes(tileNode->rawData(), attributeOffset, tileNode->rawData().size()),
 					});
@@ -230,6 +292,20 @@ void TileSerializationOTBM::readTileArea(IOMapOTBM& iomap, Map& map, BinaryNode*
 					} else {
 						tile->addItem(std::move(item));
 					}
+				}
+			} else if (item_type == OTBM_TILE_ZONE) {
+				uint16_t zone_count = 0;
+				if (!itemNode->getU16(zone_count)) {
+					spdlog::warn("Failed to read tile zone count at {},{},{}", pos.x, pos.y, pos.z);
+					continue;
+				}
+				for (uint16_t i = 0; i < zone_count; ++i) {
+					uint16_t zone_id = 0;
+					if (!itemNode->getU16(zone_id)) {
+						spdlog::warn("Failed to read tile zone id at {},{},{}", pos.x, pos.y, pos.z);
+						break;
+					}
+					tile->addZone(zone_id);
 				}
 			} else {
 				tile->addOpaqueChildNode(capturePreservedNode(itemNode));
@@ -359,6 +435,15 @@ void TileSerializationOTBM::serializeTile(const IOMapOTBM& iomap, const Tile* sa
 		for (const auto& opaqueChildNode : invalidZones->opaqueChildNodes) {
 			writePreservedNode(f, opaqueChildNode);
 		}
+	}
+
+	if (iomap.version.otbm >= MAP_OTBM_5 && !save_tile->zone_ids.empty()) {
+		f.addNode(OTBM_TILE_ZONE);
+		f.addU16(static_cast<uint16_t>(save_tile->zone_ids.size()));
+		for (uint16_t zone_id : save_tile->zone_ids) {
+			f.addU16(zone_id);
+		}
+		f.endNode();
 	}
 
 	f.endNode();

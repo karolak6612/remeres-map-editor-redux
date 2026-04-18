@@ -57,6 +57,33 @@
 using attribute_t = uint8_t;
 using flags_t = uint32_t;
 
+namespace {
+	bool hasZoneAssignments(Map& map) {
+		for (MapIterator it = map.begin(); it != map.end(); ++it) {
+			if (const Tile* tile = it->get(); tile && !tile->getZones().empty()) {
+				return true;
+			}
+		}
+		return false;
+	}
+
+	bool hasCanarySpawnMetadata(Map& map) {
+		for (MapIterator it = map.begin(); it != map.end(); ++it) {
+			const Tile* tile = it->get();
+			if (!tile || !tile->creature) {
+				continue;
+			}
+
+			const Creature& creature = *tile->creature;
+			if (creature.getSpawnWeight().has_value() || !creature.getSpawnAttributes().empty()) {
+				return true;
+			}
+		}
+
+		return false;
+	}
+}
+
 // Item OTBM operations delegated to ItemSerializationOTBM
 std::unique_ptr<Item> Item::Create_OTBM(const IOMap& maphandle, BinaryNode* stream) {
 	return ItemSerializationOTBM::createFromStream(maphandle, stream);
@@ -252,6 +279,8 @@ bool IOMapOTBM::loadMapFromDisk(Map& map, const FileName& filename) {
 
 	loadAux(&MapXMLIO::loadHouses, "house", map.housefile);
 	loadAux(&MapXMLIO::loadSpawns, "spawn", map.spawnfile);
+	loadAux(&MapXMLIO::loadNpcSpawns, "npc", map.spawnnpcfile);
+	loadAux(&MapXMLIO::loadZones, "zones", map.zonefile);
 	// Waypoint migration and loading logic
 	if (!map.waypoints.empty()) {
 		// Case: OTBM has waypoints
@@ -407,6 +436,16 @@ bool IOMapOTBM::loadMap(Map& map, NodeFileReadHandle& f) {
 }
 
 bool IOMapOTBM::saveMapToDisk(Map& map, const FileName& identifier) {
+	if (map.getVersion().otbm < MAP_OTBM_5 && (!map.spawnnpcfile.empty() || !map.npc_spawns.empty())) {
+		error("OTBM %d cannot store NPC spawn data. Save this map as OTBM 5 or 6.", static_cast<int>(map.getVersion().otbm));
+		return false;
+	}
+
+	if (map.getVersion().otbm < MAP_OTBM_5 && hasCanarySpawnMetadata(map)) {
+		error("OTBM %d cannot store Canary spawn metadata. Save this map as OTBM 5 or 6.", static_cast<int>(map.getVersion().otbm));
+		return false;
+	}
+
 	DiskNodeFileWriteHandle f(
 		nstr(identifier.GetFullPath()),
 		(g_settings.getInteger(Config::SAVE_WITH_OTB_MAGIC_NUMBER) ? "OTBM" : std::string(4, '\0'))
@@ -427,10 +466,34 @@ bool IOMapOTBM::saveMapToDisk(Map& map, const FileName& identifier) {
 		return false;
 	}
 
+	if (!map.spawnnpcfile.empty() || !map.npc_spawns.empty()) {
+		if (map.spawnnpcfile.empty()) {
+			map.spawnnpcfile = identifier.GetName() + "-npc.xml";
+		}
+		g_gui.SetLoadDone(99, "Saving NPC spawns...");
+		if (!MapXMLIO::saveNpcSpawns(map, identifier)) {
+			spdlog::error("Failed to save NPC spawns!");
+			return false;
+		}
+	}
+
 	g_gui.SetLoadDone(99, "Saving houses...");
 	if (!MapXMLIO::saveHouses(map, identifier)) {
 		spdlog::error("IOMapOTBM::saveMapToDisk: Failed to save houses");
 		return false;
+	}
+
+	const bool hasZoneData = !map.zones.empty() || hasZoneAssignments(map);
+	const bool saveZones = !map.zonefile.empty() || hasZoneData;
+	if (saveZones) {
+		if (map.zonefile.empty()) {
+			map.zonefile = identifier.GetName() + "-zones.xml";
+		}
+		g_gui.SetLoadDone(99, "Saving zones...");
+		if (!MapXMLIO::saveZones(map, identifier)) {
+			spdlog::error("IOMapOTBM::saveMapToDisk: Failed to save zones");
+			return false;
+		}
 	}
 
 	// Always save waypoints to XML if they exist, creating a default file if needed
@@ -488,6 +551,14 @@ bool IOMapOTBM::saveMap(Map& map, NodeFileWriteHandle& f) {
 			};
 
 			addExtFile(OTBM_ATTR_EXT_SPAWN_FILE, map.spawnfile);
+			if (mapVersion.otbm >= MAP_OTBM_5) {
+				if (!map.spawnnpcfile.empty()) {
+					addExtFile(OTBM_ATTR_EXT_SPAWN_NPC_FILE, map.spawnnpcfile);
+				}
+				if (!map.zonefile.empty()) {
+					addExtFile(OTBM_ATTR_EXT_ZONE_FILE, map.zonefile);
+				}
+			}
 			addExtFile(OTBM_ATTR_EXT_HOUSE_FILE, map.housefile);
 
 			writeTileData(map, f);

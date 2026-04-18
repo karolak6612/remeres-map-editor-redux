@@ -16,7 +16,7 @@
 SpawnCreaturePanel::SpawnCreaturePanel(wxWindow* parent) :
 	wxPanel(parent, wxID_ANY) {
 
-	wxStaticBoxSizer* main_sizer = newd wxStaticBoxSizer(wxVERTICAL, this, "Spawn & Creature");
+	wxStaticBoxSizer* main_sizer = newd wxStaticBoxSizer(wxVERTICAL, this, "Spawn, NPC & Creature");
 
 	// Spawn Node
 	wxBoxSizer* spawn_sizer = newd wxBoxSizer(wxHORIZONTAL);
@@ -26,6 +26,13 @@ SpawnCreaturePanel::SpawnCreaturePanel(wxWindow* parent) :
 	spawn_sizer->Add(spawn_bitmap, wxSizerFlags(0).Center().Border(wxALL, 2));
 	spawn_sizer->Add(spawn_text, wxSizerFlags(1).Center().Border(wxALL, 2));
 
+	wxBoxSizer* npc_spawn_sizer = newd wxBoxSizer(wxHORIZONTAL);
+	npc_spawn_bitmap = newd wxStaticBitmap(main_sizer->GetStaticBox(), wxID_ANY, wxNullBitmap, wxDefaultPosition, FROM_DIP(this, wxSize(32, 32)), wxBORDER_SIMPLE);
+	npc_spawn_bitmap->Hide();
+	npc_spawn_text = newd wxStaticText(main_sizer->GetStaticBox(), wxID_ANY, "No NPC Spawn");
+	npc_spawn_sizer->Add(npc_spawn_bitmap, wxSizerFlags(0).Center().Border(wxALL, 2));
+	npc_spawn_sizer->Add(npc_spawn_text, wxSizerFlags(1).Center().Border(wxALL, 2));
+
 	// Creature Node
 	wxBoxSizer* creature_sizer = newd wxBoxSizer(wxHORIZONTAL);
 	creature_bitmap = newd wxStaticBitmap(main_sizer->GetStaticBox(), wxID_ANY, wxNullBitmap, wxDefaultPosition, FROM_DIP(this, wxSize(32, 32)), wxBORDER_SIMPLE);
@@ -34,22 +41,39 @@ SpawnCreaturePanel::SpawnCreaturePanel(wxWindow* parent) :
 	creature_sizer->Add(creature_bitmap, wxSizerFlags(0).Center().Border(wxALL, 2));
 	creature_sizer->Add(creature_text, wxSizerFlags(1).Center().Border(wxALL, 2));
 
+	wxBoxSizer* zone_sizer = newd wxBoxSizer(wxHORIZONTAL);
+	zone_bitmap = newd wxStaticBitmap(main_sizer->GetStaticBox(), wxID_ANY, wxNullBitmap, wxDefaultPosition, FROM_DIP(this, wxSize(32, 32)), wxBORDER_SIMPLE);
+	zone_bitmap->Hide();
+	zone_text = newd wxStaticText(main_sizer->GetStaticBox(), wxID_ANY, "No Zones");
+	zone_sizer->Add(zone_bitmap, wxSizerFlags(0).Center().Border(wxALL, 2));
+	zone_sizer->Add(zone_text, wxSizerFlags(1).Center().Border(wxALL, 2));
+
 	main_sizer->Add(spawn_sizer, wxSizerFlags(1).Expand().Border(wxALL, 2));
+	main_sizer->Add(npc_spawn_sizer, wxSizerFlags(1).Expand().Border(wxALL, 2));
 	main_sizer->Add(creature_sizer, wxSizerFlags(1).Expand().Border(wxALL, 2));
+	main_sizer->Add(zone_sizer, wxSizerFlags(1).Expand().Border(wxALL, 2));
 
 	SetSizer(main_sizer);
 
 	// Bind mouse events for clicking
 	spawn_bitmap->Bind(wxEVT_LEFT_UP, &SpawnCreaturePanel::OnSpawnClick, this);
 	spawn_text->Bind(wxEVT_LEFT_UP, &SpawnCreaturePanel::OnSpawnClick, this);
+	npc_spawn_bitmap->Bind(wxEVT_LEFT_UP, &SpawnCreaturePanel::OnNpcSpawnClick, this);
+	npc_spawn_text->Bind(wxEVT_LEFT_UP, &SpawnCreaturePanel::OnNpcSpawnClick, this);
 	creature_bitmap->Bind(wxEVT_LEFT_UP, &SpawnCreaturePanel::OnCreatureClick, this);
 	creature_text->Bind(wxEVT_LEFT_UP, &SpawnCreaturePanel::OnCreatureClick, this);
+	zone_bitmap->Bind(wxEVT_LEFT_UP, &SpawnCreaturePanel::OnZoneClick, this);
+	zone_text->Bind(wxEVT_LEFT_UP, &SpawnCreaturePanel::OnZoneClick, this);
 }
 
 SpawnCreaturePanel::~SpawnCreaturePanel() {
 }
 
 void SpawnCreaturePanel::SetTile(Tile* tile) {
+	SetTile(tile, nullptr);
+}
+
+void SpawnCreaturePanel::SetTile(Tile* tile, Map* map) {
 	if (tile && tile->spawn) {
 		spawn_text->SetLabelText(wxString::Format("Spawn\nR=%d", tile->spawn->getSize()));
 		spawn_bitmap->SetBitmap(IMAGE_MANAGER.GetBitmap(ICON_FIRE, FROM_DIP(this, wxSize(32, 32))));
@@ -57,6 +81,15 @@ void SpawnCreaturePanel::SetTile(Tile* tile) {
 	} else {
 		spawn_text->SetLabelText("No Spawn");
 		spawn_bitmap->Hide();
+	}
+
+	if (tile && tile->npc_spawn) {
+		npc_spawn_text->SetLabelText(wxString::Format("NPC Spawn\nR=%d", tile->npc_spawn->getSize()));
+		npc_spawn_bitmap->SetBitmap(IMAGE_MANAGER.GetBitmap(ICON_USER, FROM_DIP(this, wxSize(32, 32))));
+		npc_spawn_bitmap->Show();
+	} else {
+		npc_spawn_text->SetLabelText("No NPC Spawn");
+		npc_spawn_bitmap->Hide();
 	}
 
 	if (tile && tile->creature) {
@@ -73,6 +106,29 @@ void SpawnCreaturePanel::SetTile(Tile* tile) {
 		creature_text->SetLabelText("No Creature");
 		creature_bitmap->Hide();
 	}
+
+	if (tile && !tile->getZones().empty()) {
+		wxString zones = "Zones\n";
+		bool first = true;
+		for (uint16_t zone_id : tile->getZones()) {
+			if (!first) {
+				zones << ", ";
+			}
+			first = false;
+			if (map) {
+				const std::string zone_name = map->zones.findName(zone_id);
+				zones << wxstr(zone_name.empty() ? std::to_string(zone_id) : zone_name);
+			} else {
+				zones << zone_id;
+			}
+		}
+		zone_text->SetLabelText(zones);
+		zone_bitmap->SetBitmap(IMAGE_MANAGER.GetBitmap(ICON_MARKER, FROM_DIP(this, wxSize(32, 32))));
+		zone_bitmap->Show();
+	} else {
+		zone_text->SetLabelText("No Zones");
+		zone_bitmap->Hide();
+	}
 	Layout();
 }
 
@@ -82,8 +138,20 @@ void SpawnCreaturePanel::OnSpawnClick(wxMouseEvent& event) {
 	}
 }
 
+void SpawnCreaturePanel::OnNpcSpawnClick(wxMouseEvent& event) {
+	if (on_npc_spawn_selected_cb) {
+		on_npc_spawn_selected_cb();
+	}
+}
+
 void SpawnCreaturePanel::OnCreatureClick(wxMouseEvent& event) {
 	if (on_creature_selected_cb) {
 		on_creature_selected_cb();
+	}
+}
+
+void SpawnCreaturePanel::OnZoneClick(wxMouseEvent& event) {
+	if (on_zone_selected_cb) {
+		on_zone_selected_cb();
 	}
 }

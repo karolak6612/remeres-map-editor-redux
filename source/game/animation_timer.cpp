@@ -6,6 +6,7 @@
 
 #include "game/animation_timer.h"
 #include "rendering/ui/map_display.h"
+#include "ui/gui.h"
 
 AnimationTimer::AnimationTimer(MapCanvas* canvas) :
 	wxTimer(),
@@ -19,9 +20,15 @@ AnimationTimer::~AnimationTimer() {
 };
 
 void AnimationTimer::Notify() {
-	if (map_canvas->GetZoom() <= 2.0) {
-		map_canvas->Refresh();
+	if (map_canvas->GetZoom() > 2.0 || !map_canvas->IsShownOnScreen()) {
+		return;
 	}
+
+	if (g_gui.GetCurrentMapTab() != map_canvas->GetParent()) {
+		return;
+	}
+
+	map_canvas->Refresh();
 };
 
 void AnimationTimer::Start() {

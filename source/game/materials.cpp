@@ -17,11 +17,13 @@
 
 #include "app/main.h"
 
+#include <format>
 #include <wx/dir.h>
 
 #include "editor/editor.h"
 #include "item_definitions/core/item_definition_store.h"
 #include "game/creatures.h"
+#include "io/xml_file_loader.h"
 
 #include "ui/gui.h"
 #include "game/materials.h"
@@ -30,6 +32,43 @@
 #include "brushes/raw/raw_brush.h"
 
 Materials g_materials;
+
+namespace {
+	template <typename UnserializeTilesetFn>
+	bool handleMaterialNode(const FileName& source_file, pugi::xml_node child_node, wxString& visit_error, std::vector<std::string>& visit_warnings, UnserializeTilesetFn&& unserialize_tileset) {
+		const auto child_name = as_lower_str(child_node.name());
+		if (child_name == "metaitem") {
+			if (const auto attribute = child_node.attribute("id")) {
+				g_item_definitions.ensureMetaItem(attribute.as_ushort());
+			}
+			return true;
+		}
+		if (child_name == "border") {
+			g_brushes.unserializeBorder(child_node, visit_warnings);
+			return true;
+		}
+		if (child_name == "brush") {
+			g_brushes.unserializeBrush(child_node, visit_warnings);
+			return true;
+		}
+		if (child_name == "tileset") {
+			if (!unserialize_tileset(child_node, visit_warnings)) {
+				visit_error = wxString::FromUTF8(std::format("Failed to load <tileset> from {}.", source_file.GetFullPath().ToStdString()));
+				return false;
+			}
+			return true;
+		}
+		return true;
+	}
+
+	template <typename UnserializeTilesetFn>
+	bool visitMaterialElements(const FileName& entry_file, const char* root_name, wxString& error, std::vector<std::string>& warnings, UnserializeTilesetFn&& unserialize_tileset) {
+		const auto visitor = [&](const FileName& source_file, pugi::xml_node child_node, wxString& visit_error, std::vector<std::string>& visit_warnings) {
+			return handleMaterialNode(source_file, child_node, visit_error, visit_warnings, unserialize_tileset);
+		};
+		return XmlFileLoader::visitElements(entry_file, root_name, visitor, error, warnings);
+	}
+}
 
 Materials::Materials() {
 	////
@@ -67,21 +106,9 @@ MaterialsExtensionList Materials::getExtensionsByVersion(const ClientVersionID& 
 }
 
 bool Materials::loadMaterials(const FileName& identifier, wxString& error, std::vector<std::string>& warnings) {
-	pugi::xml_document doc;
-	pugi::xml_parse_result result = doc.load_file(identifier.GetFullPath().mb_str());
-	if (!result) {
-		warnings.push_back((wxString("Could not open ") + identifier.GetFullName() + " (file not found or syntax error)").ToStdString());
-		return false;
-	}
-
-	pugi::xml_node node = doc.child("materials");
-	if (!node) {
-		warnings.push_back((identifier.GetFullName() + ": Invalid rootheader.").ToStdString());
-		return false;
-	}
-
-	unserializeMaterials(identifier, node, error, warnings);
-	return true;
+	return visitMaterialElements(identifier, "materials", error, warnings, [this](pugi::xml_node child_node, std::vector<std::string>& visit_warnings) {
+		return unserializeTileset(child_node, visit_warnings);
+	});
 }
 
 bool Materials::loadExtensions(FileName directoryName, wxString& error, std::vector<std::string>& warnings) {
@@ -185,49 +212,15 @@ bool Materials::loadExtensions(FileName directoryName, wxString& error, std::vec
 
 		extensions.push_back(materialExtension);
 		if (materialExtension->isForVersion(g_version.GetCurrentVersionID())) {
-			unserializeMaterials(filename, extensionNode, error, warnings);
+			wxString extension_error;
+			if (!visitMaterialElements(fn, "materialsextension", extension_error, warnings, [this](pugi::xml_node child_node, std::vector<std::string>& visit_warnings) {
+				return unserializeTileset(child_node, visit_warnings);
+			})) {
+				warnings.push_back((filename + ": " + extension_error).ToStdString());
+			}
 		}
 	} while (ext_dir.GetNext(&filename));
 
-	return true;
-}
-
-bool Materials::unserializeMaterials(const FileName& filename, pugi::xml_node node, wxString& error, std::vector<std::string>& warnings) {
-	wxString warning;
-	pugi::xml_attribute attribute;
-	for (pugi::xml_node childNode = node.first_child(); childNode; childNode = childNode.next_sibling()) {
-		const std::string& childName = as_lower_str(childNode.name());
-		if (childName == "include") {
-			if (!(attribute = childNode.attribute("file"))) {
-				continue;
-			}
-
-			FileName includeName;
-			includeName.SetPath(filename.GetPath());
-			includeName.SetFullName(wxString(attribute.as_string(), wxConvUTF8));
-
-			wxString subError;
-			if (!loadMaterials(includeName, subError, warnings)) {
-				warnings.push_back((wxString("Error while loading file \"") + includeName.GetFullName() + "\": " + subError).ToStdString());
-			}
-		} else if (childName == "metaitem") {
-			if (const auto attribute = childNode.attribute("id")) {
-				g_item_definitions.ensureMetaItem(attribute.as_ushort());
-			}
-		} else if (childName == "border") {
-			g_brushes.unserializeBorder(childNode, warnings);
-			if (warning.size()) {
-				warnings.push_back((wxString("materials.xml: ") + warning).ToStdString());
-			}
-		} else if (childName == "brush") {
-			g_brushes.unserializeBrush(childNode, warnings);
-			if (warning.size()) {
-				warnings.push_back((wxString("materials.xml: ") + warning).ToStdString());
-			}
-		} else if (childName == "tileset") {
-			unserializeTileset(childNode, warnings);
-		}
-	}
 	return true;
 }
 
@@ -244,6 +237,7 @@ static RAWBrush* ensureRawBrush(ServerItemId item_id) {
 
 void Materials::createOtherTileset() {
 	Tileset* others;
+	Tileset* monster_tileset;
 	Tileset* npc_tileset;
 
 	if (tilesets.find("Others") != tilesets.end()) {
@@ -252,6 +246,14 @@ void Materials::createOtherTileset() {
 	} else {
 		others = newd Tileset(g_brushes, "Others");
 		tilesets["Others"] = others;
+	}
+
+	if (tilesets.find("Monsters") != tilesets.end()) {
+		monster_tileset = tilesets["Monsters"];
+		monster_tileset->clear();
+	} else {
+		monster_tileset = newd Tileset(g_brushes, "Monsters");
+		tilesets["Monsters"] = monster_tileset;
 	}
 
 	if (tilesets.find("NPCs") != tilesets.end()) {
@@ -304,7 +306,7 @@ void Materials::createOtherTileset() {
 		if (type->isNpc) {
 			npc_tileset->getCategory(TILESET_CREATURE)->brushlist.push_back(type->brush);
 		} else {
-			others->getCategory(TILESET_CREATURE)->brushlist.push_back(type->brush);
+			monster_tileset->getCategory(TILESET_CREATURE)->brushlist.push_back(type->brush);
 		}
 	}
 }

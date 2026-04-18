@@ -23,7 +23,7 @@ void SpriteDrawer::glBlitAtlasQuad(SpriteBatch& sprite_batch, int sx, int sy, co
 
 		sprite_batch.draw(
 			static_cast<float>(sx), static_cast<float>(sy),
-			static_cast<float>(TILE_SIZE), static_cast<float>(TILE_SIZE),
+			static_cast<float>(region->pixel_width), static_cast<float>(region->pixel_height),
 			*region,
 			normalizedR, normalizedG, normalizedB, normalizedA
 		);
@@ -66,7 +66,7 @@ void SpriteDrawer::glSetColor(wxColor color) {
 
 void SpriteDrawer::BlitSprite(SpriteBatch& sprite_batch, int screenx, int screeny, ServerItemId server_item_id, DrawColor color) {
 	const auto definition = g_item_definitions.get(server_item_id);
-	GameSprite* spr = definition ? dynamic_cast<GameSprite*>(g_gui.gfx.getSprite(definition.clientId())) : nullptr;
+	GameSprite* spr = definition ? g_gui.gfx.getGameSprite(definition.clientId()) : nullptr;
 	if (spr == nullptr) {
 		return;
 	}
@@ -78,8 +78,9 @@ void SpriteDrawer::BlitSprite(SpriteBatch& sprite_batch, int screenx, int screen
 	if (spr == nullptr) {
 		return;
 	}
-	screenx -= spr->getDrawOffset().first;
-	screeny -= spr->getDrawOffset().second;
+	const auto draw_offset = spr->getDrawOffset();
+	screenx -= draw_offset.first;
+	screeny -= draw_offset.second;
 
 	int tme = 0; // GetTime() % itype->FPA;
 
@@ -87,15 +88,21 @@ void SpriteDrawer::BlitSprite(SpriteBatch& sprite_batch, int screenx, int screen
 	// Note: ensureAtlasManager is called by MapDrawer at frame start usually, but we check here too if needed?
 	// BatchRenderer::SetAtlasManager call removed. Use sprite_batch.
 
+	const auto& layout_metrics = spr->getPlainLayoutMetrics(-1, 0, 0, 0, tme);
+
+	int x_offset = 0;
 	for (int cx = 0; cx != spr->width; ++cx) {
+		int y_offset = 0;
 		for (int cy = 0; cy != spr->height; ++cy) {
 			for (int cf = 0; cf != spr->layers; ++cf) {
 				const AtlasRegion* region = spr->getAtlasRegion(cx, cy, cf, -1, 0, 0, 0, tme);
 				if (region) {
-					glBlitAtlasQuad(sprite_batch, screenx - cx * TILE_SIZE, screeny - cy * TILE_SIZE, region, color);
+					glBlitAtlasQuad(sprite_batch, screenx - x_offset, screeny - y_offset, region, color);
 				}
 				// No fallback - if region is null, sprite failed to load
 			}
+			y_offset += layout_metrics.row_heights[cy];
 		}
+		x_offset += layout_metrics.column_widths[cx];
 	}
 }

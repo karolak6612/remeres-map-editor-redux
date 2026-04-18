@@ -584,6 +584,10 @@ void MainMenuBar::OnSelectRawPalette(wxCommandEvent& event) {
 	paletteMenuHandler->OnSelectRawPalette(event);
 }
 
+void MainMenuBar::OnSelectZonePalette(wxCommandEvent& event) {
+	paletteMenuHandler->OnSelectZonePalette(event);
+}
+
 void MainMenuBar::OnScriptsOpenFolder(wxCommandEvent& event) {
 	if (scriptMenuHandler) scriptMenuHandler->OnScriptsOpenFolder(event);
 }

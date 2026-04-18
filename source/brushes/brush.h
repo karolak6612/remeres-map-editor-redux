@@ -51,6 +51,8 @@ class DoorBrush;
 class OptionalBorderBrush;
 class CreatureBrush;
 class SpawnBrush;
+class NpcSpawnBrush;
+class ZoneBrush;
 class HouseBrush;
 class HouseExitBrush;
 class WaypointBrush;

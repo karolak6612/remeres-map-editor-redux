@@ -30,7 +30,7 @@ enum {
 };
 
 HousePalette::HousePalette(wxWindow* parent) :
-	wxPanel(parent, wxID_ANY),
+	PalettePanel(parent),
 	map(nullptr) {
 
 	wxBoxSizer* main_sizer = newd wxBoxSizer(wxVERTICAL);
@@ -118,6 +118,14 @@ HousePalette::HousePalette(wxWindow* parent) :
 }
 
 HousePalette::~HousePalette() {
+}
+
+PaletteType HousePalette::GetType() const {
+	return TILESET_HOUSE;
+}
+
+wxString HousePalette::GetName() const {
+	return "House Palette";
 }
 
 void HousePalette::SetMap(Map* m) {
@@ -221,6 +229,38 @@ Brush* HousePalette::GetSelectedBrush() const {
 		return (g_brush_manager.house_brush->getHouseID() != 0 ? g_brush_manager.house_brush : nullptr);
 	}
 	return nullptr;
+}
+
+bool HousePalette::SelectBrush(const Brush* whatbrush) {
+	if (whatbrush == g_brush_manager.house_brush) {
+		house_brush_button->SetValue(true);
+		select_exit_button->SetValue(false);
+	} else if (whatbrush == g_brush_manager.house_exit_brush) {
+		house_brush_button->SetValue(false);
+		select_exit_button->SetValue(true);
+	} else {
+		return false;
+	}
+
+	const uint32_t house_id = whatbrush == g_brush_manager.house_brush ? g_brush_manager.house_brush->getHouseID() : g_brush_manager.house_exit_brush->getHouseID();
+	if (house_id == 0) {
+		return true;
+	}
+
+	for (unsigned row = 0; row < house_list->GetItemCount(); ++row) {
+		const wxDataViewItem item = house_list->RowToItem(row);
+		const auto* house = reinterpret_cast<House*>(house_list->GetItemData(item));
+		if (house && house->getID() == house_id) {
+			house_list->Select(item);
+			break;
+		}
+	}
+
+	return true;
+}
+
+void HousePalette::OnUpdate() {
+	UpdateHouses();
 }
 
 void HousePalette::SelectHouseBrush() {

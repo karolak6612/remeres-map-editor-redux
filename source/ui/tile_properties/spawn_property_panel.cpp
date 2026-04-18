@@ -37,10 +37,11 @@ void SpawnPropertyPanel::SetItem(Item* /*item*/, Tile* tile, Map* map) {
 	SetSpawn(nullptr, tile, map);
 }
 
-void SpawnPropertyPanel::SetSpawn(Spawn* spawn, Tile* tile, Map* map) {
+void SpawnPropertyPanel::SetSpawn(Spawn* spawn, Tile* tile, Map* map, const wxString& title) {
 	current_spawn = spawn;
 	current_tile = tile;
 	current_map = map;
+	radius_sizer->GetStaticBox()->SetLabel(title);
 
 	if (spawn) {
 		GetSizer()->Show(radius_sizer, true);
@@ -60,12 +61,24 @@ void SpawnPropertyPanel::OnRadiusChange(wxSpinEvent& event) {
 		}
 
 		std::unique_ptr<Tile> new_tile = TileOperations::deepCopy(current_tile, *current_map);
-		if (new_tile->spawn) {
-			new_tile->spawn->setSize(radius_spin->GetValue());
+		Spawn* edited_spawn = nullptr;
+		if (current_spawn == current_tile->npc_spawn.get()) {
+			edited_spawn = new_tile->npc_spawn.get();
+		} else if (current_spawn == current_tile->spawn.get()) {
+			edited_spawn = new_tile->spawn.get();
+		}
+
+		if (edited_spawn) {
+			const bool editing_npc_spawn = current_spawn == current_tile->npc_spawn.get();
+			const Position position = new_tile->getPosition();
+			edited_spawn->setSize(radius_spin->GetValue());
 
 			std::unique_ptr<Action> action = editor->actionQueue->createAction(ACTION_CHANGE_PROPERTIES);
 			action->addChange(std::make_unique<Change>(std::move(new_tile)));
 			editor->addAction(std::move(action));
+
+			current_tile = editor->map.getTile(position);
+			current_spawn = current_tile ? (editing_npc_spawn ? current_tile->npc_spawn.get() : current_tile->spawn.get()) : nullptr;
 			g_gui.RefreshView();
 		}
 	}

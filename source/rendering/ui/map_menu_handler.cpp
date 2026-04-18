@@ -53,6 +53,8 @@ void MapMenuHandler::BindEvents() {
 	canvas->Bind(wxEVT_MENU, &MapMenuHandler::OnSelectTableBrush, this, MAP_POPUP_MENU_SELECT_TABLE_BRUSH);
 	canvas->Bind(wxEVT_MENU, &MapMenuHandler::OnSelectCreatureBrush, this, MAP_POPUP_MENU_SELECT_CREATURE_BRUSH);
 	canvas->Bind(wxEVT_MENU, &MapMenuHandler::OnSelectSpawnBrush, this, MAP_POPUP_MENU_SELECT_SPAWN_BRUSH);
+	canvas->Bind(wxEVT_MENU, &MapMenuHandler::OnSelectNpcSpawnBrush, this, MAP_POPUP_MENU_SELECT_NPC_SPAWN_BRUSH);
+	canvas->Bind(wxEVT_MENU, &MapMenuHandler::OnSelectZoneBrush, this, MAP_POPUP_MENU_SELECT_ZONE_BRUSH);
 	canvas->Bind(wxEVT_MENU, &MapMenuHandler::OnSelectHouseBrush, this, MAP_POPUP_MENU_SELECT_HOUSE_BRUSH);
 	canvas->Bind(wxEVT_MENU, &MapMenuHandler::OnSelectMoveTo, this, MAP_POPUP_MENU_MOVE_TO_TILESET);
 
@@ -185,6 +187,14 @@ void MapMenuHandler::OnSelectCreatureBrush(wxCommandEvent& WXUNUSED(event)) {
 
 void MapMenuHandler::OnSelectSpawnBrush(wxCommandEvent& WXUNUSED(event)) {
 	BrushSelector::SelectSpawnBrush();
+}
+
+void MapMenuHandler::OnSelectNpcSpawnBrush(wxCommandEvent& WXUNUSED(event)) {
+	BrushSelector::SelectNpcSpawnBrush();
+}
+
+void MapMenuHandler::OnSelectZoneBrush(wxCommandEvent& WXUNUSED(event)) {
+	BrushSelector::SelectZoneBrush(editor.selection);
 }
 
 void MapMenuHandler::OnSelectMoveTo(wxCommandEvent& WXUNUSED(event)) {

@@ -9,7 +9,7 @@
 
 namespace {
 int toDisplayOTBMVersion(uint32_t raw_version) {
-	return raw_version <= static_cast<uint32_t>(MAP_OTBM_4) ? static_cast<int>(raw_version) + 1 : static_cast<int>(raw_version);
+	return static_cast<int>(raw_version) + 1;
 }
 }
 
@@ -108,6 +108,13 @@ bool HeaderSerializationOTBM::peekStartupInfo(NodeFileReadHandle& f, OTBMStartup
 				}
 				break;
 			}
+			case OTBM_ATTR_EXT_ZONE_FILE: {
+				std::string ignored_string;
+				if (!map_header_node->getString(ignored_string)) {
+					return false;
+				}
+				break;
+			}
 			default:
 				return true;
 		}
@@ -133,7 +140,7 @@ bool HeaderSerializationOTBM::loadMapRoot(Map& map, NodeFileReadHandle& f, MapVe
 
 	version.otbm = static_cast<MapVersionID>(u32);
 
-	if (version.otbm > MAP_OTBM_4) {
+	if (version.otbm > MAP_OTBM_6) {
 		// Failed to read version
 		if (DialogUtil::PopupDialog("Map error", "The loaded map appears to be a OTBM format that is not supported by the editor.\n"
 												 "Do you still want to attempt to load the map?",
@@ -220,10 +227,15 @@ bool HeaderSerializationOTBM::readMapAttributes(Map& map, BinaryNode* mapHeaderN
 				break;
 			}
 			case OTBM_ATTR_EXT_SPAWN_NPC_FILE: {
-				// compatibility: skip Canary RME NPC spawn file tag
-				std::string stringToSkip;
-				if (!mapHeaderNode->getString(stringToSkip)) {
+				if (!mapHeaderNode->getString(map.spawnnpcfile)) {
 					spdlog::warn("Invalid map NPC spawnfile tag");
+					return true;
+				}
+				break;
+			}
+			case OTBM_ATTR_EXT_ZONE_FILE: {
+				if (!mapHeaderNode->getString(map.zonefile)) {
+					spdlog::warn("Invalid map zonefile tag");
 					return true;
 				}
 				break;

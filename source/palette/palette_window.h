@@ -22,8 +22,10 @@
 
 class BrushPalettePanel;
 class CreaturePalettePanel;
+class HousePalette;
 class WaypointPalettePanel;
 class WaypointPalettePanel;
+class ZonePalettePanel;
 
 class PaletteWindow : public wxPanel {
 public:
@@ -68,9 +70,11 @@ protected:
 	static PalettePanel* CreateDoodadPalette(wxWindow* parent, const TilesetContainer& tilesets);
 	static PalettePanel* CreateItemPalette(wxWindow* parent, const TilesetContainer& tilesets);
 	static PalettePanel* CreateCollectionPalette(wxWindow* parent, const TilesetContainer& tilesets);
+	static PalettePanel* CreateHousePalette(wxWindow* parent, const TilesetContainer& tilesets);
 	static PalettePanel* CreateCreaturePalette(wxWindow* parent, const TilesetContainer& tilesets);
 	static PalettePanel* CreateWaypointPalette(wxWindow* parent, const TilesetContainer& tilesets);
 	static PalettePanel* CreateRAWPalette(wxWindow* parent, const TilesetContainer& tilesets);
+	static PalettePanel* CreateZonePalette(wxWindow* parent, const TilesetContainer& tilesets);
 
 	wxChoicebook* choicebook;
 
@@ -78,9 +82,11 @@ protected:
 	BrushPalettePanel* doodad_palette;
 	BrushPalettePanel* item_palette;
 	BrushPalettePanel* collection_palette;
+	HousePalette* house_palette;
 	CreaturePalettePanel* creature_palette;
 	WaypointPalettePanel* waypoint_palette;
 	BrushPalettePanel* raw_palette;
+	ZonePalettePanel* zone_palette;
 };
 
 #endif

@@ -181,6 +181,19 @@ void Action::commit(DirtyList* dirty_list) {
 						editor.map.addSpawn(insertedTile);
 					}
 
+					if (displaced->npc_spawn) {
+						if (insertedTile->npc_spawn) {
+							if (*displaced->npc_spawn != *insertedTile->npc_spawn) {
+								editor.map.removeNpcSpawn(displaced);
+								editor.map.addNpcSpawn(insertedTile);
+							}
+						} else {
+							editor.map.removeNpcSpawn(displaced);
+						}
+					} else if (insertedTile->npc_spawn) {
+						editor.map.addNpcSpawn(insertedTile);
+					}
+
 					if (displaced->isSelected()) {
 						editor.selection.removeInternal(displaced);
 					}
@@ -205,6 +218,9 @@ void Action::commit(DirtyList* dirty_list) {
 					if (insertedTile->spawn) {
 						editor.map.addSpawn(insertedTile);
 					}
+					if (insertedTile->npc_spawn) {
+						editor.map.addNpcSpawn(insertedTile);
+					}
 					insertedTile->modify();
 				} else if (displaced) {
 					if (displaced->isSelected()) {
@@ -218,6 +234,9 @@ void Action::commit(DirtyList* dirty_list) {
 					}
 					if (displaced->spawn) {
 						editor.map.removeSpawn(displaced);
+					}
+					if (displaced->npc_spawn) {
+						editor.map.removeNpcSpawn(displaced);
 					}
 				}
 
@@ -353,6 +372,19 @@ void Action::undo(DirtyList* dirty_list) {
 							editor.map.removeSpawn(newtile);
 						}
 
+						if (oldtile->npc_spawn) {
+							if (newtile->npc_spawn) {
+								if (*oldtile->npc_spawn != *newtile->npc_spawn) {
+									editor.map.removeNpcSpawn(newtile);
+									editor.map.addNpcSpawn(oldtile);
+								}
+							} else {
+								editor.map.addNpcSpawn(oldtile);
+							}
+						} else if (newtile->npc_spawn) {
+							editor.map.removeNpcSpawn(newtile);
+						}
+
 						TileOperations::update(oldtile);
 						if (oldtile->isSelected()) {
 							editor.selection.addInternal(oldtile);
@@ -368,6 +400,9 @@ void Action::undo(DirtyList* dirty_list) {
 						}
 						if (oldtile->spawn) {
 							editor.map.addSpawn(oldtile);
+						}
+						if (oldtile->npc_spawn) {
+							editor.map.addNpcSpawn(oldtile);
 						}
 						TileOperations::update(oldtile);
 						if (oldtile->isSelected()) {
@@ -398,6 +433,9 @@ void Action::undo(DirtyList* dirty_list) {
 						}
 						if (removed->spawn) {
 							editor.map.removeSpawn(removed);
+						}
+						if (removed->npc_spawn) {
+							editor.map.removeNpcSpawn(removed);
 						}
 					}
 					uptr = std::move(removedTile);

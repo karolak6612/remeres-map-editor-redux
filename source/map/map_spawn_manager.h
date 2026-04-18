@@ -5,12 +5,22 @@
 
 class MapSpawnManager {
 public:
+	enum class SpawnCoverageOperation {
+		Add,
+		Remove,
+	};
+
 	static bool addSpawn(Map& map, Tile* tile);
+	static bool addNpcSpawn(Map& map, Tile* tile);
 	static void removeSpawn(Map& map, Tile* tile);
+	static void removeNpcSpawn(Map& map, Tile* tile);
 	static SpawnList getSpawnList(Map& map, Tile* where);
+	static SpawnList getNpcSpawnList(Map& map, Tile* where);
 
 private:
+	static void applySpawnCoverage(Map& map, Tile* tile, Spawn* spawn, bool create_missing_tiles, SpawnCoverageOperation operation, bool npc);
 	static void removeSpawnInternal(Map& map, Tile* tile);
+	static void removeNpcSpawnInternal(Map& map, Tile* tile);
 };
 
 #endif

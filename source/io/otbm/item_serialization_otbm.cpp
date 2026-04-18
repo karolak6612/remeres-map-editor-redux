@@ -265,7 +265,7 @@ void ItemSerializationOTBM::serializeItemAttributes(const IOMap& maphandle, Node
 		}
 	}
 
-	if (maphandle.version.otbm >= MAP_OTBM_4) {
+	if (maphandle.version.otbm == MAP_OTBM_4 || maphandle.version.otbm > MAP_OTBM_5) {
 		if (item.hasAttributes()) {
 			f.addU8(OTBM_ATTR_ATTRIBUTE_MAP);
 			item.serializeAttributeMap(maphandle, f);
