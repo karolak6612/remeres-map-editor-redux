@@ -170,6 +170,7 @@ void GUI::SetSelectionMode() {
 	}
 
 	mapTab->OnSwitchEditorMode(SELECTION_MODE);
+	SyncCurrentMapCanvasPreviewState();
 }
 
 void GUI::SetDrawingMode() {
@@ -192,9 +193,11 @@ void GUI::SetDrawingMode() {
 	} else {
 		mapTab->GetSession()->secondary_map = nullptr;
 	}
+
+	SyncCurrentMapCanvasPreviewState();
 }
 
-void GUI::RefreshView() {
+void GUI::RefreshView(RepaintReason reason, bool immediate) {
 	MapTab* current_map_tab = GetCurrentMapTab();
 	for (int i = 0; i < tabbook->GetTabCount(); ++i) {
 		auto* editor_tab = tabbook->GetTab(i);
@@ -204,9 +207,25 @@ void GUI::RefreshView() {
 		}
 
 		if (!current_map_tab || !map_tab || map_tab->HasSameReference(current_map_tab)) {
-			editor_tab->GetWindow()->Refresh();
+			if (map_tab) {
+				map_tab->GetCanvas()->RequestLocalRefresh(reason, immediate);
+			} else {
+				editor_tab->GetWindow()->Refresh();
+			}
 		}
 	}
+}
+
+void GUI::SyncCurrentMapCanvasPreviewState() {
+	MapTab* mapTab = GetCurrentMapTab();
+	if (!mapTab) {
+		return;
+	}
+
+	const bool hover_preview_active = IsPasting()
+		|| (mapTab->GetMode() == DRAWING_MODE && GetCurrentBrush() != nullptr)
+		|| mapTab->GetSession()->secondary_map != nullptr;
+	mapTab->GetCanvas()->SetHoverPreviewActive(hover_preview_active);
 }
 
 // Welcome Dialog moved to WelcomeManager
@@ -236,9 +255,11 @@ void GUI::PreparePaste() {
 }
 void GUI::StartPasting() {
 	g_editors.StartPasting();
+	SyncCurrentMapCanvasPreviewState();
 }
 void GUI::EndPasting() {
 	g_editors.EndPasting();
+	SyncCurrentMapCanvasPreviewState();
 }
 
 bool GUI::CanUndo() {
@@ -313,6 +334,7 @@ void GUI::FitViewToMap(MapTab* mt) {
 
 void GUI::FillDoodadPreviewBuffer() {
 	g_brush_manager.FillDoodadPreviewBuffer();
+	SyncCurrentMapCanvasPreviewState();
 }
 
 void GUI::SelectBrush() {
@@ -320,6 +342,7 @@ void GUI::SelectBrush() {
 	if (tool_options) {
 		tool_options->SetActiveBrush(GetCurrentBrush());
 	}
+	SyncCurrentMapCanvasPreviewState();
 	emitBrushChangeIfNeeded(*this);
 }
 bool GUI::SelectBrush(const Brush* brush, PaletteType pt) {
@@ -327,6 +350,7 @@ bool GUI::SelectBrush(const Brush* brush, PaletteType pt) {
 	if (tool_options) {
 		tool_options->SetActiveBrush(GetCurrentBrush());
 	}
+	SyncCurrentMapCanvasPreviewState();
 	emitBrushChangeIfNeeded(*this);
 	return changed;
 }
@@ -335,6 +359,7 @@ void GUI::SelectPreviousBrush() {
 	if (tool_options) {
 		tool_options->SetActiveBrush(GetCurrentBrush());
 	}
+	SyncCurrentMapCanvasPreviewState();
 	emitBrushChangeIfNeeded(*this);
 }
 void GUI::SelectBrushInternal(Brush* brush) {
@@ -342,6 +367,7 @@ void GUI::SelectBrushInternal(Brush* brush) {
 	if (tool_options) {
 		tool_options->SetActiveBrush(GetCurrentBrush());
 	}
+	SyncCurrentMapCanvasPreviewState();
 	emitBrushChangeIfNeeded(*this);
 }
 Brush* GUI::GetCurrentBrush() const {

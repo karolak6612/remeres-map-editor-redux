@@ -256,9 +256,11 @@ void DrawingController::HandleDrag(const Position& mouse_map_pos, bool shift_dow
 		// Create newd doodad layout (does nothing if a non-doodad brush is selected)
 		g_gui.FillDoodadPreviewBuffer();
 
-		canvas->RequestRepaint(MapCanvas::RepaintReason::InteractionOverlayChanged);
+		canvas->MarkInvalid(RepaintReason::InteractionOverlayChanged);
+		canvas->FlushRepaintRequest();
 	} else if (dragging_draw) {
-		canvas->RequestRepaint(MapCanvas::RepaintReason::InteractionOverlayChanged);
+		canvas->MarkInvalid(RepaintReason::InteractionOverlayChanged);
+		canvas->FlushRepaintRequest();
 	}
 	// Removed map_update check as this function is usually called when coords changed
 	if (!drawing && !dragging_draw && brush) {

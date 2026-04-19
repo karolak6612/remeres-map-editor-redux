@@ -260,7 +260,8 @@ void MapWindow::OnSize(wxSizeEvent& event) {
 void MapWindow::OnScroll(wxScrollEvent& event) {
 	SyncTrackedMinimapViewportToCurrentView();
 	g_gui.UpdateMinimap();
-	canvas->RequestRepaint(MapCanvas::RepaintReason::ViewportChanged);
+	canvas->MarkInvalid(RepaintReason::ViewportChanged);
+	canvas->FlushRepaintRequest();
 }
 
 void MapWindow::OnScrollLineDown(wxScrollEvent& event) {
@@ -269,7 +270,8 @@ void MapWindow::OnScrollLineDown(wxScrollEvent& event) {
 	} else {
 		ScrollRelative(0, 96);
 	}
-	canvas->RequestRepaint(MapCanvas::RepaintReason::ViewportChanged);
+	canvas->MarkInvalid(RepaintReason::ViewportChanged);
+	canvas->FlushRepaintRequest();
 }
 
 void MapWindow::OnScrollLineUp(wxScrollEvent& event) {
@@ -278,7 +280,8 @@ void MapWindow::OnScrollLineUp(wxScrollEvent& event) {
 	} else {
 		ScrollRelative(0, -96);
 	}
-	canvas->RequestRepaint(MapCanvas::RepaintReason::ViewportChanged);
+	canvas->MarkInvalid(RepaintReason::ViewportChanged);
+	canvas->FlushRepaintRequest();
 }
 
 void MapWindow::OnScrollPageDown(wxScrollEvent& event) {
@@ -287,7 +290,8 @@ void MapWindow::OnScrollPageDown(wxScrollEvent& event) {
 	} else {
 		ScrollRelative(0, 5 * 96);
 	}
-	canvas->RequestRepaint(MapCanvas::RepaintReason::ViewportChanged);
+	canvas->MarkInvalid(RepaintReason::ViewportChanged);
+	canvas->FlushRepaintRequest();
 }
 
 void MapWindow::OnScrollPageUp(wxScrollEvent& event) {
@@ -296,6 +300,7 @@ void MapWindow::OnScrollPageUp(wxScrollEvent& event) {
 	} else {
 		ScrollRelative(0, -5 * 96);
 	}
-	canvas->RequestRepaint(MapCanvas::RepaintReason::ViewportChanged);
+	canvas->MarkInvalid(RepaintReason::ViewportChanged);
+	canvas->FlushRepaintRequest();
 }
 

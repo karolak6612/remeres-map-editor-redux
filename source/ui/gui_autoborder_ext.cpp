@@ -17,6 +17,7 @@ void GUI::UpdateAutoborderPreview(Position pos) {
 		if (mapTab && mapTab->GetSession()->secondary_map == g_autoborder_preview.GetBufferMap()) {
 			g_autoborder_preview.Clear();
 			mapTab->GetSession()->secondary_map = nullptr;
+			SyncCurrentMapCanvasPreviewState();
 		}
 		return;
 	}
@@ -25,10 +26,12 @@ void GUI::UpdateAutoborderPreview(Position pos) {
 	if (IsDrawingMode() && brush && brush->needBorders() && g_settings.getInteger(Config::USE_AUTOMAGIC) && g_settings.getInteger(Config::SHOW_AUTOBORDER_PREVIEW) && mapTab) {
 		g_autoborder_preview.Update(*(mapTab->GetEditor()), pos, wxGetKeyState(WXK_ALT));
 		mapTab->GetSession()->secondary_map = g_autoborder_preview.GetBufferMap();
+		SyncCurrentMapCanvasPreviewState();
 	} else if (mapTab) {
 		if (mapTab->GetSession()->secondary_map == g_autoborder_preview.GetBufferMap()) {
 			g_autoborder_preview.Clear();
 			mapTab->GetSession()->secondary_map = nullptr;
+			SyncCurrentMapCanvasPreviewState();
 		}
 	}
 }

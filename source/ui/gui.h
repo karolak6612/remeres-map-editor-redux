@@ -20,6 +20,7 @@
 #include "brushes/managers/doodad_preview_manager.h"
 #include "brushes/managers/autoborder_preview_manager.h"
 #include "brushes/brush_footprint.h"
+#include "rendering/ui/view_invalidation_state.h"
 #include "ui/managers/status_manager.h"
 #include "ui/managers/search_manager.h"
 #include "ui/managers/welcome_manager.h"
@@ -263,7 +264,8 @@ public:
 	// Centers current view on position
 	void SetScreenCenterPosition(Position pos);
 	// Refresh the view canvas
-	void RefreshView();
+	void RefreshView(RepaintReason reason = RepaintReason::MapContentChanged, bool immediate = false);
+	void SyncCurrentMapCanvasPreviewState();
 	// Fit all/specified current map view to map dimensions
 	void FitViewToMap();
 	void FitViewToMap(MapTab* mt);

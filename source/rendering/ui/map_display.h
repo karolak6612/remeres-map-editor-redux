@@ -21,9 +21,9 @@
 #include "editor/action.h"
 #include "map/tile.h"
 #include "game/creature.h"
+#include "rendering/ui/view_invalidation_state.h"
 #include "rendering/utilities/frame_pacer.h"
 
-#include "ui/map_popup_menu.h"
 #include "ui/map_popup_menu.h"
 #include "game/animation_timer.h"
 #include "rendering/core/graphics.h"
@@ -35,8 +35,6 @@ struct DrawingOptions;
 class Item;
 class Creature;
 class MapWindow;
-class AnimationTimer;
-class AnimationTimer;
 class MapDrawer;
 class SelectionController;
 class DrawingController;
@@ -44,16 +42,6 @@ class ScreenshotController;
 class MapMenuHandler;
 
 class MapCanvas : public wxGLCanvas {
-public:
-	enum class RepaintReason : uint32_t {
-		None = 0,
-		ViewportChanged = 1u << 0,
-		MapContentChanged = 1u << 1,
-		HoverOverlayChanged = 1u << 2,
-		InteractionOverlayChanged = 1u << 3,
-		AnimationTick = 1u << 4,
-	};
-
 private:
 	std::unique_ptr<wxGLContext> m_glContext;
 	std::unique_ptr<NVGcontext, NVGDeleter> m_nvg;
@@ -91,9 +79,12 @@ public:
 	void OnMousePropertiesRelease(wxMouseEvent& event);
 
 	virtual void Refresh();
-	void RequestRepaint(RepaintReason reason, bool immediate = false);
-	void RequestSharedMapRefresh();
+	void MarkInvalid(RepaintReason reason, RefreshScope scope = RefreshScope::LocalView);
+	void RequestLocalRefresh(RepaintReason reason, bool immediate = false);
+	void RequestSharedMapRefresh(RepaintReason reason = RepaintReason::MapContentChanged, bool immediate = false);
 	void RequestAnimationRepaint();
+	void FlushRepaintRequest(bool immediate = false);
+	void SetHoverPreviewActive(bool active);
 
 	virtual void ScreenToMap(int screen_x, int screen_y, int* map_x, int* map_y);
 	void MouseToMap(int* map_x, int* map_y) {
@@ -189,12 +180,8 @@ public:
 	std::unique_ptr<MapMenuHandler> menu_handler;
 
 private:
-	bool HasAnyFlag(RepaintReason value, RepaintReason flag) const;
-	bool IsAnimationEnabled() const;
-	bool HasHoverDependentPreview() const;
-	bool HasLocalInteractionOverlay() const;
-	bool ShouldAnimateAtReducedRate() const;
-	int GetAnimationRefreshIntervalMs() const;
+	void UpdateInvalidationState();
+	bool ComputeInteractionOverlayActive() const;
 	void QueueNativeRefresh(bool immediate);
 	void EnsureNanoVG();
 	void DrawOverlays(NVGcontext* vg, const DrawingOptions& options);
@@ -203,8 +190,7 @@ private:
 	MapWindow* GetMapWindow() const;
 	bool renderer_initialized = false;
 	long m_last_gc_time = 0;
-	uint32_t repaint_flags_ = 0;
-	long long last_animation_refresh_ms_ = 0;
+	ViewInvalidationState invalidation_state_{};
 };
 
 #endif
