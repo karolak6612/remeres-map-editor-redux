@@ -195,10 +195,16 @@ void GUI::SetDrawingMode() {
 }
 
 void GUI::RefreshView() {
+	MapTab* current_map_tab = GetCurrentMapTab();
 	for (int i = 0; i < tabbook->GetTabCount(); ++i) {
-		EditorTab* editorTab = tabbook->GetTab(i);
-		if (editorTab) {
-			editorTab->GetWindow()->Refresh();
+		auto* editor_tab = tabbook->GetTab(i);
+		auto* map_tab = dynamic_cast<MapTab*>(editor_tab);
+		if (!editor_tab) {
+			continue;
+		}
+
+		if (!current_map_tab || !map_tab || map_tab->HasSameReference(current_map_tab)) {
+			editor_tab->GetWindow()->Refresh();
 		}
 	}
 }

@@ -39,7 +39,7 @@ void NavigationController::HandleArrowKeys(MapCanvas* canvas, wxKeyEvent& event)
 	}
 
 	canvas->UpdatePositionStatus();
-	canvas->Refresh();
+	canvas->RequestRepaint(MapCanvas::RepaintReason::ViewportChanged);
 }
 
 void NavigationController::HandleMouseDrag(MapCanvas* canvas, wxMouseEvent& event) {
@@ -48,7 +48,7 @@ void NavigationController::HandleMouseDrag(MapCanvas* canvas, wxMouseEvent& even
 			map_window->ResumeMinimapTrackingToCurrentView();
 		}
 		static_cast<MapWindow*>(canvas->GetParent())->ScrollRelative(int(g_settings.getFloat(Config::SCROLL_SPEED) * canvas->zoom * (event.GetX() - canvas->cursor_x)), int(g_settings.getFloat(Config::SCROLL_SPEED) * canvas->zoom * (event.GetY() - canvas->cursor_y)));
-		canvas->Refresh();
+		canvas->RequestRepaint(MapCanvas::RepaintReason::ViewportChanged);
 	}
 }
 
@@ -104,7 +104,7 @@ void NavigationController::ChangeFloor(MapCanvas* canvas, int new_floor) {
 		g_gui.root->UpdateFloorMenu();
 		g_gui.UpdateMinimap(true);
 	}
-	canvas->Refresh();
+	canvas->RequestRepaint(MapCanvas::RepaintReason::ViewportChanged);
 }
 
 void NavigationController::HandleWheel(MapCanvas* canvas, wxMouseEvent& event) {

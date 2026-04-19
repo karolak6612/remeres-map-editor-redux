@@ -52,6 +52,7 @@
 #include "live/live_client.h"
 #include "ui/browse_tile_window.h"
 #include "ui/dialog_helper.h"
+#include "ui/map_tab.h"
 #include "game/animation_timer.h"
 #include "ui/map_popup_menu.h"
 #include "brushes/brush_utility.h"
@@ -171,11 +172,80 @@ MapCanvas::~MapCanvas() {
 }
 
 void MapCanvas::Refresh() {
+	RequestRepaint(RepaintReason::MapContentChanged);
+}
+
+bool MapCanvas::HasAnyFlag(RepaintReason value, RepaintReason flag) const {
+	return (static_cast<uint32_t>(value) & static_cast<uint32_t>(flag)) != 0;
+}
+
+bool MapCanvas::IsAnimationEnabled() const {
+	return g_settings.getBoolean(Config::SHOW_PREVIEW);
+}
+
+bool MapCanvas::HasHoverDependentPreview() const {
+	if (isPasting()) {
+		return true;
+	}
+
+	if (auto* map_tab = dynamic_cast<MapTab*>(GetMapWindow())) {
+		return map_tab->GetSession()->secondary_map != nullptr;
+	}
+
+	return false;
+}
+
+bool MapCanvas::HasLocalInteractionOverlay() const {
+	return screendragging
+		|| (selection_controller && (selection_controller->IsDragging() || selection_controller->IsBoundboxSelection()))
+		|| (drawing_controller && (drawing_controller->IsDrawing() || drawing_controller->IsDraggingDraw() || drawing_controller->IsReplaceDragging()));
+}
+
+bool MapCanvas::ShouldAnimateAtReducedRate() const {
+	return zoom > 2.0;
+}
+
+int MapCanvas::GetAnimationRefreshIntervalMs() const {
+	constexpr int near_refresh_ms = 1000 / 60;
+	constexpr int far_refresh_ms = 1000 / 20;
+	return ShouldAnimateAtReducedRate() ? far_refresh_ms : near_refresh_ms;
+}
+
+void MapCanvas::QueueNativeRefresh(bool immediate) {
+	(void)immediate;
 	if (refresh_watch.Time() > g_settings.getInteger(Config::HARD_REFRESH_RATE)) {
 		refresh_watch.Start();
 		wxGLCanvas::Update();
 	}
 	wxGLCanvas::Refresh();
+}
+
+void MapCanvas::RequestRepaint(RepaintReason reason, bool immediate) {
+	repaint_flags_ |= static_cast<uint32_t>(reason);
+
+	if (HasAnyFlag(reason, RepaintReason::AnimationTick)) {
+		if (!IsAnimationEnabled()) {
+			repaint_flags_ &= ~static_cast<uint32_t>(RepaintReason::AnimationTick);
+			return;
+		}
+
+		const long long now = wxGetUTCTimeMillis().GetValue();
+		if (now - last_animation_refresh_ms_ < GetAnimationRefreshIntervalMs()) {
+			return;
+		}
+
+		last_animation_refresh_ms_ = now;
+	}
+
+	QueueNativeRefresh(immediate);
+}
+
+void MapCanvas::RequestSharedMapRefresh() {
+	g_gui.RefreshView();
+}
+
+void MapCanvas::RequestAnimationRepaint() {
+	RequestRepaint(RepaintReason::AnimationTick);
 }
 
 void MapCanvas::SetZoom(double value) {
@@ -289,6 +359,7 @@ void MapCanvas::OnPaint(wxPaintEvent& event) {
 		} else {
 			animation_timer->Stop();
 			g_gui.gfx.pauseAnimation();
+			last_animation_refresh_ms_ = 0;
 		}
 
 		// BatchRenderer calls removed - MapDrawer handles its own renderers
@@ -308,6 +379,8 @@ void MapCanvas::OnPaint(wxPaintEvent& event) {
 
 		drawer->ClearFrameOverlays();
 	}
+
+	repaint_flags_ = 0;
 
 	PerformGarbageCollection();
 
@@ -389,8 +462,8 @@ void MapCanvas::SyncCursorHoverState() {
 	UpdatePositionStatus(cursor_x, cursor_y);
 	UpdateZoomStatus();
 
-	if (map_update) {
-		Refresh();
+	if (map_update && HasHoverDependentPreview()) {
+		RequestRepaint(RepaintReason::HoverOverlayChanged);
 	}
 }
 
@@ -419,7 +492,9 @@ void MapCanvas::OnMouseMove(wxMouseEvent& event) {
 		g_gui.UpdateAutoborderPreview(Position(mouse_map_x, mouse_map_y, floor));
 		UpdatePositionStatus(cursor_x, cursor_y);
 		UpdateZoomStatus();
-		Refresh();
+		if (HasHoverDependentPreview()) {
+			RequestRepaint(RepaintReason::HoverOverlayChanged);
+		}
 	}
 
 	if (g_gui.IsSelectionMode()) {
@@ -513,7 +588,7 @@ void MapCanvas::OnMouseActionClick(wxMouseEvent& event) {
 	last_click_map_x = mouse_map_x;
 	last_click_map_y = mouse_map_y;
 	last_click_map_z = floor;
-	g_gui.RefreshView();
+	RequestSharedMapRefresh();
 	g_gui.UpdateMinimap();
 }
 
@@ -534,7 +609,7 @@ void MapCanvas::OnMouseActionRelease(wxMouseEvent& event) {
 			drawing_controller->HandleRelease(Position(mouse_map_x, mouse_map_y, floor), event.ShiftDown(), event.ControlDown(), event.AltDown());
 		}
 	}
-	g_gui.RefreshView();
+	RequestSharedMapRefresh();
 	g_gui.UpdateMinimap();
 }
 
@@ -584,7 +659,7 @@ void MapCanvas::OnMousePropertiesClick(wxMouseEvent& event) {
 
 	last_click_map_x = mouse_map_x;
 	last_click_map_y = mouse_map_y;
-	g_gui.RefreshView();
+	RequestRepaint(RepaintReason::InteractionOverlayChanged);
 }
 
 void MapCanvas::OnMousePropertiesRelease(wxMouseEvent& event) {
@@ -608,7 +683,7 @@ void MapCanvas::OnMousePropertiesRelease(wxMouseEvent& event) {
 	last_cursor_map_y = mouse_map_y;
 	last_cursor_map_z = floor;
 
-	g_gui.RefreshView();
+	RequestRepaint(RepaintReason::InteractionOverlayChanged);
 }
 
 void MapCanvas::OnWheel(wxMouseEvent& event) {
@@ -620,11 +695,11 @@ void MapCanvas::OnWheel(wxMouseEvent& event) {
 		ZoomController::OnWheel(this, event);
 	}
 
-	Refresh();
+	RequestRepaint(RepaintReason::ViewportChanged);
 }
 
 void MapCanvas::OnLoseMouse(wxMouseEvent& event) {
-	Refresh();
+	RequestRepaint(RepaintReason::HoverOverlayChanged);
 }
 
 void MapCanvas::OnGainMouse(wxMouseEvent& event) {
@@ -637,7 +712,7 @@ void MapCanvas::OnGainMouse(wxMouseEvent& event) {
 		screendragging = false;
 	}
 
-	Refresh();
+	RequestRepaint(RepaintReason::InteractionOverlayChanged);
 }
 
 void MapCanvas::OnKeyDown(wxKeyEvent& event) {
@@ -656,13 +731,13 @@ void MapCanvas::EnterDrawingMode() {
 	dragging = false;
 	boundbox_selection = false;
 	EndPasting();
-	Refresh();
+	RequestRepaint(RepaintReason::InteractionOverlayChanged);
 }
 
 void MapCanvas::EnterSelectionMode() {
 	drawing_controller->Reset();
 	editor.replace_brush = nullptr;
-	Refresh();
+	RequestRepaint(RepaintReason::InteractionOverlayChanged);
 }
 
 bool MapCanvas::isPasting() const {

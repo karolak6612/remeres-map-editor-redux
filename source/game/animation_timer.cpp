@@ -19,10 +19,8 @@ AnimationTimer::~AnimationTimer() {
 };
 
 void AnimationTimer::Notify() {
-	if (map_canvas->GetZoom() <= 2.0) {
-		map_canvas->Refresh();
-	}
-};
+	map_canvas->RequestAnimationRepaint();
+}
 
 void AnimationTimer::Start() {
 	if (!started) {
