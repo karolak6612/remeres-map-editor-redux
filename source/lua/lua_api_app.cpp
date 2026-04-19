@@ -29,7 +29,9 @@
 #include "game/items.h"
 #include "brushes/raw/raw_brush.h"
 #include "brushes/ground/auto_border.h"
+#include "brushes/ground/ground_brush.h"
 #include "util/file_system.h"
+#include "ext/pugixml.hpp"
 
 #include <wx/msgdlg.h>
 #include <wx/app.h>
@@ -435,8 +437,171 @@ namespace LuaAPI {
 		return bordersTable;
 	}
 
+	static sol::object getGrounds(sol::this_state ts) {
+		sol::state_view lua(ts);
+
+		sol::table groundsTable = lua.create_table();
+
+		for (const auto& pair : g_brushes.getMap()) {
+			const Brush* brush = pair.second.get();
+			const GroundBrush* ground = brush ? brush->as<GroundBrush>() : nullptr;
+			if (!ground) {
+				continue;
+			}
+
+			sol::table g = lua.create_table();
+			g["id"] = ground->getID();
+			g["name"] = ground->getName();
+			g["lookid"] = ground->getLookID();
+			g["server_lookid"] = 0;
+			g["z_order"] = ground->getZ();
+			g["randomize"] = ground->isReRandomizable();
+			g["solo_optional"] = ground->useSoloOptionalBorder();
+
+			std::vector<std::pair<uint16_t, int>> itemEntries;
+			ground->getItemChanceEntries(itemEntries);
+
+			sol::table items = lua.create_table();
+			for (size_t i = 0; i < itemEntries.size(); ++i) {
+				sol::table item = lua.create_table();
+				item["id"] = itemEntries[i].first;
+				item["chance"] = itemEntries[i].second;
+				items[static_cast<int>(i + 1)] = item;
+			}
+			g["items"] = items;
+
+			if (!itemEntries.empty()) {
+				sol::table mainItem = lua.create_table();
+				mainItem["id"] = itemEntries.front().first;
+				mainItem["chance"] = itemEntries.front().second;
+				g["main_item"] = mainItem;
+			} else {
+				g["main_item"] = sol::nil;
+			}
+
+			groundsTable[ground->getName()] = g;
+		}
+
+		return groundsTable;
+	}
+
 	static std::string getDataDirectory() {
 		return FileSystem::GetDataDirectory().ToStdString();
+	}
+
+	static std::vector<std::string> splitPath(std::string_view path) {
+		std::vector<std::string> parts;
+		size_t start = 0;
+		while (start < path.size()) {
+			size_t slash = path.find('/', start);
+			size_t count = slash == std::string_view::npos ? path.size() - start : slash - start;
+			if (count > 0) {
+				parts.emplace_back(path.substr(start, count));
+			}
+			if (slash == std::string_view::npos) {
+				break;
+			}
+			start = slash + 1;
+		}
+		return parts;
+	}
+
+	static pugi::xml_node findNodeByPath(pugi::xml_node root, const std::string& path) {
+		if (!root) {
+			return pugi::xml_node();
+		}
+
+		if (path.empty()) {
+			return root;
+		}
+
+		pugi::xml_node current = root;
+		const auto parts = splitPath(path);
+		for (size_t index = 0; index < parts.size(); ++index) {
+			const std::string& part = parts[index];
+			if (index == 0 && current.type() == pugi::node_element && current.name() == part) {
+				continue;
+			}
+			current = current.child(part.c_str());
+			if (!current) {
+				return pugi::xml_node();
+			}
+		}
+
+		return current;
+	}
+
+	static std::tuple<bool, std::string> upsertXmlNodeFile(const std::string& path, const sol::table& options) {
+		const std::string rootName = options.get_or(std::string("root"), std::string("root"));
+		const std::string parentPath = options.get_or(std::string("parent"), rootName);
+		const std::string fragment = options.get_or(std::string("xml"), std::string(""));
+		const std::string matchTag = options.get_or(std::string("tag"), std::string(""));
+		const std::string matchAttr = options.get_or(std::string("match_attr"), std::string(""));
+		const std::string matchValue = options.get_or(std::string("match_value"), std::string(""));
+
+		if (fragment.empty()) {
+			return { false, "Missing XML fragment." };
+		}
+
+		pugi::xml_document document;
+		bool fileExists = std::filesystem::exists(path);
+		if (fileExists) {
+			const pugi::xml_parse_result loaded = document.load_file(path.c_str(), pugi::parse_default);
+			if (!loaded) {
+				return { false, "Failed to parse XML file: " + std::string(loaded.description()) };
+			}
+		}
+
+		pugi::xml_node root = document.document_element();
+		if (!root) {
+			document.reset();
+			document.append_child(pugi::node_declaration).append_attribute("version") = "1.0";
+			document.first_child().append_attribute("encoding") = "utf-8";
+			root = document.append_child(rootName.c_str());
+		}
+
+		if (!root || std::string(root.name()) != rootName) {
+			return { false, "Root node does not match expected <" + rootName + ">." };
+		}
+
+		pugi::xml_node parent = findNodeByPath(root, parentPath);
+		if (!parent) {
+			return { false, "Parent node path not found: " + parentPath };
+		}
+
+		pugi::xml_document fragmentDocument;
+		const pugi::xml_parse_result fragmentLoaded = fragmentDocument.load_buffer(fragment.data(), fragment.size(), pugi::parse_default);
+		if (!fragmentLoaded) {
+			return { false, "Failed to parse XML fragment: " + std::string(fragmentLoaded.description()) };
+		}
+
+		pugi::xml_node fragmentNode = fragmentDocument.document_element();
+		if (!fragmentNode) {
+			return { false, "XML fragment does not contain an element node." };
+		}
+
+		pugi::xml_node existing;
+		if (!matchTag.empty() && !matchAttr.empty()) {
+			for (pugi::xml_node child = parent.child(matchTag.c_str()); child; child = child.next_sibling(matchTag.c_str())) {
+				if (child.attribute(matchAttr.c_str()).as_string() == matchValue) {
+					existing = child;
+					break;
+				}
+			}
+		}
+
+		if (existing) {
+			parent.insert_copy_before(fragmentNode, existing);
+			parent.remove_child(existing);
+		} else {
+			parent.append_copy(fragmentNode);
+		}
+
+		if (!document.save_file(path.c_str(), "\t", pugi::format_default, pugi::encoding_utf8)) {
+			return { false, "Failed to save XML file." };
+		}
+
+		return { true, existing ? "updated" : "appended" };
 	}
 
 	static sol::table storageForScript(sol::this_state ts, const std::string& name) {
@@ -538,6 +703,44 @@ namespace LuaAPI {
 			}
 		};
 
+		storage["exists"] = [path](sol::object) -> bool {
+			return std::filesystem::exists(path);
+		};
+
+		storage["readText"] = [path](sol::this_state ts2, sol::object) -> std::tuple<sol::object, sol::object> {
+			sol::state_view lua(ts2);
+
+			std::ifstream file(path, std::ios::binary | std::ios::ate);
+			if (!file.is_open()) {
+				return {
+					sol::make_object(lua, sol::nil),
+					sol::make_object(lua, std::string("Could not open file."))
+				};
+			}
+
+			const std::streamsize fileSize = file.tellg();
+			if (fileSize < 0 || fileSize > static_cast<std::streamsize>(4 * 1024 * 1024)) {
+				return {
+					sol::make_object(lua, sol::nil),
+					sol::make_object(lua, std::string("File is too large to read safely."))
+				};
+			}
+
+			std::string content(static_cast<size_t>(fileSize), '\0');
+			file.seekg(0, std::ios::beg);
+			if (fileSize > 0 && !file.read(content.data(), fileSize)) {
+				return {
+					sol::make_object(lua, sol::nil),
+					sol::make_object(lua, std::string("Could not read file contents."))
+				};
+			}
+
+			return {
+				sol::make_object(lua, content),
+				sol::make_object(lua, sol::nil)
+			};
+		};
+
 		storage["save"] = [path](sol::this_state ts2, sol::object first, sol::object second) -> bool {
 			sol::state_view lua(ts2);
 			std::string content;
@@ -577,6 +780,10 @@ namespace LuaAPI {
 
 		storage["clear"] = [path](sol::object) -> bool {
 			return std::remove(path.c_str()) == 0;
+		};
+
+		storage["upsertXml"] = [path](sol::object, sol::table options) -> std::tuple<bool, std::string> {
+			return upsertXmlNodeFile(path, options);
 		};
 
 		return storage;
@@ -672,6 +879,8 @@ namespace LuaAPI {
 				return sol::nil;
 			} else if (key == "borders") {
 				return getBorders(ts);
+			} else if (key == "grounds") {
+				return getGrounds(ts);
 			} else if (key == "editor") {
 				Editor* editor = g_gui.GetCurrentEditor();
 				if (editor) {
