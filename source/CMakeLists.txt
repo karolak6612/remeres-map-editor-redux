@@ -228,12 +228,10 @@ set(rme_H
     ${CMAKE_CURRENT_LIST_DIR}/rendering/ui/map_status_updater.h
     ${CMAKE_CURRENT_LIST_DIR}/rendering/ui/minimap_window.h
     ${CMAKE_CURRENT_LIST_DIR}/rendering/ui/navigation_controller.h
-    ${CMAKE_CURRENT_LIST_DIR}/rendering/ui/repaint_policy.h
     ${CMAKE_CURRENT_LIST_DIR}/rendering/ui/popup_action_handler.h
     ${CMAKE_CURRENT_LIST_DIR}/rendering/ui/screenshot_controller.h
     ${CMAKE_CURRENT_LIST_DIR}/rendering/ui/selection_controller.h
     ${CMAKE_CURRENT_LIST_DIR}/rendering/ui/tooltip_drawer.h
-    ${CMAKE_CURRENT_LIST_DIR}/rendering/ui/view_invalidation_state.h
     ${CMAKE_CURRENT_LIST_DIR}/rendering/ui/zoom_controller.h
     ${CMAKE_CURRENT_LIST_DIR}/rendering/utilities/fps_counter.h
     ${CMAKE_CURRENT_LIST_DIR}/rendering/utilities/frame_pacer.h
@@ -602,7 +600,6 @@ set(rme_SRC
     ${CMAKE_CURRENT_LIST_DIR}/rendering/ui/map_status_updater.cpp
     ${CMAKE_CURRENT_LIST_DIR}/rendering/ui/minimap_window.cpp
     ${CMAKE_CURRENT_LIST_DIR}/rendering/ui/navigation_controller.cpp
-    ${CMAKE_CURRENT_LIST_DIR}/rendering/ui/repaint_policy.cpp
     ${CMAKE_CURRENT_LIST_DIR}/rendering/ui/popup_action_handler.cpp
     ${CMAKE_CURRENT_LIST_DIR}/rendering/ui/screenshot_controller.cpp
     ${CMAKE_CURRENT_LIST_DIR}/rendering/ui/selection_controller.cpp

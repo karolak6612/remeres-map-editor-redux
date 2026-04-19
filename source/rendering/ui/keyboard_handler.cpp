@@ -61,8 +61,7 @@ void KeyboardHandler::OnKeyDown(MapCanvas* canvas, wxKeyEvent& event) {
 		case WXK_SPACE: {
 			if (event.ControlDown()) {
 				g_gui.FillDoodadPreviewBuffer();
-				canvas->MarkInvalid(RepaintReason::HoverOverlayChanged);
-				canvas->FlushRepaintRequest();
+				canvas->RequestLocalRefresh();
 			} else {
 				g_gui.SwitchMode();
 			}
@@ -78,7 +77,7 @@ void KeyboardHandler::OnKeyDown(MapCanvas* canvas, wxKeyEvent& event) {
 		}
 		case WXK_DELETE: {
 			canvas->editor.destroySelection();
-			canvas->RequestSharedMapRefresh(RepaintReason::MapContentChanged);
+			canvas->RequestSharedMapRefresh();
 			break;
 		}
 		case 'z':
@@ -145,8 +144,7 @@ void KeyboardHandler::HandleBrushSizeChange(MapCanvas* canvas, int keycode) {
 	} else {
 		g_gui.DecreaseBrushSize();
 	}
-	canvas->MarkInvalid(RepaintReason::InteractionOverlayChanged);
-	canvas->FlushRepaintRequest();
+	canvas->RequestLocalRefresh();
 }
 
 void KeyboardHandler::HandleBrushVariation(MapCanvas* canvas, int keycode) {
@@ -163,8 +161,7 @@ void KeyboardHandler::HandleBrushVariation(MapCanvas* canvas, int keycode) {
 		}
 	}
 	g_gui.SetBrushVariation(nv);
-	canvas->MarkInvalid(RepaintReason::HoverOverlayChanged);
-	canvas->FlushRepaintRequest();
+	canvas->RequestLocalRefresh();
 }
 
 void KeyboardHandler::HandleHotkeys(MapCanvas* canvas, wxKeyEvent& event) {
@@ -196,8 +193,7 @@ void KeyboardHandler::HandleHotkeys(MapCanvas* canvas, wxKeyEvent& event) {
 			static_cast<MapWindow*>(canvas->GetParent())->SetScreenCenterPosition(hk.GetPosition());
 
 			g_gui.SetStatusText("Used hotkey " + i2ws(index));
-			canvas->MarkInvalid(RepaintReason::ViewportChanged);
-			canvas->FlushRepaintRequest();
+			canvas->RequestLocalRefresh();
 		} else if (hk.IsBrush()) {
 			g_gui.SetDrawingMode();
 
@@ -214,8 +210,7 @@ void KeyboardHandler::HandleHotkeys(MapCanvas* canvas, wxKeyEvent& event) {
 			}
 
 			g_gui.SetStatusText("Used hotkey " + i2ws(index));
-			canvas->MarkInvalid(RepaintReason::HoverOverlayChanged);
-			canvas->FlushRepaintRequest();
+			canvas->RequestLocalRefresh();
 		} else {
 			g_gui.SetStatusText("Unassigned hotkey " + i2ws(index));
 		}

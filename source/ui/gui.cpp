@@ -201,7 +201,7 @@ void GUI::SetCurrentMapSecondaryMap(BaseMap* secondary_map) {
 	SyncCurrentMapCanvasPreviewState();
 }
 
-void GUI::RefreshView(RepaintReason reason, bool immediate) {
+void GUI::RefreshView(bool immediate) {
 	MapTab* current_map_tab = GetCurrentMapTab();
 	for (int i = 0; i < tabbook->GetTabCount(); ++i) {
 		auto* editor_tab = tabbook->GetTab(i);
@@ -212,7 +212,7 @@ void GUI::RefreshView(RepaintReason reason, bool immediate) {
 
 		if (!current_map_tab || !map_tab || map_tab->HasSameReference(current_map_tab)) {
 			if (map_tab) {
-				map_tab->GetCanvas()->RequestLocalRefresh(reason, immediate);
+				map_tab->GetCanvas()->RequestLocalRefresh(immediate);
 			} else {
 				editor_tab->GetWindow()->Refresh();
 			}

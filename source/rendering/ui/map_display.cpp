@@ -65,7 +65,6 @@
 #include "rendering/ui/selection_controller.h"
 #include "rendering/ui/drawing_controller.h"
 #include "rendering/ui/map_menu_handler.h"
-#include "rendering/ui/repaint_policy.h"
 #include "rendering/drawers/overlays/lua_overlay_drawer.h"
 
 #include "brushes/doodad/doodad_brush.h"
@@ -173,76 +172,58 @@ MapCanvas::~MapCanvas() {
 }
 
 void MapCanvas::Refresh() {
-	RequestLocalRefresh(RepaintReason::MapContentChanged);
+	RequestLocalRefresh();
 }
 
-bool MapCanvas::ComputeInteractionOverlayActive() const {
-	return screendragging
-		|| (selection_controller && (selection_controller->IsDragging() || selection_controller->IsBoundboxSelection()))
-		|| (drawing_controller && (drawing_controller->IsDrawing() || drawing_controller->IsDraggingDraw() || drawing_controller->IsReplaceDragging()));
+bool MapCanvas::IsAnimationEnabled() const {
+	return g_settings.getBoolean(Config::SHOW_PREVIEW);
 }
 
-void MapCanvas::UpdateInvalidationState() {
-	invalidation_state_.animation_enabled = g_settings.getBoolean(Config::SHOW_PREVIEW);
-	invalidation_state_.interaction_overlay_active = ComputeInteractionOverlayActive();
-	invalidation_state_.zoom = zoom;
+int MapCanvas::GetAnimationRefreshIntervalMs() const {
+	constexpr double far_zoom_threshold = 2.0;
+	constexpr int near_zoom_refresh_interval_ms = 1000 / 60;
+	constexpr int far_zoom_refresh_interval_ms = 1000 / 20;
+	return zoom <= far_zoom_threshold ? near_zoom_refresh_interval_ms : far_zoom_refresh_interval_ms;
 }
 
 void MapCanvas::QueueNativeRefresh(bool immediate) {
 	wxGLCanvas::Refresh();
-	invalidation_state_.native_refresh_pending = true;
-
 	if (immediate || refresh_watch.Time() > g_settings.getInteger(Config::HARD_REFRESH_RATE)) {
 		refresh_watch.Start();
 		wxGLCanvas::Update();
 	}
 }
 
-void MapCanvas::MarkInvalid(RepaintReason reason, RefreshScope scope) {
-	UpdateInvalidationState();
-	SetFlag(invalidation_state_.pending_reasons, reason);
-	invalidation_state_.refresh_scope = scope;
+void MapCanvas::RequestLocalRefresh(bool immediate) {
+	QueueNativeRefresh(immediate);
 }
 
-void MapCanvas::FlushRepaintRequest(bool immediate) {
-	UpdateInvalidationState();
-
-	const auto now = std::chrono::steady_clock::now();
-	const RepaintDecision decision = EvaluateRepaintRequest(invalidation_state_, invalidation_state_.pending_reasons, immediate, now);
-	invalidation_state_.pending_reasons = decision.allowed_reasons;
-	if (!decision.should_refresh) {
-		return;
-	}
-
-	if (::HasFlag(decision.allowed_reasons, RepaintReason::AnimationTick)) {
-		invalidation_state_.last_animation_refresh = now;
-	}
-
-	QueueNativeRefresh(decision.immediate);
-}
-
-void MapCanvas::RequestLocalRefresh(RepaintReason reason, bool immediate) {
-	MarkInvalid(reason, RefreshScope::LocalView);
-	FlushRepaintRequest(immediate);
-}
-
-void MapCanvas::RequestSharedMapRefresh(RepaintReason reason, bool immediate) {
-	MarkInvalid(reason, RefreshScope::SharedMap);
-	g_gui.RefreshView(reason, immediate);
+void MapCanvas::RequestSharedMapRefresh(bool immediate) {
+	g_gui.RefreshView(immediate);
 }
 
 void MapCanvas::RequestAnimationRepaint() {
-	RequestLocalRefresh(RepaintReason::AnimationTick);
-}
-
-void MapCanvas::SetHoverPreviewActive(bool active) {
-	if (invalidation_state_.hover_preview_active == active) {
+	if (!IsAnimationEnabled()) {
 		return;
 	}
 
-	invalidation_state_.hover_preview_active = active;
-	MarkInvalid(RepaintReason::HoverOverlayChanged);
-	FlushRepaintRequest();
+	const auto now = std::chrono::steady_clock::now();
+	const auto refresh_interval = std::chrono::milliseconds(GetAnimationRefreshIntervalMs());
+	if (last_animation_refresh_time_ != std::chrono::steady_clock::time_point{} && now - last_animation_refresh_time_ < refresh_interval) {
+		return;
+	}
+
+	last_animation_refresh_time_ = now;
+	RequestLocalRefresh();
+}
+
+void MapCanvas::SetHoverPreviewActive(bool active) {
+	if (hover_preview_active_ == active) {
+		return;
+	}
+
+	hover_preview_active_ = active;
+	RequestLocalRefresh();
 }
 
 void MapCanvas::SetZoom(double value) {
@@ -356,7 +337,7 @@ void MapCanvas::OnPaint(wxPaintEvent& event) {
 		} else {
 			animation_timer->Stop();
 			g_gui.gfx.pauseAnimation();
-			invalidation_state_.last_animation_refresh = {};
+			last_animation_refresh_time_ = {};
 		}
 
 		// BatchRenderer calls removed - MapDrawer handles its own renderers
@@ -376,9 +357,6 @@ void MapCanvas::OnPaint(wxPaintEvent& event) {
 
 		drawer->ClearFrameOverlays();
 	}
-
-	invalidation_state_.pending_reasons = RepaintReason::None;
-	invalidation_state_.native_refresh_pending = false;
 
 	PerformGarbageCollection();
 
@@ -460,9 +438,8 @@ void MapCanvas::SyncCursorHoverState() {
 	UpdatePositionStatus(cursor_x, cursor_y);
 	UpdateZoomStatus();
 
-	if (map_update && invalidation_state_.hover_preview_active) {
-		MarkInvalid(RepaintReason::HoverOverlayChanged);
-		FlushRepaintRequest();
+	if (map_update && hover_preview_active_) {
+		RequestLocalRefresh();
 	}
 }
 
@@ -491,9 +468,8 @@ void MapCanvas::OnMouseMove(wxMouseEvent& event) {
 		g_gui.UpdateAutoborderPreview(Position(mouse_map_x, mouse_map_y, floor));
 		UpdatePositionStatus(cursor_x, cursor_y);
 		UpdateZoomStatus();
-		if (invalidation_state_.hover_preview_active) {
-			MarkInvalid(RepaintReason::HoverOverlayChanged);
-			FlushRepaintRequest();
+		if (hover_preview_active_) {
+			RequestLocalRefresh();
 		}
 	}
 
@@ -659,8 +635,7 @@ void MapCanvas::OnMousePropertiesClick(wxMouseEvent& event) {
 
 	last_click_map_x = mouse_map_x;
 	last_click_map_y = mouse_map_y;
-	MarkInvalid(RepaintReason::InteractionOverlayChanged);
-	FlushRepaintRequest();
+	RequestLocalRefresh();
 }
 
 void MapCanvas::OnMousePropertiesRelease(wxMouseEvent& event) {
@@ -684,8 +659,7 @@ void MapCanvas::OnMousePropertiesRelease(wxMouseEvent& event) {
 	last_cursor_map_y = mouse_map_y;
 	last_cursor_map_z = floor;
 
-	MarkInvalid(RepaintReason::InteractionOverlayChanged);
-	FlushRepaintRequest();
+	RequestLocalRefresh();
 }
 
 void MapCanvas::OnWheel(wxMouseEvent& event) {
@@ -697,13 +671,11 @@ void MapCanvas::OnWheel(wxMouseEvent& event) {
 		ZoomController::OnWheel(this, event);
 	}
 
-	MarkInvalid(RepaintReason::ViewportChanged);
-	FlushRepaintRequest();
+	RequestLocalRefresh();
 }
 
 void MapCanvas::OnLoseMouse(wxMouseEvent& event) {
-	MarkInvalid(RepaintReason::HoverOverlayChanged);
-	FlushRepaintRequest();
+	RequestLocalRefresh();
 }
 
 void MapCanvas::OnGainMouse(wxMouseEvent& event) {
@@ -716,8 +688,7 @@ void MapCanvas::OnGainMouse(wxMouseEvent& event) {
 		screendragging = false;
 	}
 
-	MarkInvalid(RepaintReason::InteractionOverlayChanged);
-	FlushRepaintRequest();
+	RequestLocalRefresh();
 }
 
 void MapCanvas::OnKeyDown(wxKeyEvent& event) {
@@ -736,15 +707,13 @@ void MapCanvas::EnterDrawingMode() {
 	dragging = false;
 	boundbox_selection = false;
 	EndPasting();
-	MarkInvalid(RepaintReason::InteractionOverlayChanged);
-	FlushRepaintRequest();
+	RequestLocalRefresh();
 }
 
 void MapCanvas::EnterSelectionMode() {
 	drawing_controller->Reset();
 	editor.replace_brush = nullptr;
-	MarkInvalid(RepaintReason::InteractionOverlayChanged);
-	FlushRepaintRequest();
+	RequestLocalRefresh();
 }
 
 bool MapCanvas::isPasting() const {

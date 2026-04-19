@@ -21,12 +21,12 @@
 #include "editor/action.h"
 #include "map/tile.h"
 #include "game/creature.h"
-#include "rendering/ui/view_invalidation_state.h"
 #include "rendering/utilities/frame_pacer.h"
 
 #include "ui/map_popup_menu.h"
 #include "game/animation_timer.h"
 #include "rendering/core/graphics.h"
+#include <chrono>
 #include <memory>
 
 struct NVGcontext;
@@ -79,11 +79,9 @@ public:
 	void OnMousePropertiesRelease(wxMouseEvent& event);
 
 	virtual void Refresh();
-	void MarkInvalid(RepaintReason reason, RefreshScope scope = RefreshScope::LocalView);
-	void RequestLocalRefresh(RepaintReason reason, bool immediate = false);
-	void RequestSharedMapRefresh(RepaintReason reason = RepaintReason::MapContentChanged, bool immediate = false);
+	void RequestLocalRefresh(bool immediate = false);
+	void RequestSharedMapRefresh(bool immediate = false);
 	void RequestAnimationRepaint();
-	void FlushRepaintRequest(bool immediate = false);
 	void SetHoverPreviewActive(bool active);
 
 	virtual void ScreenToMap(int screen_x, int screen_y, int* map_x, int* map_y);
@@ -180,8 +178,8 @@ public:
 	std::unique_ptr<MapMenuHandler> menu_handler;
 
 private:
-	void UpdateInvalidationState();
-	bool ComputeInteractionOverlayActive() const;
+	bool IsAnimationEnabled() const;
+	int GetAnimationRefreshIntervalMs() const;
 	void QueueNativeRefresh(bool immediate);
 	void EnsureNanoVG();
 	void DrawOverlays(NVGcontext* vg, const DrawingOptions& options);
@@ -190,7 +188,8 @@ private:
 	MapWindow* GetMapWindow() const;
 	bool renderer_initialized = false;
 	long m_last_gc_time = 0;
-	ViewInvalidationState invalidation_state_{};
+	bool hover_preview_active_ = false;
+	std::chrono::steady_clock::time_point last_animation_refresh_time_{};
 };
 
 #endif
