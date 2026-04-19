@@ -130,17 +130,5 @@ target_link_libraries(rme PRIVATE ${LUA_LIBRARIES})
 
 set_property(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR} PROPERTY VS_STARTUP_PROJECT "rme")
 
-add_executable(rme_vsync_policy_test
-	${CMAKE_CURRENT_SOURCE_DIR}/source/test_vsync_policy.cpp
-	${CMAKE_CURRENT_SOURCE_DIR}/source/ui/managers/vsync_policy.cpp
-)
-target_compile_features(rme_vsync_policy_test PRIVATE cxx_std_23)
-target_include_directories(rme_vsync_policy_test PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/source)
-if(TARGET wxWidgets::wxWidgets)
-	target_link_libraries(rme_vsync_policy_test PRIVATE wxWidgets::wxWidgets)
-else()
-	target_link_libraries(rme_vsync_policy_test PRIVATE ${wxWidgets_LIBRARIES})
-endif()
-
 
 

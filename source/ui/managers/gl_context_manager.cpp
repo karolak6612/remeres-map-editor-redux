@@ -32,7 +32,7 @@ SwapIntervalApplicationResult applySwapIntervalWgl(int interval) {
 }
 #endif
 
-SwapIntervalApplicationResult applySwapInterval(wxGLCanvas& canvas, VSyncMode mode) {
+SwapIntervalApplicationResult applySwapInterval([[maybe_unused]] wxGLCanvas& canvas, [[maybe_unused]] VSyncMode mode) {
 #if wxCHECK_VERSION(3, 3, 2)
 	switch (canvas.SetSwapInterval(getSwapIntervalForMode(mode))) {
 	case wxGLCanvas::SwapInterval::Set:
@@ -46,8 +46,6 @@ SwapIntervalApplicationResult applySwapInterval(wxGLCanvas& canvas, VSyncMode mo
 #elif defined(__WXMSW__)
 	return applySwapIntervalWgl(getSwapIntervalForMode(mode));
 #else
-	wxUnusedVar(canvas);
-	wxUnusedVar(mode);
 	return SwapIntervalApplicationResult::NotSet;
 #endif
 }
@@ -117,15 +115,10 @@ VSyncApplicationOutcome GLContextManager::applyVSyncWithCurrentContext(wxGLCanva
 	if (result == VSyncApplicationOutcome::AdaptiveFallback) {
 		m_forceStandardVSyncForSession = true;
 		m_lastAppliedModes[&canvas] = VSyncMode::On;
-		return result;
-	}
-
-	if (result == VSyncApplicationOutcome::Applied) {
+	} else if (result == VSyncApplicationOutcome::Applied) {
 		m_lastAppliedModes[&canvas] = requested_mode;
-		return result;
 	}
 
-	m_lastAppliedModes[&canvas] = requested_mode;
 	return result;
 }
 
@@ -155,6 +148,8 @@ VSyncApplicationOutcome GLContextManager::probeConfiguredVSync() {
 		return applyVSyncWithCurrentContext(*canvas);
 	}
 
+	// No visible canvas could be probed right now. The refreshed canvases will
+	// apply vSync on their next successful paint once they have a current context.
 	return VSyncApplicationOutcome::Applied;
 }
 

@@ -203,7 +203,6 @@ namespace Config {
 
 		FRAME_RATE_LIMIT,
 		SHOW_FPS_COUNTER,
-		VSYNC_MODE,
 
 		ANTI_ALIASING,
 		SCREEN_SHADER,
@@ -226,6 +225,7 @@ namespace Config {
 
 		// Add new settings at the end to preserve enum ordering for persisted settings
 		SHOW_MISSING_ITEMS_WARNING,
+		VSYNC_MODE,
 
 		LAST,
 	};

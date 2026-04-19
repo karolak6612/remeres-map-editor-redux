@@ -98,7 +98,9 @@ void NanoVGCanvas::OnPaint(wxPaintEvent&) {
 		return;
 	}
 
-	MakeContextCurrent();
+	if (!MakeContextCurrent()) {
+		return;
+	}
 
 	int w, h;
 	GetClientSize(&w, &h);

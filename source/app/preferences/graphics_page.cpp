@@ -239,22 +239,26 @@ void GraphicsPage::Apply() {
 	g_settings.setInteger(Config::CURSOR_ALT_ALPHA, cursor_color.Alpha());
 
 	g_settings.setInteger(Config::HIDE_ITEMS_WHEN_ZOOMED, hide_items_when_zoomed_chkbox->GetValue());
-	g_settings.setInteger(Config::VSYNC_MODE, vsync_choice->GetSelection());
+	const auto requested_vsync_mode = sanitizeVSyncMode(vsync_choice->GetSelection());
+	const auto previous_vsync_mode = sanitizeVSyncMode(g_settings.getInteger(Config::VSYNC_MODE));
+	g_settings.setInteger(Config::VSYNC_MODE, static_cast<int>(requested_vsync_mode));
 	g_settings.setInteger(Config::SHOW_FPS_COUNTER, show_fps_chkbox->GetValue());
 
-	const auto vsync_summary = g_gl_context.ReapplyVSyncToRegisteredCanvases();
-	if (vsync_summary.adaptive_fallback) {
-		wxMessageBox(
-			"Adaptive vSync is not supported by the active OpenGL driver. Standard vSync has been enabled for this session instead.",
-			"Adaptive VSync Unavailable",
-			wxOK | wxICON_WARNING
-		);
-	} else if (vsync_summary.apply_failed) {
-		wxMessageBox(
-			"The selected vSync mode could not be applied on the active OpenGL canvases. Rendering will continue using the driver default.",
-			"VSync Apply Failed",
-			wxOK | wxICON_WARNING
-		);
+	if (requested_vsync_mode != previous_vsync_mode) {
+		const auto vsync_summary = g_gl_context.ReapplyVSyncToRegisteredCanvases();
+		if (vsync_summary.adaptive_fallback) {
+			wxMessageBox(
+				"Adaptive VSync is not supported by the active OpenGL driver. Standard VSync has been enabled for this session instead.",
+				"Adaptive VSync Unavailable",
+				wxOK | wxICON_WARNING
+			);
+		} else if (vsync_summary.apply_failed) {
+			wxMessageBox(
+				"The selected VSync mode could not be applied on the active OpenGL canvases. Rendering will continue using the driver default.",
+				"VSync Apply Failed",
+				wxOK | wxICON_WARNING
+			);
+		}
 	}
 
 	if (must_restart) {
