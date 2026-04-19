@@ -236,7 +236,13 @@ void MapCanvas::RequestAnimationRepaint() {
 }
 
 void MapCanvas::SetHoverPreviewActive(bool active) {
+	if (invalidation_state_.hover_preview_active == active) {
+		return;
+	}
+
 	invalidation_state_.hover_preview_active = active;
+	MarkInvalid(RepaintReason::HoverOverlayChanged);
+	FlushRepaintRequest();
 }
 
 void MapCanvas::SetZoom(double value) {

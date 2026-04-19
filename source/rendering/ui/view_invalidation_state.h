@@ -53,10 +53,6 @@ inline void ClearFlag(RepaintReason& value, RepaintReason flag) {
 	value = static_cast<RepaintReason>(std::to_underlying(value) & ~std::to_underlying(flag));
 }
 
-[[nodiscard]] constexpr bool AnyNonAnimationFlags(RepaintReason value) {
-	return (std::to_underlying(value) & ~std::to_underlying(RepaintReason::AnimationTick)) != 0;
-}
-
 struct ViewInvalidationState {
 	RepaintReason pending_reasons = RepaintReason::None;
 	RefreshScope refresh_scope = RefreshScope::LocalView;

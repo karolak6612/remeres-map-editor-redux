@@ -164,9 +164,7 @@ void GUI::SetSelectionMode() {
 	}
 
 	if (GetCurrentBrush() && GetCurrentBrush()->is<DoodadBrush>()) {
-		if (mapTab) {
-			mapTab->GetSession()->secondary_map = nullptr;
-		}
+		SetCurrentMapSecondaryMap(nullptr);
 	}
 
 	mapTab->OnSwitchEditorMode(SELECTION_MODE);
@@ -182,18 +180,24 @@ void GUI::SetDrawingMode() {
 	mapTab->OnSwitchEditorMode(DRAWING_MODE);
 
 	if (GetCurrentBrush() && GetCurrentBrush()->is<DoodadBrush>()) {
-		if (mapTab) {
-			mapTab->GetSession()->secondary_map = g_doodad_preview.GetBufferMap();
-		}
+		SetCurrentMapSecondaryMap(g_doodad_preview.GetBufferMap());
 	} else if (GetCurrentBrush() && GetCurrentBrush()->needBorders() && g_settings.getInteger(Config::USE_AUTOMAGIC)) {
 		// We'll set the map, but it might be empty until first mouse move
-		if (mapTab) {
-			mapTab->GetSession()->secondary_map = g_autoborder_preview.GetBufferMap();
-		}
+		SetCurrentMapSecondaryMap(g_autoborder_preview.GetBufferMap());
 	} else {
-		mapTab->GetSession()->secondary_map = nullptr;
+		SetCurrentMapSecondaryMap(nullptr);
 	}
 
+	SyncCurrentMapCanvasPreviewState();
+}
+
+void GUI::SetCurrentMapSecondaryMap(BaseMap* secondary_map) {
+	MapTab* mapTab = GetCurrentMapTab();
+	if (!mapTab) {
+		return;
+	}
+
+	mapTab->GetSession()->secondary_map = secondary_map;
 	SyncCurrentMapCanvasPreviewState();
 }
 

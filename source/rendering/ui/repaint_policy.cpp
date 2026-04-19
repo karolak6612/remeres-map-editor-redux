@@ -38,7 +38,7 @@ RepaintDecision EvaluateRepaintRequest(
 	}
 
 	const auto refresh_interval = std::chrono::milliseconds(decision.animation_interval_ms);
-	if (state.last_animation_refresh.time_since_epoch().count() != 0 && now - state.last_animation_refresh < refresh_interval) {
+	if (state.last_animation_refresh != std::chrono::steady_clock::time_point{} && now - state.last_animation_refresh < refresh_interval) {
 		ClearFlag(decision.allowed_reasons, RepaintReason::AnimationTick);
 		spdlog::trace(
 			"RepaintPolicy: throttled animation tick at zoom={} interval_ms={} remaining reasons={}",

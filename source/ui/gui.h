@@ -263,6 +263,7 @@ public:
 
 	// Centers current view on position
 	void SetScreenCenterPosition(Position pos);
+	void SetCurrentMapSecondaryMap(BaseMap* secondary_map);
 	// Refresh the view canvas
 	void RefreshView(RepaintReason reason = RepaintReason::MapContentChanged, bool immediate = false);
 	void SyncCurrentMapCanvasPreviewState();
