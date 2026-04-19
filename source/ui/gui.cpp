@@ -164,12 +164,11 @@ void GUI::SetSelectionMode() {
 	}
 
 	if (GetCurrentBrush() && GetCurrentBrush()->is<DoodadBrush>()) {
-		if (mapTab) {
-			mapTab->GetSession()->secondary_map = nullptr;
-		}
+		SetCurrentMapSecondaryMap(nullptr);
 	}
 
 	mapTab->OnSwitchEditorMode(SELECTION_MODE);
+	SyncCurrentMapCanvasPreviewState();
 }
 
 void GUI::SetDrawingMode() {
@@ -181,25 +180,61 @@ void GUI::SetDrawingMode() {
 	mapTab->OnSwitchEditorMode(DRAWING_MODE);
 
 	if (GetCurrentBrush() && GetCurrentBrush()->is<DoodadBrush>()) {
-		if (mapTab) {
-			mapTab->GetSession()->secondary_map = g_doodad_preview.GetBufferMap();
-		}
+		SetCurrentMapSecondaryMap(g_doodad_preview.GetBufferMap());
 	} else if (GetCurrentBrush() && GetCurrentBrush()->needBorders() && g_settings.getInteger(Config::USE_AUTOMAGIC)) {
 		// We'll set the map, but it might be empty until first mouse move
-		if (mapTab) {
-			mapTab->GetSession()->secondary_map = g_autoborder_preview.GetBufferMap();
-		}
+		SetCurrentMapSecondaryMap(g_autoborder_preview.GetBufferMap());
 	} else {
-		mapTab->GetSession()->secondary_map = nullptr;
+		SetCurrentMapSecondaryMap(nullptr);
+	}
+
+	SyncCurrentMapCanvasPreviewState();
+}
+
+void GUI::SetCurrentMapSecondaryMap(BaseMap* secondary_map) {
+	MapTab* mapTab = GetCurrentMapTab();
+	if (!mapTab) {
+		return;
+	}
+
+	mapTab->GetSession()->secondary_map = secondary_map;
+	SyncCurrentMapCanvasPreviewState();
+}
+
+void GUI::RefreshView(bool immediate) {
+	MapTab* current_map_tab = GetCurrentMapTab();
+	for (int i = 0; i < tabbook->GetTabCount(); ++i) {
+		auto* editor_tab = tabbook->GetTab(i);
+		auto* map_tab = dynamic_cast<MapTab*>(editor_tab);
+		if (!editor_tab) {
+			continue;
+		}
+
+		if (!current_map_tab || !map_tab || map_tab->HasSameReference(current_map_tab)) {
+			if (map_tab) {
+				map_tab->GetCanvas()->RequestLocalRefresh(immediate);
+			} else {
+				editor_tab->GetWindow()->Refresh();
+			}
+		}
 	}
 }
 
-void GUI::RefreshView() {
-	for (int i = 0; i < tabbook->GetTabCount(); ++i) {
-		EditorTab* editorTab = tabbook->GetTab(i);
-		if (editorTab) {
-			editorTab->GetWindow()->Refresh();
+void GUI::SyncCurrentMapCanvasPreviewState() {
+	if (!tabbook) {
+		return;
+	}
+
+	for (int index = 0; index < tabbook->GetTabCount(); ++index) {
+		auto* map_tab = dynamic_cast<MapTab*>(tabbook->GetTab(index));
+		if (!map_tab) {
+			continue;
 		}
+
+		const bool hover_preview_active = IsPasting()
+			|| (map_tab->GetMode() == DRAWING_MODE && GetCurrentBrush() != nullptr)
+			|| map_tab->GetSession()->secondary_map != nullptr;
+		map_tab->GetCanvas()->SetHoverPreviewActive(hover_preview_active);
 	}
 }
 
@@ -230,9 +265,11 @@ void GUI::PreparePaste() {
 }
 void GUI::StartPasting() {
 	g_editors.StartPasting();
+	SyncCurrentMapCanvasPreviewState();
 }
 void GUI::EndPasting() {
 	g_editors.EndPasting();
+	SyncCurrentMapCanvasPreviewState();
 }
 
 bool GUI::CanUndo() {
@@ -307,6 +344,7 @@ void GUI::FitViewToMap(MapTab* mt) {
 
 void GUI::FillDoodadPreviewBuffer() {
 	g_brush_manager.FillDoodadPreviewBuffer();
+	SyncCurrentMapCanvasPreviewState();
 }
 
 void GUI::SelectBrush() {
@@ -314,6 +352,7 @@ void GUI::SelectBrush() {
 	if (tool_options) {
 		tool_options->SetActiveBrush(GetCurrentBrush());
 	}
+	SyncCurrentMapCanvasPreviewState();
 	emitBrushChangeIfNeeded(*this);
 }
 bool GUI::SelectBrush(const Brush* brush, PaletteType pt) {
@@ -321,6 +360,7 @@ bool GUI::SelectBrush(const Brush* brush, PaletteType pt) {
 	if (tool_options) {
 		tool_options->SetActiveBrush(GetCurrentBrush());
 	}
+	SyncCurrentMapCanvasPreviewState();
 	emitBrushChangeIfNeeded(*this);
 	return changed;
 }
@@ -329,6 +369,7 @@ void GUI::SelectPreviousBrush() {
 	if (tool_options) {
 		tool_options->SetActiveBrush(GetCurrentBrush());
 	}
+	SyncCurrentMapCanvasPreviewState();
 	emitBrushChangeIfNeeded(*this);
 }
 void GUI::SelectBrushInternal(Brush* brush) {
@@ -336,6 +377,7 @@ void GUI::SelectBrushInternal(Brush* brush) {
 	if (tool_options) {
 		tool_options->SetActiveBrush(GetCurrentBrush());
 	}
+	SyncCurrentMapCanvasPreviewState();
 	emitBrushChangeIfNeeded(*this);
 }
 Brush* GUI::GetCurrentBrush() const {

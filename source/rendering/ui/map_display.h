@@ -24,9 +24,9 @@
 #include "rendering/utilities/frame_pacer.h"
 
 #include "ui/map_popup_menu.h"
-#include "ui/map_popup_menu.h"
 #include "game/animation_timer.h"
 #include "rendering/core/graphics.h"
+#include <chrono>
 #include <memory>
 
 struct NVGcontext;
@@ -35,8 +35,6 @@ struct DrawingOptions;
 class Item;
 class Creature;
 class MapWindow;
-class AnimationTimer;
-class AnimationTimer;
 class MapDrawer;
 class SelectionController;
 class DrawingController;
@@ -44,6 +42,7 @@ class ScreenshotController;
 class MapMenuHandler;
 
 class MapCanvas : public wxGLCanvas {
+private:
 	std::unique_ptr<wxGLContext> m_glContext;
 	std::unique_ptr<NVGcontext, NVGDeleter> m_nvg;
 
@@ -79,7 +78,10 @@ public:
 	void OnMousePropertiesClick(wxMouseEvent& event);
 	void OnMousePropertiesRelease(wxMouseEvent& event);
 
-	virtual void Refresh();
+	void RequestLocalRefresh(bool immediate = false);
+	void RequestSharedMapRefresh(bool immediate = false);
+	void RequestAnimationRepaint();
+	void SetHoverPreviewActive(bool active);
 
 	virtual void ScreenToMap(int screen_x, int screen_y, int* map_x, int* map_y);
 	void MouseToMap(int* map_x, int* map_y) {
@@ -175,6 +177,9 @@ public:
 	std::unique_ptr<MapMenuHandler> menu_handler;
 
 private:
+	bool IsAnimationEnabled() const;
+	int GetAnimationRefreshIntervalMs() const noexcept;
+	void QueueNativeRefresh(bool immediate);
 	void EnsureNanoVG();
 	void DrawOverlays(NVGcontext* vg, const DrawingOptions& options);
 	void PerformGarbageCollection();
@@ -182,6 +187,8 @@ private:
 	MapWindow* GetMapWindow() const;
 	bool renderer_initialized = false;
 	long m_last_gc_time = 0;
+	bool hover_preview_active_ = false;
+	std::chrono::steady_clock::time_point last_animation_refresh_time_{};
 };
 
 #endif

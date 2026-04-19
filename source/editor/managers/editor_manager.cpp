@@ -418,17 +418,14 @@ void EditorManager::StartPasting() {
 	MapTab* mapTab = g_gui.GetCurrentMapTab();
 	if (mapTab) {
 		g_gui.pasting = true;
-		mapTab->GetSession()->secondary_map = &g_gui.copybuffer.getBufferMap();
+		g_gui.SetCurrentMapSecondaryMap(&g_gui.copybuffer.getBufferMap());
 	}
 }
 
 void EditorManager::EndPasting() {
 	if (g_gui.pasting) {
 		g_gui.pasting = false;
-		MapTab* mapTab = g_gui.GetCurrentMapTab();
-		if (mapTab) {
-			mapTab->GetSession()->secondary_map = nullptr;
-		}
+		g_gui.SetCurrentMapSecondaryMap(nullptr);
 	}
 }
 

@@ -114,9 +114,7 @@ void BrushManager::SelectBrushInternal(Brush* brush) {
 	if (brush->is<DoodadBrush>()) {
 		UpdateDoodadPreview();
 	} else {
-		if (mapTab) {
-			mapTab->GetSession()->secondary_map = nullptr;
-		}
+		g_gui.SetCurrentMapSecondaryMap(nullptr);
 		g_doodad_preview.Clear();
 	}
 
@@ -192,10 +190,7 @@ void BrushManager::SetBrushSizeInternal(int nz) {
 		exact_brush_size = false;
 		aspect_ratio_locked = true;
 		g_doodad_preview.FillBuffer();
-		MapTab* mapTab = g_gui.GetCurrentMapTab();
-		if (mapTab) {
-			mapTab->GetSession()->secondary_map = g_doodad_preview.GetBufferMap();
-		}
+		g_gui.SetCurrentMapSecondaryMap(g_doodad_preview.GetBufferMap());
 	} else {
 		brush_size_x = normalized_size;
 		brush_size_y = normalized_size;
@@ -389,8 +384,5 @@ void BrushManager::FillDoodadPreviewBuffer() {
 }
 void BrushManager::UpdateDoodadPreview() {
 	g_doodad_preview.FillBuffer();
-	MapTab* mapTab = g_gui.GetCurrentMapTab();
-	if (mapTab) {
-		mapTab->GetSession()->secondary_map = g_doodad_preview.GetBufferMap();
-	}
+	g_gui.SetCurrentMapSecondaryMap(g_doodad_preview.GetBufferMap());
 }

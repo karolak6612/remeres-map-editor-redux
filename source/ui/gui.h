@@ -262,8 +262,10 @@ public:
 
 	// Centers current view on position
 	void SetScreenCenterPosition(Position pos);
+	void SetCurrentMapSecondaryMap(BaseMap* secondary_map);
 	// Refresh the view canvas
-	void RefreshView();
+	void RefreshView(bool immediate = false);
+	void SyncCurrentMapCanvasPreviewState();
 	// Fit all/specified current map view to map dimensions
 	void FitViewToMap();
 	void FitViewToMap(MapTab* mt);

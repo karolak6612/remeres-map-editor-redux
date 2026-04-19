@@ -147,7 +147,7 @@ void SelectionController::HandleClick(const Position& mouse_map_pos, bool shift_
 void SelectionController::HandleDrag(const Position& mouse_map_pos, bool shift_down, bool ctrl_down, bool alt_down) {
 	if (g_gui.IsSelectionMode()) {
 		if (canvas->isPasting()) {
-			canvas->Refresh();
+			canvas->RequestLocalRefresh();
 		} else if (dragging) {
 			wxString ss;
 
@@ -157,7 +157,7 @@ void SelectionController::HandleDrag(const Position& mouse_map_pos, bool shift_d
 			ss << "Dragging " << -move_x << "," << -move_y << "," << -move_z;
 			g_gui.SetStatusText(ss);
 
-			canvas->Refresh();
+			canvas->RequestLocalRefresh();
 		} else if (boundbox_selection) {
 			// Calculate selection size
 			int move_x = std::abs(canvas->last_click_map_x - mouse_map_pos.x);
@@ -166,7 +166,7 @@ void SelectionController::HandleDrag(const Position& mouse_map_pos, bool shift_d
 			ss << "Selection " << move_x + 1 << ":" << move_y + 1;
 			g_gui.SetStatusText(ss);
 
-			canvas->Refresh();
+			canvas->RequestLocalRefresh();
 		}
 	}
 }

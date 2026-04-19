@@ -16,7 +16,7 @@ void GUI::UpdateAutoborderPreview(Position pos) {
 	if (brush && brush->is<DoodadBrush>()) {
 		if (mapTab && mapTab->GetSession()->secondary_map == g_autoborder_preview.GetBufferMap()) {
 			g_autoborder_preview.Clear();
-			mapTab->GetSession()->secondary_map = nullptr;
+			SetCurrentMapSecondaryMap(nullptr);
 		}
 		return;
 	}
@@ -24,11 +24,11 @@ void GUI::UpdateAutoborderPreview(Position pos) {
 	// Check for editor to ensure we don't dereference a null pointer
 	if (IsDrawingMode() && brush && brush->needBorders() && g_settings.getInteger(Config::USE_AUTOMAGIC) && g_settings.getInteger(Config::SHOW_AUTOBORDER_PREVIEW) && mapTab) {
 		g_autoborder_preview.Update(*(mapTab->GetEditor()), pos, wxGetKeyState(WXK_ALT));
-		mapTab->GetSession()->secondary_map = g_autoborder_preview.GetBufferMap();
+		SetCurrentMapSecondaryMap(g_autoborder_preview.GetBufferMap());
 	} else if (mapTab) {
 		if (mapTab->GetSession()->secondary_map == g_autoborder_preview.GetBufferMap()) {
 			g_autoborder_preview.Clear();
-			mapTab->GetSession()->secondary_map = nullptr;
+			SetCurrentMapSecondaryMap(nullptr);
 		}
 	}
 }
