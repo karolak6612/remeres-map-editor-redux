@@ -239,9 +239,6 @@
 		<item name="Debug .dat" action="DEBUG_VIEW_DAT" help="View all item sprites available."/>
 	</menu>
 	-->
-	<menu name="Experimental">
-		<item name="Fog in light view" hotkey="" action="EXPERIMENTAL_FOG" help="Apply fog filter to light effect."/>
-	</menu>
 	<menu name="Scripts" special="SCRIPTS">
 		<item name="Script Manager..." action="SCRIPTS_MANAGER" help="Show/hide the Script Manager window."/>
 		<separator/>

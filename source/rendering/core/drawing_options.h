@@ -55,7 +55,6 @@ struct DrawingOptions {
 	bool always_show_zones;
 	bool extended_house_shader;
 
-	bool experimental_fog;
 	bool draw_floor_shadow;
 
 	uint32_t current_house_id;

@@ -23,7 +23,8 @@ void RenderView::Setup(MapCanvas* canvas, const DrawingOptions& options) {
 	if (options.show_lights) {
 		IngamePreview::FloorVisibilityCalculator floor_visibility;
 		start_z = floor_visibility.CalcLastVisibleFloor(floor);
-		superend_z = floor_visibility.CalcFirstVisibleFloor(canvas->editor.map, camera_pos.x, camera_pos.y, floor);
+		const Position light_origin = canvas->GetLightVisibilityOrigin().value_or(camera_pos);
+		superend_z = floor_visibility.CalcFirstVisibleFloor(canvas->editor.map, light_origin.x, light_origin.y, floor);
 	} else if (options.show_all_floors) {
 		if (floor <= GROUND_LAYER) {
 			start_z = GROUND_LAYER;

@@ -28,6 +28,7 @@
 #include "rendering/core/graphics.h"
 #include <chrono>
 #include <memory>
+#include <optional>
 
 struct NVGcontext;
 struct DrawingOptions;
@@ -109,6 +110,9 @@ public:
 	virtual void GetViewBox(int* view_scroll_x, int* view_scroll_y, int* screensize_x, int* screensize_y) const;
 
 	Position GetCursorPosition() const;
+	void SetLightVisibilityOrigin(const Position& pos);
+	void ClearLightVisibilityOrigin();
+	std::optional<Position> GetLightVisibilityOrigin() const;
 
 	void TakeScreenshot(wxFileName path, wxString format);
 
@@ -155,6 +159,7 @@ public:
 
 	int view_scroll_x;
 	int view_scroll_y;
+	std::optional<Position> light_visibility_origin_override_;
 
 	uint32_t current_house_id;
 

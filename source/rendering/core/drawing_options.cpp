@@ -138,7 +138,6 @@ void DrawingOptions::Update() {
 	minimum_ambient_light = std::clamp(g_gui.GetAmbientLightLevel(), 0.0f, 1.0f);
 	draw_floor_shadow = show_shade;
 
-	experimental_fog = g_settings.getBoolean(Config::EXPERIMENTAL_FOG);
 	anti_aliasing = g_settings.getBoolean(Config::ANTI_ALIASING);
 	screen_shader_name = g_settings.getString(Config::SCREEN_SHADER);
 }
