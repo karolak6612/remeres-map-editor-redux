@@ -171,15 +171,11 @@ MapCanvas::~MapCanvas() {
 	g_gl_context.UnregisterCanvas(this);
 }
 
-void MapCanvas::Refresh() {
-	RequestLocalRefresh();
-}
-
 bool MapCanvas::IsAnimationEnabled() const {
 	return g_settings.getBoolean(Config::SHOW_PREVIEW);
 }
 
-int MapCanvas::GetAnimationRefreshIntervalMs() const {
+int MapCanvas::GetAnimationRefreshIntervalMs() const noexcept {
 	constexpr double far_zoom_threshold = 2.0;
 	constexpr int near_zoom_refresh_interval_ms = 1000 / 60;
 	constexpr int far_zoom_refresh_interval_ms = 1000 / 20;
@@ -438,7 +434,7 @@ void MapCanvas::SyncCursorHoverState() {
 	UpdatePositionStatus(cursor_x, cursor_y);
 	UpdateZoomStatus();
 
-	if (map_update && hover_preview_active_) {
+	if (map_update) {
 		RequestLocalRefresh();
 	}
 }
@@ -468,9 +464,7 @@ void MapCanvas::OnMouseMove(wxMouseEvent& event) {
 		g_gui.UpdateAutoborderPreview(Position(mouse_map_x, mouse_map_y, floor));
 		UpdatePositionStatus(cursor_x, cursor_y);
 		UpdateZoomStatus();
-		if (hover_preview_active_) {
-			RequestLocalRefresh();
-		}
+		RequestLocalRefresh();
 	}
 
 	if (g_gui.IsSelectionMode()) {

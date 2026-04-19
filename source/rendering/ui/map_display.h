@@ -78,7 +78,6 @@ public:
 	void OnMousePropertiesClick(wxMouseEvent& event);
 	void OnMousePropertiesRelease(wxMouseEvent& event);
 
-	virtual void Refresh();
 	void RequestLocalRefresh(bool immediate = false);
 	void RequestSharedMapRefresh(bool immediate = false);
 	void RequestAnimationRepaint();
@@ -179,7 +178,7 @@ public:
 
 private:
 	bool IsAnimationEnabled() const;
-	int GetAnimationRefreshIntervalMs() const;
+	int GetAnimationRefreshIntervalMs() const noexcept;
 	void QueueNativeRefresh(bool immediate);
 	void EnsureNanoVG();
 	void DrawOverlays(NVGcontext* vg, const DrawingOptions& options);

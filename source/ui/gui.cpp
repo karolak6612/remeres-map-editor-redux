@@ -221,15 +221,21 @@ void GUI::RefreshView(bool immediate) {
 }
 
 void GUI::SyncCurrentMapCanvasPreviewState() {
-	MapTab* mapTab = GetCurrentMapTab();
-	if (!mapTab) {
+	if (!tabbook) {
 		return;
 	}
 
-	const bool hover_preview_active = IsPasting()
-		|| (mapTab->GetMode() == DRAWING_MODE && GetCurrentBrush() != nullptr)
-		|| mapTab->GetSession()->secondary_map != nullptr;
-	mapTab->GetCanvas()->SetHoverPreviewActive(hover_preview_active);
+	for (int index = 0; index < tabbook->GetTabCount(); ++index) {
+		auto* map_tab = dynamic_cast<MapTab*>(tabbook->GetTab(index));
+		if (!map_tab) {
+			continue;
+		}
+
+		const bool hover_preview_active = IsPasting()
+			|| (map_tab->GetMode() == DRAWING_MODE && GetCurrentBrush() != nullptr)
+			|| map_tab->GetSession()->secondary_map != nullptr;
+		map_tab->GetCanvas()->SetHoverPreviewActive(hover_preview_active);
+	}
 }
 
 // Welcome Dialog moved to WelcomeManager
