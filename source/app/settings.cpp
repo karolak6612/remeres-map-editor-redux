@@ -19,6 +19,7 @@
 #include "ui/gui_ids.h"
 #include "app/client_version.h"
 #include "app/main.h"
+#include "ui/managers/vsync_policy.h"
 
 #include <spdlog/spdlog.h>
 #include <spdlog/fmt/ostr.h>
@@ -393,6 +394,7 @@ void Settings::IO(IOMode mode) {
 	String(TILESET_EXPORT_DIR, "");
 	Int(FRAME_RATE_LIMIT, 144);
 	Bool(SHOW_FPS_COUNTER, false);
+	Int(VSYNC_MODE, static_cast<int>(VSyncMode::On));
 	Int(ANTI_ALIASING, 0);
 	String(SCREEN_SHADER, "None");
 

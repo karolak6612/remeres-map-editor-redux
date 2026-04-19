@@ -421,6 +421,7 @@ namespace IngamePreview {
 
 		if (m_glContext) {
 			SetCurrent(*m_glContext);
+			g_gl_context.ApplyVSyncIfNeeded(*this);
 		}
 
 		if (!m_nvg) {

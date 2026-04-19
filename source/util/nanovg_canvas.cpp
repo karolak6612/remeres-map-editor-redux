@@ -81,7 +81,13 @@ bool NanoVGCanvas::MakeContextCurrent() {
 	if (!m_glContext) {
 		return false;
 	}
-	return g_gl_context.EnsureContextCurrent(*m_glContext, this);
+
+	if (!g_gl_context.EnsureContextCurrent(*m_glContext, this)) {
+		return false;
+	}
+
+	g_gl_context.ApplyVSyncIfNeeded(*this);
+	return true;
 }
 
 void NanoVGCanvas::OnPaint(wxPaintEvent&) {
@@ -92,7 +98,7 @@ void NanoVGCanvas::OnPaint(wxPaintEvent&) {
 		return;
 	}
 
-	SetCurrent(*m_glContext);
+	MakeContextCurrent();
 
 	int w, h;
 	GetClientSize(&w, &h);
