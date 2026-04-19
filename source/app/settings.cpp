@@ -470,10 +470,6 @@ void Settings::IO(IOMode mode) {
 	String(TOOLBAR_POSITION_LAYOUT, "");
 	String(TOOLBAR_SIZES_LAYOUT, "");
 
-	// experimental
-	section("experimental");
-	Int(EXPERIMENTAL_FOG, 0);
-
 	// Missing items report (added at end to preserve enum stability)
 	section("Editor");
 	Bool(SHOW_MISSING_ITEMS_WARNING, false);

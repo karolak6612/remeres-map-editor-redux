@@ -406,6 +406,18 @@ Position MapCanvas::GetCursorPosition() const {
 	return Position(last_cursor_map_x, last_cursor_map_y, floor);
 }
 
+void MapCanvas::SetLightVisibilityOrigin(const Position& pos) {
+	light_visibility_origin_override_ = pos;
+}
+
+void MapCanvas::ClearLightVisibilityOrigin() {
+	light_visibility_origin_override_.reset();
+}
+
+std::optional<Position> MapCanvas::GetLightVisibilityOrigin() const {
+	return light_visibility_origin_override_;
+}
+
 void MapCanvas::UpdatePositionStatus(int x, int y) {
 	if (x == -1) {
 		x = cursor_x;
@@ -561,6 +573,7 @@ void MapCanvas::OnMouseActionClick(wxMouseEvent& event) {
 	last_click_map_x = mouse_map_x;
 	last_click_map_y = mouse_map_y;
 	last_click_map_z = floor;
+	SetLightVisibilityOrigin(Position(mouse_map_x, mouse_map_y, floor));
 	RequestSharedMapRefresh();
 	g_gui.UpdateMinimap();
 }
@@ -745,6 +758,7 @@ void MapCanvas::Reset() {
 
 	last_mmb_click_x = -1;
 	last_mmb_click_y = -1;
+	ClearLightVisibilityOrigin();
 
 	editor.selection.clear();
 	editor.actionQueue->clear();

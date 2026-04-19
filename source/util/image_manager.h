@@ -1353,7 +1353,6 @@ constexpr std::string_view ICON_SKULL = "svg/solid/skull.svg";
 constexpr std::string_view ICON_SLASH = "svg/solid/slash.svg";
 constexpr std::string_view ICON_SLEIGH = "svg/solid/sleigh.svg";
 constexpr std::string_view ICON_SLIDERS = "svg/solid/sliders.svg";
-constexpr std::string_view ICON_SMOG = "svg/solid/smog.svg";
 constexpr std::string_view ICON_SMOKING = "svg/solid/smoking.svg";
 constexpr std::string_view ICON_SNOWFLAKE_SOLID = "svg/solid/snowflake.svg";
 constexpr std::string_view ICON_SNOWMAN = "svg/solid/snowman.svg";

@@ -97,6 +97,7 @@ void NavigationController::ChangeFloor(MapCanvas* canvas, int new_floor) {
 	int old_floor = canvas->floor;
 	canvas->floor = new_floor;
 	if (old_floor != new_floor) {
+		canvas->ClearLightVisibilityOrigin();
 		if (auto* map_window = dynamic_cast<MapWindow*>(canvas->GetParent())) {
 			map_window->ResumeMinimapTrackingToCurrentView();
 		}

@@ -84,6 +84,8 @@ cmake-build-*/
 .qwen/
 .agent/
 /.agent/rules
+.codex/local.toml
+.codex/*.local.toml
 gha-creds-*.json
 
 # ============================================================
