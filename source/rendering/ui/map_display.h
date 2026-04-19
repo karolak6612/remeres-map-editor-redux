@@ -21,7 +21,7 @@
 #include "editor/action.h"
 #include "map/tile.h"
 #include "game/creature.h"
-#include "rendering/utilities/frame_pacer.h"
+#include "rendering/utilities/fps_counter.h"
 
 #include "ui/map_popup_menu.h"
 #include "game/animation_timer.h"
@@ -162,7 +162,7 @@ public:
 	std::unique_ptr<MapPopupMenu> popup_menu;
 	std::unique_ptr<AnimationTimer> animation_timer;
 
-	FramePacer frame_pacer;
+	FPSCounter fps_counter;
 
 	friend class MapDrawer;
 	friend class SelectionDrawer;

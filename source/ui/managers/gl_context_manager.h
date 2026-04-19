@@ -6,6 +6,14 @@
 #include <memory>
 
 #include <set>
+#include <unordered_map>
+
+#include "ui/managers/vsync_policy.h"
+
+struct VSyncApplySummary {
+	bool adaptive_fallback = false;
+	bool apply_failed = false;
+};
 
 class GLContextManager {
 public:
@@ -20,15 +28,24 @@ public:
 
 	void RegisterCanvas(wxGLCanvas* canvas);
 	void UnregisterCanvas(wxGLCanvas* canvas);
+	VSyncApplicationOutcome ApplyVSyncIfNeeded(wxGLCanvas& canvas);
+	VSyncApplySummary ReapplyVSyncToRegisteredCanvases();
 
 	void SetFallbackCanvas(wxGLCanvas* canvas) {
 		m_fallbackCanvas = canvas;
 	}
 
 private:
+	[[nodiscard]] VSyncMode getConfiguredVSyncMode() const noexcept;
+	[[nodiscard]] VSyncApplicationOutcome applyVSyncWithCurrentContext(wxGLCanvas& canvas);
+	[[nodiscard]] VSyncApplicationOutcome probeConfiguredVSync();
+	void refreshRegisteredCanvases() const;
+
 	std::unique_ptr<wxGLContext> OGLContext;
 	std::set<wxGLCanvas*> m_canvases;
+	std::unordered_map<wxGLCanvas*, VSyncMode> m_lastAppliedModes;
 	wxGLCanvas* m_fallbackCanvas = nullptr;
+	bool m_forceStandardVSyncForSession = false;
 };
 
 extern GLContextManager g_gl_context;

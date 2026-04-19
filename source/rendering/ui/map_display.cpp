@@ -309,6 +309,7 @@ void MapCanvas::OnPaint(wxPaintEvent& event) {
 	if (m_glContext) {
 		g_gl_context.EnsureContextCurrent(*m_glContext, this);
 		g_gl_context.SetFallbackCanvas(this);
+		g_gl_context.ApplyVSyncIfNeeded(*this);
 	}
 
 	EnsureNanoVG();
@@ -358,8 +359,10 @@ void MapCanvas::OnPaint(wxPaintEvent& event) {
 
 	SwapBuffers();
 
-	// FPS tracking and limiting
-	frame_pacer.UpdateAndLimit(g_settings.getInteger(Config::FRAME_RATE_LIMIT), g_settings.getBoolean(Config::SHOW_FPS_COUNTER));
+	fps_counter.Update();
+	if (g_settings.getBoolean(Config::SHOW_FPS_COUNTER) && fps_counter.HasChanged()) {
+		MapStatusUpdater::UpdateFPS(fps_counter.GetStatusString());
+	}
 
 	// Send newd node requests
 	if (editor.live_manager.GetClient()) {

@@ -5,6 +5,7 @@
 #include "app/settings.h"
 #include "rendering/postprocess/post_process_manager.h"
 #include "ui/gui.h"
+#include "ui/managers/vsync_policy.h"
 
 GraphicsPage::GraphicsPage(wxWindow* parent) : ScrollablePreferencesPage(parent) {
 	auto* page_sizer = GetPageSizer();
@@ -162,12 +163,16 @@ GraphicsPage::GraphicsPage(wxWindow* parent) : ScrollablePreferencesPage(parent)
 		"Changing sprite caching requires an application restart before the new loading mode takes effect.",
 		Theme::Role::Warning
 	);
-	fps_limit_spin = new wxSpinCtrl(performance_section, wxID_ANY, i2ws(g_settings.getInteger(Config::FRAME_RATE_LIMIT)), wxDefaultPosition, wxDefaultSize, wxSP_ARROW_KEYS, 0, 300);
+	vsync_choice = new wxChoice(performance_section, wxID_ANY);
+	vsync_choice->Append("Off");
+	vsync_choice->Append("On");
+	vsync_choice->Append("Adaptive");
+	vsync_choice->SetSelection(static_cast<int>(sanitizeVSyncMode(g_settings.getInteger(Config::VSYNC_MODE))));
 	PreferencesLayout::AddControlRow(
 		performance_section,
-		"FPS limit",
-		"Cap frame rate to reduce power usage. Set this to 0 for an uncapped viewport.",
-		fps_limit_spin
+		"VSync",
+		"Reduce tearing by synchronizing buffer swaps to the display refresh rate. Adaptive mode may fall back to standard vSync depending on the driver.",
+		vsync_choice
 	);
 	show_fps_chkbox = PreferencesLayout::AddCheckBoxRow(
 		performance_section,
@@ -234,8 +239,27 @@ void GraphicsPage::Apply() {
 	g_settings.setInteger(Config::CURSOR_ALT_ALPHA, cursor_color.Alpha());
 
 	g_settings.setInteger(Config::HIDE_ITEMS_WHEN_ZOOMED, hide_items_when_zoomed_chkbox->GetValue());
-	g_settings.setInteger(Config::FRAME_RATE_LIMIT, fps_limit_spin->GetValue());
+	const auto requested_vsync_mode = sanitizeVSyncMode(vsync_choice->GetSelection());
+	const auto previous_vsync_mode = sanitizeVSyncMode(g_settings.getInteger(Config::VSYNC_MODE));
+	g_settings.setInteger(Config::VSYNC_MODE, static_cast<int>(requested_vsync_mode));
 	g_settings.setInteger(Config::SHOW_FPS_COUNTER, show_fps_chkbox->GetValue());
+
+	if (requested_vsync_mode != previous_vsync_mode) {
+		const auto vsync_summary = g_gl_context.ReapplyVSyncToRegisteredCanvases();
+		if (vsync_summary.adaptive_fallback) {
+			wxMessageBox(
+				"Adaptive VSync is not supported by the active OpenGL driver. Standard VSync has been enabled for this session instead.",
+				"Adaptive VSync Unavailable",
+				wxOK | wxICON_WARNING
+			);
+		} else if (vsync_summary.apply_failed) {
+			wxMessageBox(
+				"The selected VSync mode could not be applied on the active OpenGL canvases. Rendering will continue using the driver default.",
+				"VSync Apply Failed",
+				wxOK | wxICON_WARNING
+			);
+		}
+	}
 
 	if (must_restart) {
 		wxMessageBox("Some changes require a restart of the application to take effect.", "Restart Required", wxOK | wxICON_INFORMATION);
