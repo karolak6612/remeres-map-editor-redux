@@ -16,28 +16,28 @@ function M.render(dlg, state, actions)
             expand = true,
         })
             dlg:label({
-                id = "save_mode_label",
-                text = state.draft and (state.draft.isNew and "Tryb: nowy ground" or "Tryb: edycja istniejacego grounda"),
+                id = "wall_save_mode_label",
+                text = state.draft and (state.draft.isNew and "Tryb: nowy wall brush" or "Tryb: edycja istniejacego wall brusha"),
                 fgcolor = Common.palette.text,
                 font_weight = "bold",
             })
             dlg:newrow()
             dlg:label({
-                id = "save_dirty_label",
+                id = "wall_save_dirty_label",
                 text = state.dirty and "Niezapisane zmiany: tak" or "Niezapisane zmiany: nie",
                 fgcolor = Common.palette.subtle,
             })
             dlg:newrow()
             dlg:label({
-                id = "save_target_label",
+                id = "wall_save_target_label",
                 text = "Target: " .. tostring(state.target_path or ""),
                 fgcolor = Common.palette.subtle,
                 font_size = 8,
             })
             dlg:newrow()
             dlg:label({
-                id = "save_hint_label",
-                text = "Podaj nazwe i glowny tile, aby zapisac ground.",
+                id = "wall_save_hint_label",
+                text = "Podaj nazwe i co najmniej jeden wall item, aby zapisac wall brush.",
                 fgcolor = Common.palette.muted,
             })
         dlg:endpanel()
@@ -87,15 +87,15 @@ function M.render(dlg, state, actions)
         dlg:endbox()
         dlg:newrow()
         dlg:label({
-            id = "save_intent_new",
-            text = "",
+            id = "wall_save_intent_new",
+            text = state.draft and actions and actions.get_save_intent and actions.get_save_intent("new") or "",
             fgcolor = Common.palette.muted,
             font_size = 8,
         })
         dlg:newrow()
         dlg:label({
-            id = "save_intent_overwrite",
-            text = "",
+            id = "wall_save_intent_overwrite",
+            text = state.draft and actions and actions.get_save_intent and actions.get_save_intent("overwrite") or "",
             fgcolor = Common.palette.muted,
             font_size = 8,
         })

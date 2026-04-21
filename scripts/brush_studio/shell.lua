@@ -4,6 +4,7 @@ local PlaceholderPage = dofile("placeholder_page.lua")
 local Paths = dofile("module_paths.lua")
 local BorderStudioPage = Paths.load("border_studio/page.lua")
 local GroundStudioPage = Paths.load("ground_studio/page.lua")
+local WallStudioPage = Paths.load("wall_studio/page.lua")
 local ComposerPage = dofile("composer_page.lua")
 local PalettePage = dofile("palette_page.lua")
 
@@ -138,6 +139,31 @@ function Shell.open_standalone()
                     state.shell_status = "Przelaczono na workflow composera."
                     rebuild()
                 end)
+                dlg:panel({
+                    bgcolor = palette.sidebar,
+                    padding = 0,
+                    margin = 0,
+                    min_width = 44,
+                    max_width = 44,
+                    expand = false,
+                })
+                dlg:endpanel()
+                nav_button(dlg, "Walls", state.active_page_key == "walls", function()
+                    if state.active_page_key == "walls" then
+                        return
+                    end
+                    local current_page = pages[state.active_page_key]
+                    if current_page and not current_page.confirmLeave() then
+                        return
+                    end
+                    if current_page then
+                        current_page.onLeave(session)
+                    end
+                    state.active_page_key = "walls"
+                    pages[state.active_page_key].onEnter(session)
+                    state.shell_status = "Przelaczono na workflow scian."
+                    rebuild()
+                end)
                 nav_button(dlg, "Palette", state.active_page_key == "palette", function()
                     if state.active_page_key == "palette" then
                         return
@@ -156,14 +182,15 @@ function Shell.open_standalone()
                 end)
                 dlg:label({
                     text = string.format(
-                        "RAW %d | B %s | G %s | C %s",
+                        "RAW %d | B %s | G %s | C %s | W %s",
                         tonumber(session.lastSelectedRaw or 0) or 0,
                         session.lastSavedBorder and ("#" .. tostring(session.lastSavedBorder)) or "-",
                         tostring(session.lastSavedGround or "-"),
-                        tostring(session.lastSavedComposedBrush or "-")
+                        tostring(session.lastSavedComposedBrush or "-"),
+                        tostring(session.lastSavedWall or "-")
                     ),
                     fgcolor = palette.muted,
-                    min_width = 260,
+                    min_width = 360,
                 })
             dlg:endbox()
         dlg:endpanel()
@@ -180,11 +207,12 @@ function Shell.open_standalone()
 
         dlg:label({
             text = string.format(
-                "Dirty: B=%s | G=%s | C=%s | P=%s",
+                "Dirty: B=%s | G=%s | C=%s | P=%s | W=%s",
                 session.pageDirty and session.pageDirty.borders and "tak" or "nie",
                 session.pageDirty and session.pageDirty.grounds and "tak" or "nie",
                 session.pageDirty and session.pageDirty.composer and "tak" or "nie",
-                session.pageDirty and session.pageDirty.palette and "tak" or "nie"
+                session.pageDirty and session.pageDirty.palette and "tak" or "nie",
+                session.pageDirty and session.pageDirty.walls and "tak" or "nie"
             ),
             fgcolor = palette.subtle,
         })
@@ -205,6 +233,10 @@ function Shell.open_standalone()
         session = session,
         onRequestRender = rebuild,
     }), "Composer")
+    pages.walls = Contract.assert_page(WallStudioPage.create({
+        session = session,
+        onRequestRender = rebuild,
+    }), "Walls")
     pages.palette = Contract.assert_page(PalettePage.create({
         session = session,
         onRequestRender = rebuild,

@@ -46,6 +46,10 @@ public:
 		return true;
 	}
 
+	WallBrush* getRedirectTo() const {
+		return redirect_to;
+	}
+
 	static uint32_t full_border_types[16];
 	static uint32_t half_border_types[16];
 

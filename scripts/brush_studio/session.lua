@@ -8,13 +8,16 @@ function Session.new()
         lastSavedGround = "",
         lastSavedComposedBrush = "",
         lastSavedPaletteEntry = "",
+        lastSavedWall = "",
         selectedBorderForComposer = 0,
         selectedGroundForComposer = "",
+        selectedWallCreator = "",
         pageDirty = {
             borders = false,
             grounds = false,
             composer = false,
             palette = false,
+            walls = false,
         },
     }
 end

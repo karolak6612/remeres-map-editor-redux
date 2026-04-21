@@ -3,7 +3,9 @@ local Model = dofile("model.lua")
 local LibraryPanel = dofile("library_panel.lua")
 local PreviewPanel = dofile("preview_panel.lua")
 local PropertiesPanel = dofile("properties_panel.lua")
+local SavePanel = dofile("save_panel.lua")
 local Logger = dofile("logger.lua")
+local XmlTarget = dofile("xml_target_helper.lua")
 
 local GroundStudioPage = {}
 
@@ -247,6 +249,18 @@ local function save_hint_text()
     return "Zapis utworzy nowy wpis albo nadpisze istniejacy ground."
 end
 
+local function save_panel_state()
+    local is_existing = state.draft and not state.draft.isNew
+    return {
+        mode_label = state.draft and (state.draft.isNew and "Tryb: nowy ground" or "Tryb: edycja istniejacego grounda") or "Tryb: nowy ground",
+        dirty_label = state.dirty and "Niezapisane zmiany: tak" or "Niezapisane zmiany: nie",
+        target_label = "Target: " .. tostring(state.target_path or ""),
+        hint_label = save_hint_text(),
+        intent_new = Model.save_intent(state.repository, state.draft, "new"),
+        intent_overwrite = is_existing and Model.save_intent(state.repository, state.draft, "overwrite") or Model.save_intent(state.repository, state.draft, "overwrite"),
+    }
+end
+
 local function soft_refresh()
     if not dlg or not state.draft then
         return
@@ -259,6 +273,7 @@ local function soft_refresh()
     local raw_info = Common.safe_item_info(state.selected_raw_id)
     local main_item_id = state.draft.mainGroundItem and state.draft.mainGroundItem.itemId or 0
     local selected_variant = selected_variant()
+    local save_state = save_panel_state()
 
     state.library_skip_changes = 12
     dlg:modify({
@@ -368,6 +383,24 @@ local function soft_refresh()
         toggle_solo_optional_button = {
             text = state.draft.soloOptional and "Solo Optional: ON" or "Solo Optional: OFF",
         },
+        save_mode_label = {
+            text = save_state.mode_label,
+        },
+        save_dirty_label = {
+            text = save_state.dirty_label,
+        },
+        save_target_label = {
+            text = save_state.target_label,
+        },
+        save_hint_label = {
+            text = save_state.hint_label,
+        },
+        save_intent_new = {
+            text = save_state.intent_new,
+        },
+        save_intent_overwrite = {
+            text = save_state.intent_overwrite,
+        },
     })
     dlg:repaint()
     state.rebuilding = false
@@ -429,7 +462,16 @@ local function render_page_content()
     })
         LibraryPanel.render(dlg, state, actions)
         PreviewPanel.render(dlg, state)
-        PropertiesPanel.render(dlg, state, actions)
+        dlg:box({
+            orient = "vertical",
+            width = 380,
+            min_width = 360,
+            expand = true,
+        })
+            PropertiesPanel.render(dlg, state, actions)
+            dlg:newrow()
+            SavePanel.render(dlg, state, actions)
+        dlg:endbox()
     dlg:endbox()
     state.library_skip_changes = 8
     state.rebuilding = false
@@ -730,6 +772,31 @@ end
 
 function actions.overwrite_existing()
     finalize_save("overwrite")
+end
+
+function actions.choose_target_path()
+    local chosen, err = XmlTarget.pick_xml_file("grounds.xml", state.target_path, "Wybierz grounds.xml")
+    if err then
+        app.alert({
+            title = "Nie mozna ustawic targetu",
+            text = err,
+            buttons = { "OK" },
+        })
+        return
+    end
+    if not chosen then
+        return
+    end
+
+    state.target_path = chosen
+    persist_settings()
+    rebuild()
+end
+
+function actions.use_default_target_path()
+    state.target_path = Model.resolve_target_path("")
+    persist_settings()
+    rebuild()
 end
 
 local function attach_brush_listener()

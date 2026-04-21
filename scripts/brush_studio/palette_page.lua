@@ -2,8 +2,10 @@ local Paths = dofile("module_paths.lua")
 local GroundCommon = Paths.load("ground_studio/common.lua")
 local PaletteDraft = dofile("palette_draft.lua")
 local PaletteRepository = dofile("palette_repository.lua")
+local XmlTarget = dofile("xml_target_helper.lua")
 
 local PalettePage = {}
+local SETTINGS_STORE = app.storage("palette_settings.json")
 
 local palette = {
     header = "#233246",
@@ -29,10 +31,11 @@ local PALETTE_SECTION_OPTIONS = {
 local function create_page(options)
     options = options or {}
     local session = options.session or {}
+    local settings = SETTINGS_STORE:load() or {}
     local dlg
 
     local state = {
-        target_path = PaletteRepository.resolve_target_path(""),
+        target_path = PaletteRepository.resolve_target_path(settings.target_path or ""),
         repository = nil,
         brush_filter = "",
         brush_items = {},
@@ -49,6 +52,12 @@ local function create_page(options)
     }
 
     local actions = {}
+
+    local function persist_settings()
+        SETTINGS_STORE:save({
+            target_path = state.target_path or "",
+        })
+    end
 
     local function sync_session_out()
         session.pageDirty = session.pageDirty or {}
@@ -253,6 +262,60 @@ local function create_page(options)
         return true
     end
 
+    local function refresh_preview_local()
+        if not dlg or not dlg.modify then
+            return false
+        end
+
+        local selected_brush = state.draft.selectedBrush
+        local preview = preview_entries()
+        state.preview_page = clamp_page(state.preview_page, #preview, state.preview_page_size)
+        local preview_first, preview_last, preview_pages = page_bounds(state.preview_page, #preview, state.preview_page_size)
+
+        dlg:modify({
+            id = "palette_preview_prev",
+            bgcolor = state.preview_page > 1 and palette.panel or palette.sidebar,
+        })
+        dlg:modify({
+            id = "palette_preview_page_label",
+            text = string.format(
+                "Pozycje %d-%d / %d  |  Strona %d / %d",
+                #preview > 0 and preview_first or 0,
+                #preview > 0 and preview_last or 0,
+                #preview,
+                state.preview_page,
+                preview_pages
+            ),
+        })
+        dlg:modify({
+            id = "palette_preview_next",
+            bgcolor = state.preview_page < preview_pages and palette.panel or palette.sidebar,
+        })
+
+        for slot = 1, tonumber(state.preview_page_size or 12) or 12 do
+            local index = preview_first + slot - 1
+            local entry = index <= preview_last and preview[index] or nil
+            dlg:modify({
+                id = "palette_preview_slot_" .. slot,
+                bgcolor = entry and (entry.isInserted and palette.accent or (entry.isSelected and palette.success or palette.sidebar)) or palette.sidebar,
+            })
+            dlg:modify({
+                id = "palette_preview_slot_label_" .. slot,
+                text = entry and string.format("%d. %s", index, entry.name) or " ",
+                fgcolor = entry and palette.text or palette.muted,
+            })
+        end
+
+        dlg:modify({
+            id = "palette_preview_empty_hint",
+            text = #preview == 0 and "Wybierz tileset i sekcje, aby zobaczyc podglad publikacji." or " ",
+        })
+
+        dlg:layout()
+        dlg:repaint()
+        return true
+    end
+
     local function use_brush_by_name(name)
         local ref = PaletteRepository.make_brush_reference(state.repository, name)
         if not ref then
@@ -317,12 +380,16 @@ local function create_page(options)
 
     function actions.prev_brush_page()
         state.brush_page = math.max(1, (tonumber(state.brush_page or 1) or 1) - 1)
-        soft_refresh()
+        if not refresh_brush_picker_local() then
+            soft_refresh()
+        end
     end
 
     function actions.next_brush_page()
         state.brush_page = clamp_page((tonumber(state.brush_page or 1) or 1) + 1, #state.brush_names, state.brush_page_size)
-        soft_refresh()
+        if not refresh_brush_picker_local() then
+            soft_refresh()
+        end
     end
 
     function actions.handle_brush_change(index)
@@ -448,12 +515,16 @@ local function create_page(options)
 
     function actions.prev_preview_page()
         state.preview_page = math.max(1, (tonumber(state.preview_page or 1) or 1) - 1)
-        soft_refresh()
+        if not refresh_preview_local() then
+            soft_refresh()
+        end
     end
 
     function actions.next_preview_page(total_entries)
         state.preview_page = clamp_page((tonumber(state.preview_page or 1) or 1) + 1, tonumber(total_entries or 0) or 0, state.preview_page_size)
-        soft_refresh()
+        if not refresh_preview_local() then
+            soft_refresh()
+        end
     end
 
     function actions.save_as_new()
@@ -462,6 +533,39 @@ local function create_page(options)
 
     function actions.update_existing()
         finalize_save("overwrite")
+    end
+
+    function actions.choose_target_path()
+        local chosen, err = XmlTarget.pick_xml_file("tilesets.xml", state.target_path, "Wybierz tilesets.xml")
+        if err then
+            app.alert({
+                title = "Nie mozna ustawic targetu",
+                text = err,
+                buttons = { "OK" },
+            })
+            return
+        end
+        if not chosen then
+            return
+        end
+
+        state.target_path = chosen
+        persist_settings()
+        refresh_repository()
+        sync_brushes()
+        sync_tilesets()
+        state.status_message = "Ustawiono nowy target tilesets.xml."
+        soft_refresh()
+    end
+
+    function actions.use_default_target_path()
+        state.target_path = PaletteRepository.resolve_target_path("")
+        persist_settings()
+        refresh_repository()
+        sync_brushes()
+        sync_tilesets()
+        state.status_message = "Przywrocono domyslny target tilesets.xml."
+        soft_refresh()
     end
 
     refresh_repository()
@@ -499,6 +603,7 @@ local function create_page(options)
     function page.onLeave(shared_session)
         session = shared_session or session
         sync_session_out()
+        persist_settings()
     end
 
     function page.render_into(dialog)
@@ -776,6 +881,7 @@ local function create_page(options)
                         expand = false,
                     })
                         dlg:button({
+                            id = "palette_preview_prev",
                             text = "<",
                             bgcolor = state.preview_page > 1 and palette.panel or palette.sidebar,
                             fgcolor = palette.text,
@@ -786,6 +892,7 @@ local function create_page(options)
                             end,
                         })
                         dlg:label({
+                            id = "palette_preview_page_label",
                             text = string.format(
                                 "Pozycje %d-%d / %d  |  Strona %d / %d",
                                 #preview > 0 and preview_first or 0,
@@ -797,6 +904,7 @@ local function create_page(options)
                             fgcolor = palette.muted,
                         })
                         dlg:button({
+                            id = "palette_preview_next",
                             text = ">",
                             bgcolor = state.preview_page < preview_pages and palette.panel or palette.sidebar,
                             fgcolor = palette.text,
@@ -807,28 +915,30 @@ local function create_page(options)
                             end,
                         })
                     dlg:endbox()
-                    for index = preview_first, preview_last do
-                        local entry = preview[index]
+                    for slot = 1, tonumber(state.preview_page_size or 12) or 12 do
+                        local index = preview_first + slot - 1
+                        local entry = index <= preview_last and preview[index] or nil
                         dlg:newrow()
                         dlg:panel({
-                            bgcolor = entry.isInserted and palette.accent or (entry.isSelected and palette.success or palette.sidebar),
+                            id = "palette_preview_slot_" .. slot,
+                            bgcolor = entry and (entry.isInserted and palette.accent or (entry.isSelected and palette.success or palette.sidebar)) or palette.sidebar,
                             padding = 6,
                             margin = 2,
                             expand = true,
                         })
                             dlg:label({
-                                text = string.format("%d. %s", index, entry.name),
-                                fgcolor = palette.text,
+                                id = "palette_preview_slot_label_" .. slot,
+                                text = entry and string.format("%d. %s", index, entry.name) or " ",
+                                fgcolor = entry and palette.text or palette.muted,
                             })
                         dlg:endpanel()
                     end
-                    if #preview == 0 then
-                        dlg:newrow()
-                        dlg:label({
-                            text = "Wybierz tileset i sekcje, aby zobaczyc podglad publikacji.",
-                            fgcolor = palette.muted,
-                        })
-                    end
+                    dlg:newrow()
+                    dlg:label({
+                        id = "palette_preview_empty_hint",
+                        text = #preview == 0 and "Wybierz tileset i sekcje, aby zobaczyc podglad publikacji." or " ",
+                        fgcolor = palette.muted,
+                    })
                 dlg:endpanel()
             dlg:endbox()
 
@@ -932,6 +1042,28 @@ local function create_page(options)
                         text = save_hint_text(),
                         fgcolor = palette.muted,
                     })
+                    dlg:newrow()
+                    dlg:box({
+                        orient = "horizontal",
+                        expand = false,
+                    })
+                        dlg:button({
+                            text = "Zmien XML",
+                            bgcolor = palette.panel,
+                            fgcolor = palette.text,
+                            onclick = function()
+                                actions.choose_target_path()
+                            end,
+                        })
+                        dlg:button({
+                            text = "Domyslny XML",
+                            bgcolor = palette.panel,
+                            fgcolor = palette.text,
+                            onclick = function()
+                                actions.use_default_target_path()
+                            end,
+                        })
+                    dlg:endbox()
                 dlg:endpanel()
             dlg:endbox()
         dlg:endbox()

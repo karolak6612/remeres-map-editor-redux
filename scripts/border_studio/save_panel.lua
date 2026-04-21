@@ -81,6 +81,28 @@ function M.render(dlg, state, actions)
             font_weight = "bold",
         })
         dlg:newrow()
+        dlg:box({
+            orient = "horizontal",
+            expand = false,
+        })
+            dlg:button({
+                text = "Zmien XML",
+                bgcolor = Common.palette.panel,
+                fgcolor = Common.palette.text,
+                onclick = function()
+                    actions.choose_target_path()
+                end,
+            })
+            dlg:button({
+                text = "Domyslny XML",
+                bgcolor = Common.palette.panel,
+                fgcolor = Common.palette.text,
+                onclick = function()
+                    actions.use_default_target_path()
+                end,
+            })
+        dlg:endbox()
+        dlg:newrow()
         dlg:label({
             id = "save_intent_new",
             text = intent_new,

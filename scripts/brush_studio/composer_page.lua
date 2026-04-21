@@ -4,8 +4,10 @@ local BorderCommon = Paths.load("border_studio/common.lua")
 local Logger = dofile("logger.lua")
 local ComposerDraft = dofile("composer_draft.lua")
 local ComposerRepository = dofile("composer_repository.lua")
+local XmlTarget = dofile("xml_target_helper.lua")
 
 local ComposerPage = {}
+local SETTINGS_STORE = app.storage("composer_settings.json")
 
 local palette = {
     header = "#233246",
@@ -43,10 +45,11 @@ local COMPOSED_PAGE_SIZE = 12
 local function create_page(options)
     options = options or {}
     local session = options.session or {}
+    local settings = SETTINGS_STORE:load() or {}
     local dlg
 
     local state = {
-        target_path = ComposerRepository.resolve_target_path and ComposerRepository.resolve_target_path("") or (app.getDataDirectory() .. "/1310/grounds.xml"),
+        target_path = ComposerRepository.resolve_target_path and ComposerRepository.resolve_target_path(settings.target_path or "") or (app.getDataDirectory() .. "/1310/grounds.xml"),
         repository = nil,
         selected_raw_id = 0,
         ground_filter = "",
@@ -100,6 +103,12 @@ local function create_page(options)
         else
             state.selected_raw_id = GroundCommon.active_raw_brush_id()
         end
+    end
+
+    local function persist_settings()
+        SETTINGS_STORE:save({
+            target_path = state.target_path or "",
+        })
     end
 
     local function request_host_render()
@@ -1146,6 +1155,35 @@ local function create_page(options)
         finalize_save("overwrite")
     end
 
+    function actions.choose_target_path()
+        local chosen, err = XmlTarget.pick_xml_file("grounds.xml", state.target_path, "Wybierz grounds.xml dla Composera")
+        if err then
+            app.alert({
+                title = "Nie mozna ustawic targetu",
+                text = err,
+                buttons = { "OK" },
+            })
+            return
+        end
+        if not chosen then
+            return
+        end
+
+        state.target_path = chosen
+        persist_settings()
+        refresh_repository()
+        sync_sources()
+        soft_refresh()
+    end
+
+    function actions.use_default_target_path()
+        state.target_path = ComposerRepository.resolve_target_path and ComposerRepository.resolve_target_path("") or (app.getDataDirectory() .. "/1310/grounds.xml")
+        persist_settings()
+        refresh_repository()
+        sync_sources()
+        soft_refresh()
+    end
+
     refresh_repository()
     sync_session_in()
     sync_sources()
@@ -1179,6 +1217,7 @@ local function create_page(options)
     function page.onLeave(shared_session)
         session = shared_session or session
         sync_session_out()
+        persist_settings()
     end
 
     function page.render_into(dialog)
@@ -1758,6 +1797,28 @@ local function create_page(options)
                         text = save_hint_text(),
                         fgcolor = palette.muted,
                     })
+                    dlg:newrow()
+                    dlg:box({
+                        orient = "horizontal",
+                        expand = false,
+                    })
+                        dlg:button({
+                            text = "Zmien XML",
+                            bgcolor = palette.panel,
+                            fgcolor = palette.text,
+                            onclick = function()
+                                actions.choose_target_path()
+                            end,
+                        })
+                        dlg:button({
+                            text = "Domyslny XML",
+                            bgcolor = palette.panel,
+                            fgcolor = palette.text,
+                            onclick = function()
+                                actions.use_default_target_path()
+                            end,
+                        })
+                    dlg:endbox()
                     dlg:newrow()
                     dlg:button({
                         text = "Save as New",

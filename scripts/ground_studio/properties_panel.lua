@@ -92,28 +92,6 @@ function M.render(dlg, state, actions)
                     end,
                 })
             dlg:endbox()
-            dlg:newrow()
-            dlg:box({
-                orient = "horizontal",
-                expand = false,
-            })
-                dlg:button({
-                    text = "Save as New",
-                    bgcolor = Common.palette.success,
-                    fgcolor = Common.palette.text,
-                    onclick = function()
-                        actions.save_as_new()
-                    end,
-                })
-                dlg:button({
-                    text = "Overwrite Existing",
-                    bgcolor = Common.palette.accent,
-                    fgcolor = Common.palette.text,
-                    onclick = function()
-                        actions.overwrite_existing()
-                    end,
-                })
-            dlg:endbox()
         dlg:endpanel()
         dlg:newrow()
         dlg:panel({

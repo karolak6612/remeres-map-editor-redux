@@ -65,7 +65,7 @@ public:
 
 private:
 	Hotkey hotkeys[10];
-	bool hotkeys_enabled;
+	int hotkeys_disable_depth;
 };
 
 extern HotkeyManager g_hotkeys;

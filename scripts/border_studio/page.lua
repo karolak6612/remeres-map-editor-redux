@@ -6,6 +6,7 @@ local SlotsPanel = dofile("slots_panel.lua")
 local RawPanel = dofile("raw_panel.lua")
 local SavePanel = dofile("save_panel.lua")
 local Logger = dofile("logger.lua")
+local XmlTarget = dofile("xml_target_helper.lua")
 
 local BorderStudioPage = {}
 
@@ -898,6 +899,31 @@ end
 
 function actions.overwrite_existing()
     finalize_save("overwrite")
+end
+
+function actions.choose_target_path()
+    local chosen, err = XmlTarget.pick_xml_file("borders.xml", state.target_path, "Wybierz borders.xml")
+    if err then
+        app.alert({
+            title = "Nie mozna ustawic targetu",
+            text = err,
+            buttons = { "OK" },
+        })
+        return
+    end
+    if not chosen then
+        return
+    end
+
+    state.target_path = chosen
+    persist_settings()
+    soft_refresh_save_panel()
+end
+
+function actions.use_default_target_path()
+    state.target_path = Model.resolve_target_path("")
+    persist_settings()
+    soft_refresh_save_panel()
 end
 
 local function attach_brush_listener()

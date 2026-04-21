@@ -30,12 +30,15 @@
 #include "brushes/raw/raw_brush.h"
 #include "brushes/ground/auto_border.h"
 #include "brushes/ground/ground_brush.h"
+#include "brushes/wall/wall_brush.h"
 #include "util/file_system.h"
 #include "ext/pugixml.hpp"
 
 #include <wx/msgdlg.h>
 #include <wx/app.h>
 #include <wx/clipbrd.h>
+#include <wx/filedlg.h>
+#include <wx/filename.h>
 #include <fstream>
 #include <filesystem>
 #include <unordered_set>
@@ -342,6 +345,46 @@ namespace LuaAPI {
 		}
 	}
 
+	static sol::object chooseFile(sol::this_state ts, sol::object arg) {
+		sol::state_view lua(ts);
+
+		std::string title = "Select file";
+		std::string path;
+		std::string wildcard = "XML files (*.xml)|*.xml|All files (*.*)|*.*";
+
+		if (arg.is<sol::table>()) {
+			sol::table options = arg.as<sol::table>();
+			title = options.get_or(std::string("title"), title);
+			path = options.get_or(std::string("path"), std::string(""));
+			wildcard = options.get_or(std::string("wildcard"), wildcard);
+		} else if (arg.is<std::string>()) {
+			path = arg.as<std::string>();
+		}
+
+		wxFileName fileName{wxString(path)};
+		wxString defaultDir = fileName.GetPath();
+		wxString defaultFile = fileName.GetFullName();
+		if (defaultDir.IsEmpty()) {
+			defaultDir = wxString(FileSystem::GetDataDirectory().ToStdString());
+		}
+
+		wxWindow* parent = g_gui.root;
+		wxFileDialog dlg(
+			parent,
+			wxString(title),
+			defaultDir,
+			defaultFile,
+			wxString(wildcard),
+			wxFD_OPEN | wxFD_FILE_MUST_EXIST
+		);
+
+		if (dlg.ShowModal() != wxID_OK) {
+			return sol::make_object(lua, sol::nil);
+		}
+
+		return sol::make_object(lua, dlg.GetPath().ToStdString());
+	}
+
 	// Check if a map is currently open
 	static bool hasMap() {
 		Editor* editor = g_gui.GetCurrentEditor();
@@ -483,6 +526,193 @@ namespace LuaAPI {
 		}
 
 		return groundsTable;
+	}
+
+	static std::string doorTypeToString(DoorType type) {
+		switch (type) {
+			case WALL_ARCHWAY:
+				return "archway";
+			case WALL_DOOR_NORMAL:
+				return "normal";
+			case WALL_DOOR_LOCKED:
+				return "locked";
+			case WALL_DOOR_QUEST:
+				return "quest";
+			case WALL_DOOR_MAGIC:
+				return "magic";
+			case WALL_DOOR_NORMAL_ALT:
+				return "normal_alt";
+			case WALL_WINDOW:
+				return "window";
+			case WALL_HATCH_WINDOW:
+				return "hatch_window";
+			default:
+				return "undefined";
+		}
+	}
+
+	static sol::object chooseFile(sol::this_state ts, sol::object arg) {
+		sol::state_view lua(ts);
+
+		std::string title = "Select file";
+		std::string path;
+		std::string wildcard = "XML files (*.xml)|*.xml|All files (*.*)|*.*";
+
+		if (arg.is<sol::table>()) {
+			sol::table options = arg.as<sol::table>();
+			title = options.get_or(std::string("title"), title);
+			path = options.get_or(std::string("path"), std::string(""));
+			wildcard = options.get_or(std::string("wildcard"), wildcard);
+		} else if (arg.is<std::string>()) {
+			path = arg.as<std::string>();
+		}
+
+		wxFileName fileName{wxString(path)};
+		wxString defaultDir = fileName.GetPath();
+		wxString defaultFile = fileName.GetFullName();
+		if (defaultDir.IsEmpty()) {
+			defaultDir = wxString(FileSystem::GetDataDirectory().ToStdString());
+		}
+
+		wxWindow* parent = g_gui.root;
+		wxFileDialog dlg(
+			parent,
+			wxString(title),
+			defaultDir,
+			defaultFile,
+			wxString(wildcard),
+			wxFD_OPEN | wxFD_FILE_MUST_EXIST
+		);
+
+		if (dlg.ShowModal() != wxID_OK) {
+			return sol::make_object(lua, sol::nil);
+		}
+
+		return sol::make_object(lua, dlg.GetPath().ToStdString());
+	}
+
+	static std::string wallAlignmentToString(int alignment) {
+		switch (alignment) {
+			case WALL_VERTICAL:
+				return "vertical";
+			case WALL_HORIZONTAL:
+				return "horizontal";
+			case WALL_NORTHWEST_DIAGONAL:
+				return "corner";
+			case WALL_POLE:
+				return "pole";
+			case WALL_SOUTH_END:
+				return "south end";
+			case WALL_EAST_END:
+				return "east end";
+			case WALL_NORTH_END:
+				return "north end";
+			case WALL_WEST_END:
+				return "west end";
+			case WALL_SOUTH_T:
+				return "south T";
+			case WALL_EAST_T:
+				return "east T";
+			case WALL_WEST_T:
+				return "west T";
+			case WALL_NORTH_T:
+				return "north T";
+			case WALL_NORTHEAST_DIAGONAL:
+				return "northeast diagonal";
+			case WALL_SOUTHWEST_DIAGONAL:
+				return "southwest diagonal";
+			case WALL_SOUTHEAST_DIAGONAL:
+				return "southeast diagonal";
+			case WALL_INTERSECTION:
+				return "intersection";
+			case WALL_UNTOUCHABLE:
+				return "untouchable";
+			default:
+				return "unknown";
+		}
+	}
+
+	static sol::object getWalls(sol::this_state ts) {
+		sol::state_view lua(ts);
+
+		sol::table wallsTable = lua.create_table();
+
+		for (const auto& pair : g_brushes.getMap()) {
+			const Brush* brush = pair.second.get();
+			const WallBrush* wall = brush ? brush->as<WallBrush>() : nullptr;
+			if (!wall || wall->is<WallDecorationBrush>()) {
+				continue;
+			}
+
+			sol::table wallTable = lua.create_table();
+			wallTable["id"] = wall->getID();
+			wallTable["name"] = wall->getName();
+			wallTable["lookid"] = wall->getLookID();
+			wallTable["kind"] = "wall";
+			uint16_t serverLookId = 0;
+
+			sol::table alignments = lua.create_table();
+			for (int alignment = 0; alignment < WallBrushItems::WALL_ALIGNMENT_COUNT; ++alignment) {
+				sol::table bucket = lua.create_table();
+				bucket["token"] = wallAlignmentToString(alignment);
+
+				sol::table items = lua.create_table();
+				const auto& wallNode = wall->items.getWallNode(alignment);
+				for (size_t itemIndex = 0; itemIndex < wallNode.items.size(); ++itemIndex) {
+					sol::table item = lua.create_table();
+					item["id"] = wallNode.items[itemIndex].id;
+					int previousChance = itemIndex == 0 ? 0 : wallNode.items[itemIndex - 1].chance;
+					item["chance"] = wallNode.items[itemIndex].chance - previousChance;
+					items[static_cast<int>(itemIndex + 1)] = item;
+				}
+				bucket["items"] = items;
+
+				sol::table doors = lua.create_table();
+				const auto& doorItems = wall->items.getDoorItems(alignment);
+				for (size_t doorIndex = 0; doorIndex < doorItems.size(); ++doorIndex) {
+					const auto& doorItem = doorItems[doorIndex];
+					const auto definition = g_item_definitions.get(doorItem.id);
+
+					sol::table door = lua.create_table();
+					door["id"] = doorItem.id;
+					door["type"] = doorTypeToString(doorItem.type);
+					door["locked"] = doorItem.locked;
+					door["open"] = definition.hasFlag(ItemFlag::IsOpen);
+					door["hate"] = definition.hasFlag(ItemFlag::WallHateMe);
+					doors[static_cast<int>(doorIndex + 1)] = door;
+				}
+				bucket["doors"] = doors;
+				if (serverLookId == 0) {
+					if (wallNode.items.size() > 0) {
+						serverLookId = wallNode.items.front().id;
+					} else if (doorItems.size() > 0) {
+						serverLookId = doorItems.front().id;
+					}
+				}
+
+				alignments[wallAlignmentToString(alignment)] = bucket;
+			}
+			wallTable["alignments"] = alignments;
+			wallTable["server_lookid"] = serverLookId;
+
+			sol::table friends = lua.create_table();
+			int friendIndex = 1;
+			for (uint32_t friendId : wall->getFriendIds()) {
+				for (const auto& candidatePair : g_brushes.getMap()) {
+					const Brush* candidate = candidatePair.second.get();
+					if (candidate && candidate->getID() == friendId) {
+						friends[friendIndex++] = candidate->getName();
+						break;
+					}
+				}
+			}
+			wallTable["friends"] = friends;
+			wallTable["redirect_to"] = wall->getRedirectTo() ? wall->getRedirectTo()->getName() : "";
+
+			wallsTable[wall->getName()] = wallTable;
+		}
+
+		return wallsTable;
 	}
 
 	static std::string getDataDirectory() {
@@ -803,6 +1033,7 @@ namespace LuaAPI {
 
 		// Functions
 		app["alert"] = showAlert;
+		app["chooseFile"] = chooseFile;
 		app["hasMap"] = hasMap;
 		app["refresh"] = refresh;
 		app["setBrush"] = [](const std::string& name) {
@@ -881,6 +1112,8 @@ namespace LuaAPI {
 				return getBorders(ts);
 			} else if (key == "grounds") {
 				return getGrounds(ts);
+			} else if (key == "walls") {
+				return getWalls(ts);
 			} else if (key == "editor") {
 				Editor* editor = g_gui.GetCurrentEditor();
 				if (editor) {
