@@ -35,6 +35,7 @@ public:
 	void ReloadSettings(Map* from);
 	// Flushes all pages and forces them to be reloaded from the palette data again
 	void InvalidateContents();
+	void InvalidatePage(PaletteType palette);
 	// (Re)Loads all currently displayed data, called from InvalidateContents implicitly
 	void LoadCurrentContents();
 	// Goes to the selected page and selects any brush there
@@ -50,7 +51,7 @@ public:
 	// Custom Event handlers (something has changed?)
 	// Finds the brush pointed to by whatbrush and selects it as the current brush (also changes page)
 	// Returns if the brush was found in this palette
-	virtual bool OnSelectBrush(const Brush* whatbrush, PaletteType primary = TILESET_UNKNOWN);
+	virtual bool OnSelectBrush(const Brush* whatbrush, PaletteType primary = TILESET_UNKNOWN, int tileset_index = -1, bool align_to_top = false);
 	// Updates the palette window to use the current brush size
 	virtual void OnUpdateBrushSize(BrushShape shape, int size);
 	// Updates the content of the palette (eg. houses, creatures)

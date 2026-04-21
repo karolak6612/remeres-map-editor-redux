@@ -5,6 +5,8 @@
 #include "map/tileset.h"
 #include "brushes/brush.h"
 
+#include <optional>
+
 enum BrushListType {
 	BRUSHLIST_LARGE_ICONS,
 	BRUSHLIST_SMALL_ICONS,
@@ -14,11 +16,7 @@ enum BrushListType {
 
 class BrushBoxInterface {
 public:
-	BrushBoxInterface(const TilesetCategory* _tileset) :
-		tileset(_tileset), loaded(false) {
-		ASSERT(tileset);
-	}
-	virtual ~BrushBoxInterface() { }
+	virtual ~BrushBoxInterface() = default;
 
 	virtual wxWindow* GetSelfWindow() = 0;
 
@@ -28,10 +26,6 @@ public:
 	virtual Brush* GetSelectedBrush() const = 0;
 	// Select the brush in the parameter, this only changes the look of the panel
 	virtual bool SelectBrush(const Brush* brush) = 0;
-
-protected:
-	const TilesetCategory* const tileset;
-	bool loaded;
 };
 
 class BrushPanel : public wxPanel {
@@ -48,6 +42,10 @@ public:
 	// Sets the display type (list or icons)
 	void SetListType(BrushListType ltype);
 	void SetListType(wxString ltype);
+
+	// Overrides list/grid display mode without changing the underlying style.
+	// std::nullopt means "follow style default".
+	void SetForceListMode(std::optional<bool> force_list_mode);
 	// Assigns a tileset to this list
 	void AssignTileset(const TilesetCategory* tileset);
 
@@ -69,6 +67,7 @@ protected:
 	BrushBoxInterface* brushbox;
 	bool loaded;
 	BrushListType list_type;
+	std::optional<bool> force_list_mode;
 };
 
 #endif

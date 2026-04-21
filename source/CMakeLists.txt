@@ -158,6 +158,9 @@ set(rme_H
     ${CMAKE_CURRENT_LIST_DIR}/palette/controls/virtual_brush_grid.h
     ${CMAKE_CURRENT_LIST_DIR}/palette/panels/brush_palette_panel.h
     ${CMAKE_CURRENT_LIST_DIR}/palette/panels/brush_panel.h
+    ${CMAKE_CURRENT_LIST_DIR}/palette/panels/tileset_move_queue_panel.h
+    ${CMAKE_CURRENT_LIST_DIR}/tileset_move_queue/tileset_move_queue.h
+    ${CMAKE_CURRENT_LIST_DIR}/tileset_move_queue/tileset_xml_rewriter.h
     ${CMAKE_CURRENT_LIST_DIR}/rendering/core/animator.h
     ${CMAKE_CURRENT_LIST_DIR}/rendering/core/atlas_manager.h
     ${CMAKE_CURRENT_LIST_DIR}/rendering/core/coordinate_mapper.h
@@ -535,6 +538,9 @@ set(rme_SRC
     ${CMAKE_CURRENT_LIST_DIR}/palette/controls/virtual_brush_grid.cpp
     ${CMAKE_CURRENT_LIST_DIR}/palette/panels/brush_palette_panel.cpp
     ${CMAKE_CURRENT_LIST_DIR}/palette/panels/brush_panel.cpp
+    ${CMAKE_CURRENT_LIST_DIR}/palette/panels/tileset_move_queue_panel.cpp
+    ${CMAKE_CURRENT_LIST_DIR}/tileset_move_queue/tileset_move_queue.cpp
+    ${CMAKE_CURRENT_LIST_DIR}/tileset_move_queue/tileset_xml_rewriter.cpp
     ${CMAKE_CURRENT_LIST_DIR}/rendering/core/animator.cpp
     ${CMAKE_CURRENT_LIST_DIR}/rendering/core/atlas_manager.cpp
     ${CMAKE_CURRENT_LIST_DIR}/rendering/core/coordinate_mapper.cpp

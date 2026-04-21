@@ -46,6 +46,7 @@
 #include "ui/result_window.h"
 #include "rendering/ui/minimap_window.h"
 #include "palette/palette_window.h"
+#include "palette/panels/tileset_move_queue_panel.h"
 #include "palette/house/house_palette.h"
 #include "rendering/ui/map_display.h"
 #include "app/application.h"
@@ -102,6 +103,7 @@ GUI::GUI() :
 	root(nullptr),
 	tool_options(nullptr),
 	tile_properties_panel(nullptr),
+	tileset_move_queue_panel(nullptr),
 	pasting(false),
 	disabled_counter(0),
 	hotkeys_enabled(true) {
@@ -146,6 +148,39 @@ bool GUI::IsDrawingMode() const {
 	return mapTab ? mapTab->GetMode() == DRAWING_MODE : false;
 }
 
+void GUI::SetPaletteMultiSelectionCount(size_t count) {
+	const bool was_active = palette_multi_selection_count > 1;
+	palette_multi_selection_count = count;
+	const bool is_active = palette_multi_selection_count > 1;
+
+	if (was_active == is_active) {
+		return;
+	}
+
+	if (is_active) {
+		g_brush_manager.SelectBrush();
+		if (tool_options) {
+			tool_options->SetActiveBrush(nullptr);
+		}
+		if (IsDrawingMode()) {
+			SetSelectionMode();
+		} else {
+			SyncCurrentMapCanvasPreviewState();
+		}
+		SetStatusText("Multi-selection active. Choose a single item to draw on the map.");
+		return;
+	}
+
+	if (tool_options) {
+		tool_options->SetActiveBrush(GetCurrentBrush());
+	}
+	SyncCurrentMapCanvasPreviewState();
+}
+
+bool GUI::HasPaletteMultiSelection() const {
+	return palette_multi_selection_count > 1;
+}
+
 void GUI::SwitchMode() {
 	MapTab* mapTab = GetCurrentMapTab();
 	if (mapTab) {
@@ -174,6 +209,11 @@ void GUI::SetSelectionMode() {
 void GUI::SetDrawingMode() {
 	MapTab* mapTab = GetCurrentMapTab();
 	if (!mapTab || mapTab->GetMode() == DRAWING_MODE) {
+		return;
+	}
+
+	if (HasPaletteMultiSelection()) {
+		SetStatusText("Multi-selection is active. Choose a single item before drawing.");
 		return;
 	}
 
@@ -348,6 +388,7 @@ void GUI::FillDoodadPreviewBuffer() {
 }
 
 void GUI::SelectBrush() {
+	palette_multi_selection_count = 0;
 	g_brush_manager.SelectBrush();
 	if (tool_options) {
 		tool_options->SetActiveBrush(GetCurrentBrush());
@@ -356,6 +397,7 @@ void GUI::SelectBrush() {
 	emitBrushChangeIfNeeded(*this);
 }
 bool GUI::SelectBrush(const Brush* brush, PaletteType pt) {
+	palette_multi_selection_count = 0;
 	const bool changed = g_brush_manager.SelectBrush(brush, pt);
 	if (tool_options) {
 		tool_options->SetActiveBrush(GetCurrentBrush());
@@ -365,6 +407,7 @@ bool GUI::SelectBrush(const Brush* brush, PaletteType pt) {
 	return changed;
 }
 void GUI::SelectPreviousBrush() {
+	palette_multi_selection_count = 0;
 	g_brush_manager.SelectPreviousBrush();
 	if (tool_options) {
 		tool_options->SetActiveBrush(GetCurrentBrush());
@@ -373,6 +416,7 @@ void GUI::SelectPreviousBrush() {
 	emitBrushChangeIfNeeded(*this);
 }
 void GUI::SelectBrushInternal(Brush* brush) {
+	palette_multi_selection_count = 0;
 	g_brush_manager.SelectBrushInternal(brush);
 	if (tool_options) {
 		tool_options->SetActiveBrush(GetCurrentBrush());
@@ -655,6 +699,26 @@ void GUI::DestroyPalettes() {
 }
 PaletteWindow* GUI::CreatePalette() {
 	return g_palettes.CreatePalette();
+}
+
+void GUI::RefreshTilesetMoveQueuePanel(bool auto_show) {
+	if (!tileset_move_queue_panel) {
+		return;
+	}
+
+	tileset_move_queue_panel->ReloadFromQueue();
+	if (auto_show && !tileset_move_queue.Empty()) {
+		ShowTilesetMoveQueuePanel(true);
+	}
+}
+
+void GUI::ShowTilesetMoveQueuePanel(bool show) {
+	if (!tileset_move_queue_panel || !aui_manager) {
+		return;
+	}
+
+	aui_manager->GetPane(tileset_move_queue_panel).Show(show);
+	aui_manager->Update();
 }
 
 void SetWindowToolTip(wxWindow* a, const wxString& tip) {

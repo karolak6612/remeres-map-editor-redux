@@ -29,11 +29,16 @@
 #include "game/items.h"
 #include "brushes/raw/raw_brush.h"
 #include "brushes/ground/auto_border.h"
+#include "brushes/ground/ground_brush.h"
+#include "brushes/wall/wall_brush.h"
 #include "util/file_system.h"
+#include "ext/pugixml.hpp"
 
 #include <wx/msgdlg.h>
 #include <wx/app.h>
 #include <wx/clipbrd.h>
+#include <wx/filedlg.h>
+#include <wx/filename.h>
 #include <fstream>
 #include <filesystem>
 #include <unordered_set>
@@ -340,6 +345,46 @@ namespace LuaAPI {
 		}
 	}
 
+	static sol::object chooseFile(sol::this_state ts, sol::object arg) {
+		sol::state_view lua(ts);
+
+		std::string title = "Select file";
+		std::string path;
+		std::string wildcard = "XML files (*.xml)|*.xml|All files (*.*)|*.*";
+
+		if (arg.is<sol::table>()) {
+			sol::table options = arg.as<sol::table>();
+			title = options.get_or(std::string("title"), title);
+			path = options.get_or(std::string("path"), std::string(""));
+			wildcard = options.get_or(std::string("wildcard"), wildcard);
+		} else if (arg.is<std::string>()) {
+			path = arg.as<std::string>();
+		}
+
+		wxFileName fileName{wxString(path)};
+		wxString defaultDir = fileName.GetPath();
+		wxString defaultFile = fileName.GetFullName();
+		if (defaultDir.IsEmpty()) {
+			defaultDir = wxString(FileSystem::GetDataDirectory().ToStdString());
+		}
+
+		wxWindow* parent = g_gui.root;
+		wxFileDialog dlg(
+			parent,
+			wxString(title),
+			defaultDir,
+			defaultFile,
+			wxString(wildcard),
+			wxFD_OPEN | wxFD_FILE_MUST_EXIST
+		);
+
+		if (dlg.ShowModal() != wxID_OK) {
+			return sol::make_object(lua, sol::nil);
+		}
+
+		return sol::make_object(lua, dlg.GetPath().ToStdString());
+	}
+
 	// Check if a map is currently open
 	static bool hasMap() {
 		Editor* editor = g_gui.GetCurrentEditor();
@@ -435,8 +480,358 @@ namespace LuaAPI {
 		return bordersTable;
 	}
 
+	static sol::object getGrounds(sol::this_state ts) {
+		sol::state_view lua(ts);
+
+		sol::table groundsTable = lua.create_table();
+
+		for (const auto& pair : g_brushes.getMap()) {
+			const Brush* brush = pair.second.get();
+			const GroundBrush* ground = brush ? brush->as<GroundBrush>() : nullptr;
+			if (!ground) {
+				continue;
+			}
+
+			sol::table g = lua.create_table();
+			g["id"] = ground->getID();
+			g["name"] = ground->getName();
+			g["lookid"] = ground->getLookID();
+			g["server_lookid"] = 0;
+			g["z_order"] = ground->getZ();
+			g["randomize"] = ground->isReRandomizable();
+			g["solo_optional"] = ground->useSoloOptionalBorder();
+
+			std::vector<std::pair<uint16_t, int>> itemEntries;
+			ground->getItemChanceEntries(itemEntries);
+
+			sol::table items = lua.create_table();
+			for (size_t i = 0; i < itemEntries.size(); ++i) {
+				sol::table item = lua.create_table();
+				item["id"] = itemEntries[i].first;
+				item["chance"] = itemEntries[i].second;
+				items[static_cast<int>(i + 1)] = item;
+			}
+			g["items"] = items;
+
+			if (!itemEntries.empty()) {
+				sol::table mainItem = lua.create_table();
+				mainItem["id"] = itemEntries.front().first;
+				mainItem["chance"] = itemEntries.front().second;
+				g["main_item"] = mainItem;
+			} else {
+				g["main_item"] = sol::nil;
+			}
+
+			groundsTable[ground->getName()] = g;
+		}
+
+		return groundsTable;
+	}
+
+	static std::string doorTypeToString(DoorType type) {
+		switch (type) {
+			case WALL_ARCHWAY:
+				return "archway";
+			case WALL_DOOR_NORMAL:
+				return "normal";
+			case WALL_DOOR_LOCKED:
+				return "locked";
+			case WALL_DOOR_QUEST:
+				return "quest";
+			case WALL_DOOR_MAGIC:
+				return "magic";
+			case WALL_DOOR_NORMAL_ALT:
+				return "normal_alt";
+			case WALL_WINDOW:
+				return "window";
+			case WALL_HATCH_WINDOW:
+				return "hatch_window";
+			default:
+				return "undefined";
+		}
+	}
+
+	static sol::object chooseFile(sol::this_state ts, sol::object arg) {
+		sol::state_view lua(ts);
+
+		std::string title = "Select file";
+		std::string path;
+		std::string wildcard = "XML files (*.xml)|*.xml|All files (*.*)|*.*";
+
+		if (arg.is<sol::table>()) {
+			sol::table options = arg.as<sol::table>();
+			title = options.get_or(std::string("title"), title);
+			path = options.get_or(std::string("path"), std::string(""));
+			wildcard = options.get_or(std::string("wildcard"), wildcard);
+		} else if (arg.is<std::string>()) {
+			path = arg.as<std::string>();
+		}
+
+		wxFileName fileName{wxString(path)};
+		wxString defaultDir = fileName.GetPath();
+		wxString defaultFile = fileName.GetFullName();
+		if (defaultDir.IsEmpty()) {
+			defaultDir = wxString(FileSystem::GetDataDirectory().ToStdString());
+		}
+
+		wxWindow* parent = g_gui.root;
+		wxFileDialog dlg(
+			parent,
+			wxString(title),
+			defaultDir,
+			defaultFile,
+			wxString(wildcard),
+			wxFD_OPEN | wxFD_FILE_MUST_EXIST
+		);
+
+		if (dlg.ShowModal() != wxID_OK) {
+			return sol::make_object(lua, sol::nil);
+		}
+
+		return sol::make_object(lua, dlg.GetPath().ToStdString());
+	}
+
+	static std::string wallAlignmentToString(int alignment) {
+		switch (alignment) {
+			case WALL_VERTICAL:
+				return "vertical";
+			case WALL_HORIZONTAL:
+				return "horizontal";
+			case WALL_NORTHWEST_DIAGONAL:
+				return "corner";
+			case WALL_POLE:
+				return "pole";
+			case WALL_SOUTH_END:
+				return "south end";
+			case WALL_EAST_END:
+				return "east end";
+			case WALL_NORTH_END:
+				return "north end";
+			case WALL_WEST_END:
+				return "west end";
+			case WALL_SOUTH_T:
+				return "south T";
+			case WALL_EAST_T:
+				return "east T";
+			case WALL_WEST_T:
+				return "west T";
+			case WALL_NORTH_T:
+				return "north T";
+			case WALL_NORTHEAST_DIAGONAL:
+				return "northeast diagonal";
+			case WALL_SOUTHWEST_DIAGONAL:
+				return "southwest diagonal";
+			case WALL_SOUTHEAST_DIAGONAL:
+				return "southeast diagonal";
+			case WALL_INTERSECTION:
+				return "intersection";
+			case WALL_UNTOUCHABLE:
+				return "untouchable";
+			default:
+				return "unknown";
+		}
+	}
+
+	static sol::object getWalls(sol::this_state ts) {
+		sol::state_view lua(ts);
+
+		sol::table wallsTable = lua.create_table();
+
+		for (const auto& pair : g_brushes.getMap()) {
+			const Brush* brush = pair.second.get();
+			const WallBrush* wall = brush ? brush->as<WallBrush>() : nullptr;
+			if (!wall || wall->is<WallDecorationBrush>()) {
+				continue;
+			}
+
+			sol::table wallTable = lua.create_table();
+			wallTable["id"] = wall->getID();
+			wallTable["name"] = wall->getName();
+			wallTable["lookid"] = wall->getLookID();
+			wallTable["kind"] = "wall";
+			uint16_t serverLookId = 0;
+
+			sol::table alignments = lua.create_table();
+			for (int alignment = 0; alignment < WallBrushItems::WALL_ALIGNMENT_COUNT; ++alignment) {
+				sol::table bucket = lua.create_table();
+				bucket["token"] = wallAlignmentToString(alignment);
+
+				sol::table items = lua.create_table();
+				const auto& wallNode = wall->items.getWallNode(alignment);
+				for (size_t itemIndex = 0; itemIndex < wallNode.items.size(); ++itemIndex) {
+					sol::table item = lua.create_table();
+					item["id"] = wallNode.items[itemIndex].id;
+					int previousChance = itemIndex == 0 ? 0 : wallNode.items[itemIndex - 1].chance;
+					item["chance"] = wallNode.items[itemIndex].chance - previousChance;
+					items[static_cast<int>(itemIndex + 1)] = item;
+				}
+				bucket["items"] = items;
+
+				sol::table doors = lua.create_table();
+				const auto& doorItems = wall->items.getDoorItems(alignment);
+				for (size_t doorIndex = 0; doorIndex < doorItems.size(); ++doorIndex) {
+					const auto& doorItem = doorItems[doorIndex];
+					const auto definition = g_item_definitions.get(doorItem.id);
+
+					sol::table door = lua.create_table();
+					door["id"] = doorItem.id;
+					door["type"] = doorTypeToString(doorItem.type);
+					door["locked"] = doorItem.locked;
+					door["open"] = definition.hasFlag(ItemFlag::IsOpen);
+					door["hate"] = definition.hasFlag(ItemFlag::WallHateMe);
+					doors[static_cast<int>(doorIndex + 1)] = door;
+				}
+				bucket["doors"] = doors;
+				if (serverLookId == 0) {
+					if (wallNode.items.size() > 0) {
+						serverLookId = wallNode.items.front().id;
+					} else if (doorItems.size() > 0) {
+						serverLookId = doorItems.front().id;
+					}
+				}
+
+				alignments[wallAlignmentToString(alignment)] = bucket;
+			}
+			wallTable["alignments"] = alignments;
+			wallTable["server_lookid"] = serverLookId;
+
+			sol::table friends = lua.create_table();
+			int friendIndex = 1;
+			for (uint32_t friendId : wall->getFriendIds()) {
+				for (const auto& candidatePair : g_brushes.getMap()) {
+					const Brush* candidate = candidatePair.second.get();
+					if (candidate && candidate->getID() == friendId) {
+						friends[friendIndex++] = candidate->getName();
+						break;
+					}
+				}
+			}
+			wallTable["friends"] = friends;
+			wallTable["redirect_to"] = wall->getRedirectTo() ? wall->getRedirectTo()->getName() : "";
+
+			wallsTable[wall->getName()] = wallTable;
+		}
+
+		return wallsTable;
+	}
+
 	static std::string getDataDirectory() {
 		return FileSystem::GetDataDirectory().ToStdString();
+	}
+
+	static std::vector<std::string> splitPath(std::string_view path) {
+		std::vector<std::string> parts;
+		size_t start = 0;
+		while (start < path.size()) {
+			size_t slash = path.find('/', start);
+			size_t count = slash == std::string_view::npos ? path.size() - start : slash - start;
+			if (count > 0) {
+				parts.emplace_back(path.substr(start, count));
+			}
+			if (slash == std::string_view::npos) {
+				break;
+			}
+			start = slash + 1;
+		}
+		return parts;
+	}
+
+	static pugi::xml_node findNodeByPath(pugi::xml_node root, const std::string& path) {
+		if (!root) {
+			return pugi::xml_node();
+		}
+
+		if (path.empty()) {
+			return root;
+		}
+
+		pugi::xml_node current = root;
+		const auto parts = splitPath(path);
+		for (size_t index = 0; index < parts.size(); ++index) {
+			const std::string& part = parts[index];
+			if (index == 0 && current.type() == pugi::node_element && current.name() == part) {
+				continue;
+			}
+			current = current.child(part.c_str());
+			if (!current) {
+				return pugi::xml_node();
+			}
+		}
+
+		return current;
+	}
+
+	static std::tuple<bool, std::string> upsertXmlNodeFile(const std::string& path, const sol::table& options) {
+		const std::string rootName = options.get_or(std::string("root"), std::string("root"));
+		const std::string parentPath = options.get_or(std::string("parent"), rootName);
+		const std::string fragment = options.get_or(std::string("xml"), std::string(""));
+		const std::string matchTag = options.get_or(std::string("tag"), std::string(""));
+		const std::string matchAttr = options.get_or(std::string("match_attr"), std::string(""));
+		const std::string matchValue = options.get_or(std::string("match_value"), std::string(""));
+
+		if (fragment.empty()) {
+			return { false, "Missing XML fragment." };
+		}
+
+		pugi::xml_document document;
+		bool fileExists = std::filesystem::exists(path);
+		if (fileExists) {
+			const pugi::xml_parse_result loaded = document.load_file(path.c_str(), pugi::parse_default);
+			if (!loaded) {
+				return { false, "Failed to parse XML file: " + std::string(loaded.description()) };
+			}
+		}
+
+		pugi::xml_node root = document.document_element();
+		if (!root) {
+			document.reset();
+			document.append_child(pugi::node_declaration).append_attribute("version") = "1.0";
+			document.first_child().append_attribute("encoding") = "utf-8";
+			root = document.append_child(rootName.c_str());
+		}
+
+		if (!root || std::string(root.name()) != rootName) {
+			return { false, "Root node does not match expected <" + rootName + ">." };
+		}
+
+		pugi::xml_node parent = findNodeByPath(root, parentPath);
+		if (!parent) {
+			return { false, "Parent node path not found: " + parentPath };
+		}
+
+		pugi::xml_document fragmentDocument;
+		const pugi::xml_parse_result fragmentLoaded = fragmentDocument.load_buffer(fragment.data(), fragment.size(), pugi::parse_default);
+		if (!fragmentLoaded) {
+			return { false, "Failed to parse XML fragment: " + std::string(fragmentLoaded.description()) };
+		}
+
+		pugi::xml_node fragmentNode = fragmentDocument.document_element();
+		if (!fragmentNode) {
+			return { false, "XML fragment does not contain an element node." };
+		}
+
+		pugi::xml_node existing;
+		if (!matchTag.empty() && !matchAttr.empty()) {
+			for (pugi::xml_node child = parent.child(matchTag.c_str()); child; child = child.next_sibling(matchTag.c_str())) {
+				if (child.attribute(matchAttr.c_str()).as_string() == matchValue) {
+					existing = child;
+					break;
+				}
+			}
+		}
+
+		if (existing) {
+			parent.insert_copy_before(fragmentNode, existing);
+			parent.remove_child(existing);
+		} else {
+			parent.append_copy(fragmentNode);
+		}
+
+		if (!document.save_file(path.c_str(), "\t", pugi::format_default, pugi::encoding_utf8)) {
+			return { false, "Failed to save XML file." };
+		}
+
+		return { true, existing ? "updated" : "appended" };
 	}
 
 	static sol::table storageForScript(sol::this_state ts, const std::string& name) {
@@ -538,6 +933,44 @@ namespace LuaAPI {
 			}
 		};
 
+		storage["exists"] = [path](sol::object) -> bool {
+			return std::filesystem::exists(path);
+		};
+
+		storage["readText"] = [path](sol::this_state ts2, sol::object) -> std::tuple<sol::object, sol::object> {
+			sol::state_view lua(ts2);
+
+			std::ifstream file(path, std::ios::binary | std::ios::ate);
+			if (!file.is_open()) {
+				return {
+					sol::make_object(lua, sol::nil),
+					sol::make_object(lua, std::string("Could not open file."))
+				};
+			}
+
+			const std::streamsize fileSize = file.tellg();
+			if (fileSize < 0 || fileSize > static_cast<std::streamsize>(4 * 1024 * 1024)) {
+				return {
+					sol::make_object(lua, sol::nil),
+					sol::make_object(lua, std::string("File is too large to read safely."))
+				};
+			}
+
+			std::string content(static_cast<size_t>(fileSize), '\0');
+			file.seekg(0, std::ios::beg);
+			if (fileSize > 0 && !file.read(content.data(), fileSize)) {
+				return {
+					sol::make_object(lua, sol::nil),
+					sol::make_object(lua, std::string("Could not read file contents."))
+				};
+			}
+
+			return {
+				sol::make_object(lua, content),
+				sol::make_object(lua, sol::nil)
+			};
+		};
+
 		storage["save"] = [path](sol::this_state ts2, sol::object first, sol::object second) -> bool {
 			sol::state_view lua(ts2);
 			std::string content;
@@ -579,6 +1012,10 @@ namespace LuaAPI {
 			return std::remove(path.c_str()) == 0;
 		};
 
+		storage["upsertXml"] = [path](sol::object, sol::table options) -> std::tuple<bool, std::string> {
+			return upsertXmlNodeFile(path, options);
+		};
+
 		return storage;
 	}
 
@@ -596,6 +1033,7 @@ namespace LuaAPI {
 
 		// Functions
 		app["alert"] = showAlert;
+		app["chooseFile"] = chooseFile;
 		app["hasMap"] = hasMap;
 		app["refresh"] = refresh;
 		app["setBrush"] = [](const std::string& name) {
@@ -672,6 +1110,10 @@ namespace LuaAPI {
 				return sol::nil;
 			} else if (key == "borders") {
 				return getBorders(ts);
+			} else if (key == "grounds") {
+				return getGrounds(ts);
+			} else if (key == "walls") {
+				return getWalls(ts);
 			} else if (key == "editor") {
 				Editor* editor = g_gui.GetCurrentEditor();
 				if (editor) {
