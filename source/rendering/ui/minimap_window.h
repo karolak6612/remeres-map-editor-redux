@@ -46,6 +46,7 @@ private:
 	void OnFloorUp(wxCommandEvent& event);
 	void OnFloorDown(wxCommandEvent& event);
 	void OnShowAllFloorsToggle(wxCommandEvent& event);
+	void OnScreenshot(wxCommandEvent& event);
 	void OnHelpEnter(wxMouseEvent& event);
 	void OnHelpLeave(wxMouseEvent& event);
 	void OnHelpClick(wxCommandEvent& event);
@@ -57,6 +58,7 @@ private:
 	wxButton* zoom_in_button_ = nullptr;
 	wxButton* floor_up_button_ = nullptr;
 	wxButton* floor_down_button_ = nullptr;
+	wxButton* screenshot_button_ = nullptr;
 	wxButton* help_button_ = nullptr;
 	wxToggleButton* show_all_floors_button_ = nullptr;
 	wxStaticText* zoom_label_ = nullptr;
@@ -75,6 +77,7 @@ public:
 
 	void DelayedUpdate();
 	void NormalizeViewportState();
+	[[nodiscard]] bool SaveCleanScreenshot(const wxFileName& file);
 
 private:
 	void OnPaint(wxPaintEvent& event);

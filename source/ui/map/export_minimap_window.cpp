@@ -13,14 +13,17 @@
 #include <wx/checkbox.h>
 #include <wx/choice.h>
 #include <wx/dirdlg.h>
+#include <wx/notebook.h>
 #include <wx/sizer.h>
-#include <wx/spinctrl.h>
 #include <wx/stattext.h>
 #include <wx/textctrl.h>
 
 namespace {
 
-constexpr std::array<int, 4> kImageSizes { 512, 1024, 2048, 4096 };
+constexpr std::array<int, 8> kImageSizes { 512, 1024, 2048, 4096, 8192, 16384, 32768, 65536 };
+constexpr int kMaxWebpDimension = 16383;
+constexpr int kMaxJpegDimension = 65500;
+constexpr int kMaxSafeImageDimension = 16384;
 
 [[nodiscard]] wxString defaultFileName(const Editor& editor) {
 	const wxString mapName = wxString::FromUTF8(editor.map.getName().c_str());
@@ -38,8 +41,20 @@ constexpr std::array<int, 4> kImageSizes { 512, 1024, 2048, 4096 };
 	return fileName.find_first_of("<>:\"/\\|?*") != std::string::npos;
 }
 
-[[nodiscard]] int clampedCurrentFloor() {
-	return std::clamp(g_gui.GetCurrentFloor(), 0, MAP_MAX_LAYER);
+[[nodiscard]] size_t formatIndex(MinimapExportFormat format) {
+	return static_cast<size_t>(format);
+}
+
+[[nodiscard]] int maxImageSizeForFormat(MinimapExportFormat format) {
+	switch (format) {
+		case MinimapExportFormat::Webp:
+			return std::min(kMaxWebpDimension, kMaxSafeImageDimension);
+		case MinimapExportFormat::Jpg:
+			return std::min(kMaxJpegDimension, kMaxSafeImageDimension);
+		case MinimapExportFormat::Otmm:
+			return 0;
+	}
+	return 0;
 }
 
 } // namespace
@@ -55,58 +70,40 @@ ExportMinimapWindow::ExportMinimapWindow(wxWindow* parent, Editor& editor) :
 	errorSizer->Add(error_field_, 0, wxALL, 5);
 	sizer->Add(errorSizer, 0, wxLEFT | wxRIGHT | wxBOTTOM | wxEXPAND, 5);
 
-	directory_text_field_ = newd wxTextCtrl(this, wxID_ANY, wxString(g_settings.getString(Config::MINIMAP_EXPORT_DIR)), wxDefaultPosition, wxDefaultSize);
-	directory_text_field_->Bind(wxEVT_TEXT, &ExportMinimapWindow::OnTextChanged, this);
+	auto* contentSizer = newd wxBoxSizer(wxHORIZONTAL);
+	auto* leftSizer = newd wxBoxSizer(wxVERTICAL);
+
 	auto* folderSizer = newd wxStaticBoxSizer(wxHORIZONTAL, this, "Output Folder");
+	wxWindow* folderParent = folderSizer->GetStaticBox();
+	directory_text_field_ = newd wxTextCtrl(folderParent, wxID_ANY, wxString(g_settings.getString(Config::MINIMAP_EXPORT_DIR)), wxDefaultPosition, wxDefaultSize);
+	directory_text_field_->Bind(wxEVT_TEXT, &ExportMinimapWindow::OnTextChanged, this);
 	folderSizer->Add(directory_text_field_, 1, wxALL | wxEXPAND, 5);
-	auto* browseButton = newd wxButton(this, MAP_WINDOW_FILE_BUTTON, "Browse");
+	auto* browseButton = newd wxButton(folderParent, MAP_WINDOW_FILE_BUTTON, "Browse");
 	browseButton->SetBitmap(IMAGE_MANAGER.GetBitmapBundle(ICON_FOLDER_OPEN));
 	folderSizer->Add(browseButton, 0, wxALL, 5);
-	sizer->Add(folderSizer, 0, wxALL | wxEXPAND, 5);
+	leftSizer->Add(folderSizer, 0, wxBOTTOM | wxEXPAND, 5);
 
-	file_name_text_field_ = newd wxTextCtrl(this, wxID_ANY, defaultFileName(editor_), wxDefaultPosition, wxDefaultSize);
-	file_name_text_field_->Bind(wxEVT_TEXT, &ExportMinimapWindow::OnTextChanged, this);
 	auto* fileSizer = newd wxStaticBoxSizer(wxHORIZONTAL, this, "File Name");
+	wxWindow* fileParent = fileSizer->GetStaticBox();
+	file_name_text_field_ = newd wxTextCtrl(fileParent, wxID_ANY, defaultFileName(editor_), wxDefaultPosition, wxDefaultSize);
+	file_name_text_field_->Bind(wxEVT_TEXT, &ExportMinimapWindow::OnTextChanged, this);
 	fileSizer->Add(file_name_text_field_, 1, wxALL | wxEXPAND, 5);
-	sizer->Add(fileSizer, 0, wxLEFT | wxRIGHT | wxBOTTOM | wxEXPAND, 5);
+	leftSizer->Add(fileSizer, 0, wxBOTTOM | wxEXPAND, 5);
 
-	format_choice_ = newd wxChoice(this, wxID_ANY);
-	format_choice_->Append(".otmm");
-	format_choice_->Append(".jpg");
-	format_choice_->Append(".webp");
-	format_choice_->SetSelection(0);
-	format_choice_->Bind(wxEVT_CHOICE, &ExportMinimapWindow::OnChoiceChanged, this);
-	auto* formatSizer = newd wxStaticBoxSizer(wxHORIZONTAL, this, "Export Format");
-	formatSizer->Add(format_choice_, 1, wxALL | wxEXPAND, 5);
-	sizer->Add(formatSizer, 0, wxLEFT | wxRIGHT | wxBOTTOM | wxEXPAND, 5);
+	notebook_ = newd wxNotebook(this, wxID_ANY);
+	notebook_->AddPage(CreateFormatPage(notebook_, MinimapExportFormat::Jpg), "JPG", true);
+	notebook_->AddPage(CreateFormatPage(notebook_, MinimapExportFormat::Webp), "WebP");
+	notebook_->AddPage(CreateFormatPage(notebook_, MinimapExportFormat::Otmm), "OTMM");
+	notebook_->Bind(wxEVT_NOTEBOOK_PAGE_CHANGED, [this](wxBookCtrlEvent& event) {
+		UpdateControlState();
+		CheckValues();
+		event.Skip();
+	});
+	leftSizer->Add(notebook_, 1, wxEXPAND);
 
-	image_size_choice_ = newd wxChoice(this, wxID_ANY);
-	for (const int size : kImageSizes) {
-		image_size_choice_->Append(wxString::Format("%d x %d", size, size));
-	}
-	image_size_choice_->SetSelection(1);
-	image_size_choice_->Bind(wxEVT_CHOICE, &ExportMinimapWindow::OnChoiceChanged, this);
-	auto* imageSizeSizer = newd wxStaticBoxSizer(wxHORIZONTAL, this, "Image Size");
-	imageSizeSizer->Add(image_size_choice_, 1, wxALL | wxEXPAND, 5);
-	sizer->Add(imageSizeSizer, 0, wxLEFT | wxRIGHT | wxBOTTOM | wxEXPAND, 5);
-
-	floor_mode_choice_ = newd wxChoice(this, wxID_ANY);
-	floor_mode_choice_->Append("All floors");
-	floor_mode_choice_->Append("Ground floor");
-	floor_mode_choice_->Append("Selected floor");
-	floor_mode_choice_->SetSelection(0);
-	floor_mode_choice_->Bind(wxEVT_CHOICE, &ExportMinimapWindow::OnChoiceChanged, this);
-	floor_spin_ = newd wxSpinCtrl(this, wxID_ANY, wxEmptyString, wxDefaultPosition, FROM_DIP(this, wxSize(72, -1)), wxSP_ARROW_KEYS, 0, MAP_MAX_LAYER, clampedCurrentFloor());
-	floor_spin_->SetMinSize(FROM_DIP(this, wxSize(72, -1)));
-	auto* floorSizer = newd wxStaticBoxSizer(wxHORIZONTAL, this, "Area");
-	floorSizer->Add(floor_mode_choice_, 1, wxALL | wxEXPAND, 5);
-	floorSizer->Add(newd wxStaticText(this, wxID_ANY, "Floor"), 0, wxALIGN_CENTER_VERTICAL | wxLEFT | wxRIGHT, 5);
-	floorSizer->Add(floor_spin_, 0, wxALL, 5);
-	sizer->Add(floorSizer, 0, wxLEFT | wxRIGHT | wxBOTTOM | wxEXPAND, 5);
-
-	show_all_floors_checkbox_ = newd wxCheckBox(this, wxID_ANY, "Enable show all floors during export");
-	show_all_floors_checkbox_->SetValue(g_settings.getBoolean(Config::SHOW_ALL_FLOORS));
-	sizer->Add(show_all_floors_checkbox_, 0, wxLEFT | wxRIGHT | wxBOTTOM, 12);
+	contentSizer->Add(leftSizer, 1, wxALL | wxEXPAND, 5);
+	contentSizer->Add(CreateAreaSizer(), 0, wxTOP | wxRIGHT | wxBOTTOM | wxEXPAND, 5);
+	sizer->Add(contentSizer, 1, wxEXPAND);
 
 	auto* buttonSizer = newd wxBoxSizer(wxHORIZONTAL);
 	ok_button_ = newd wxButton(this, wxID_OK, "OK");
@@ -158,10 +155,10 @@ void ExportMinimapWindow::OnClickOK(wxCommandEvent& WXUNUSED(event)) {
 		.outputDirectory = directory,
 		.fileBaseName = FileBaseName(),
 		.format = SelectedFormat(),
-		.floorMode = SelectedFloorMode(),
-		.selectedFloor = floor_spin_->GetValue(),
+		.selectedFloors = SelectedFloors(),
 		.imageSize = SelectedImageSize(),
-		.showAllFloors = show_all_floors_checkbox_->GetValue(),
+		.showAllFloors = CurrentControls().show_all_floors_checkbox ? CurrentControls().show_all_floors_checkbox->GetValue() : false,
+		.applyShadeToAdjacentFloors = CurrentControls().shade_adjacent_floors_checkbox ? CurrentControls().shade_adjacent_floors_checkbox->GetValue() : false,
 	};
 
 	g_gui.CreateLoadBar("Exporting Minimap");
@@ -217,30 +214,60 @@ void ExportMinimapWindow::CheckValues() {
 		ok_button_->Enable(false);
 		return;
 	}
+	if (std::ranges::none_of(SelectedFloors(), [](bool selected) { return selected; })) {
+		error_field_->SetLabel("Select at least one floor.");
+		ok_button_->Enable(false);
+		return;
+	}
 
 	error_field_->SetLabel(wxEmptyString);
 	ok_button_->Enable(true);
 }
 
 void ExportMinimapWindow::UpdateControlState() {
-	const bool isImage = SelectedFormat() != MinimapExportFormat::Otmm;
-	const bool isSelectedFloor = SelectedFloorMode() == MinimapExportFloorMode::SelectedFloor;
-	image_size_choice_->Enable(isImage);
-	floor_spin_->Enable(isSelectedFloor);
-	show_all_floors_checkbox_->Enable(isImage && SelectedFloorMode() != MinimapExportFloorMode::AllFloors);
+	for (FormatControls& controls : format_controls_) {
+		if (!controls.shade_adjacent_floors_checkbox) {
+			continue;
+		}
+
+		const bool canShade = controls.show_all_floors_checkbox && controls.show_all_floors_checkbox->GetValue();
+		controls.shade_adjacent_floors_checkbox->Enable(canShade);
+	}
 }
 
 MinimapExportFormat ExportMinimapWindow::SelectedFormat() const {
-	return static_cast<MinimapExportFormat>(std::max(0, format_choice_->GetSelection()));
-}
+	if (!notebook_) {
+		return MinimapExportFormat::Jpg;
+	}
 
-MinimapExportFloorMode ExportMinimapWindow::SelectedFloorMode() const {
-	return static_cast<MinimapExportFloorMode>(std::max(0, floor_mode_choice_->GetSelection()));
+	switch (notebook_->GetSelection()) {
+		case 1:
+			return MinimapExportFormat::Webp;
+		case 2:
+			return MinimapExportFormat::Otmm;
+		default:
+			return MinimapExportFormat::Jpg;
+	}
 }
 
 int ExportMinimapWindow::SelectedImageSize() const {
-	const int index = std::clamp(image_size_choice_->GetSelection(), 0, static_cast<int>(kImageSizes.size() - 1));
-	return kImageSizes[static_cast<size_t>(index)];
+	const wxChoice* choice = CurrentControls().image_size_choice;
+	const std::vector<int>& imageSizes = CurrentControls().image_sizes;
+	if (!choice || imageSizes.empty()) {
+		return kImageSizes[1];
+	}
+
+	const int index = std::clamp(choice->GetSelection(), 0, static_cast<int>(imageSizes.size() - 1));
+	return imageSizes[static_cast<size_t>(index)];
+}
+
+MinimapExportFloorMask ExportMinimapWindow::SelectedFloors() const {
+	MinimapExportFloorMask floors {};
+	for (int floor = 0; floor < MAP_LAYERS; ++floor) {
+		const wxCheckBox* checkbox = floor_checkboxes_[static_cast<size_t>(floor)];
+		floors[static_cast<size_t>(floor)] = checkbox && checkbox->GetValue();
+	}
+	return floors;
 }
 
 std::string ExportMinimapWindow::FileBaseName() const {
@@ -248,4 +275,77 @@ std::string ExportMinimapWindow::FileBaseName() const {
 	const wxFileName fileName(text);
 	const wxString baseName = fileName.GetName();
 	return (baseName.empty() ? text : baseName).ToStdString();
+}
+
+wxPanel* ExportMinimapWindow::CreateFormatPage(wxNotebook* notebook, MinimapExportFormat format) {
+	auto* panel = newd wxPanel(notebook, wxID_ANY);
+	auto* sizer = newd wxBoxSizer(wxVERTICAL);
+	FormatControls& controls = format_controls_[formatIndex(format)];
+
+	if (format != MinimapExportFormat::Otmm) {
+		auto* imageSizeSizer = newd wxStaticBoxSizer(wxHORIZONTAL, panel, "Image Size");
+		wxWindow* imageSizeParent = imageSizeSizer->GetStaticBox();
+		controls.image_size_choice = newd wxChoice(imageSizeParent, wxID_ANY);
+		const int maxImageSize = maxImageSizeForFormat(format);
+		for (const int size : kImageSizes) {
+			if (size > maxImageSize) {
+				continue;
+			}
+			controls.image_sizes.push_back(size);
+			controls.image_size_choice->Append(wxString::Format("%d x %d", size, size));
+		}
+		controls.image_size_choice->SetSelection(1);
+		controls.image_size_choice->Bind(wxEVT_CHOICE, &ExportMinimapWindow::OnChoiceChanged, this);
+		imageSizeSizer->Add(controls.image_size_choice, 1, wxALL | wxEXPAND, 5);
+		sizer->Add(imageSizeSizer, 0, wxLEFT | wxRIGHT | wxTOP | wxEXPAND, 14);
+	}
+
+	if (format != MinimapExportFormat::Otmm) {
+		controls.show_all_floors_checkbox = newd wxCheckBox(panel, wxID_ANY, "Enable show all floors during export");
+		controls.show_all_floors_checkbox->SetValue(false);
+		controls.show_all_floors_checkbox->Bind(wxEVT_CHECKBOX, &ExportMinimapWindow::OnChoiceChanged, this);
+		sizer->Add(controls.show_all_floors_checkbox, 0, wxLEFT | wxRIGHT | wxTOP, 20);
+
+		controls.shade_adjacent_floors_checkbox = newd wxCheckBox(panel, wxID_ANY, "Apply shade to adjacent floors");
+		controls.shade_adjacent_floors_checkbox->SetValue(false);
+		controls.shade_adjacent_floors_checkbox->Bind(wxEVT_CHECKBOX, &ExportMinimapWindow::OnChoiceChanged, this);
+		sizer->Add(controls.shade_adjacent_floors_checkbox, 0, wxLEFT | wxRIGHT | wxTOP, 20);
+	}
+
+	sizer->AddStretchSpacer(1);
+	panel->SetSizer(sizer);
+	return panel;
+}
+
+wxSizer* ExportMinimapWindow::CreateAreaSizer() {
+	auto* areaSizer = newd wxStaticBoxSizer(wxHORIZONTAL, this, "Area");
+	wxWindow* areaParent = areaSizer->GetStaticBox();
+	auto* surfaceSizer = newd wxBoxSizer(wxVERTICAL);
+	auto* undergroundSizer = newd wxBoxSizer(wxVERTICAL);
+	surfaceSizer->Add(newd wxStaticText(areaParent, wxID_ANY, "Surface floors"), 0, wxLEFT | wxRIGHT | wxTOP | wxBOTTOM, 4);
+	undergroundSizer->Add(newd wxStaticText(areaParent, wxID_ANY, "Underground floors"), 0, wxLEFT | wxRIGHT | wxTOP | wxBOTTOM, 4);
+
+	for (int floor = 0; floor < MAP_LAYERS; ++floor) {
+		auto* checkbox = newd wxCheckBox(areaParent, wxID_ANY, wxString::Format("Floor %d", floor));
+		checkbox->SetValue(true);
+		checkbox->Bind(wxEVT_CHECKBOX, &ExportMinimapWindow::OnChoiceChanged, this);
+		floor_checkboxes_[static_cast<size_t>(floor)] = checkbox;
+		if (floor <= GROUND_LAYER) {
+			surfaceSizer->Add(checkbox, 0, wxLEFT | wxRIGHT | wxBOTTOM, 8);
+		} else {
+			undergroundSizer->Add(checkbox, 0, wxLEFT | wxRIGHT | wxBOTTOM, 8);
+		}
+	}
+
+	areaSizer->Add(surfaceSizer, 1, wxALL | wxEXPAND, 5);
+	areaSizer->Add(undergroundSizer, 1, wxALL | wxEXPAND, 5);
+	return areaSizer;
+}
+
+ExportMinimapWindow::FormatControls& ExportMinimapWindow::CurrentControls() {
+	return format_controls_[formatIndex(SelectedFormat())];
+}
+
+const ExportMinimapWindow::FormatControls& ExportMinimapWindow::CurrentControls() const {
+	return format_controls_[formatIndex(SelectedFormat())];
 }

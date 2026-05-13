@@ -29,6 +29,8 @@ struct Bounds {
 struct Chunk {
 	int x = 0;
 	int y = 0;
+	int width = 0;
+	int height = 0;
 };
 
 struct FloorSelection {
@@ -44,12 +46,21 @@ struct FloorSelection {
 [[nodiscard]] FloorSelection allFloors();
 [[nodiscard]] FloorSelection singleFloor(int floor);
 [[nodiscard]] FloorSelection showAllFloorsForTarget(int targetFloor);
+[[nodiscard]] FloorSelection selectedFloorsForOutput(const MinimapExportOptions& options);
 [[nodiscard]] FloorSelection selectedFloorsForBounds(const MinimapExportOptions& options);
 [[nodiscard]] FloorSelection selectedFloorsForOtmm(const MinimapExportOptions& options);
+[[nodiscard]] int maxEncodedImageDimension(MinimapExportFormat format);
 [[nodiscard]] Bounds findContentBounds(Map& map, std::span<const int> floors);
-[[nodiscard]] std::vector<Chunk> buildChunks(const Bounds& bounds, int imageSize);
+[[nodiscard]] Bounds findMapBounds(const Map& map);
+[[nodiscard]] std::vector<Chunk> buildChunks(const Bounds& bounds, int outputImageSize, int chunkImageSize);
+[[nodiscard]] double exportScaleForBounds(const Bounds& bounds, int imageSize);
+[[nodiscard]] wxFileName exportRootDirectory(const MinimapExportOptions& options);
+[[nodiscard]] wxFileName floorDirectory(const MinimapExportOptions& options, int floor);
+[[nodiscard]] wxFileName fullImagesDirectory(const MinimapExportOptions& options);
+[[nodiscard]] bool ensureDirectory(const wxFileName& directory);
 [[nodiscard]] wxFileName outputFile(const wxFileName& directory, const std::string& baseName, const std::string& extension);
-[[nodiscard]] wxFileName chunkFile(const wxFileName& directory, const std::string& baseName, MinimapExportFormat format, int floor, const Chunk& chunk);
+[[nodiscard]] wxFileName chunkFile(const MinimapExportOptions& options, int floor, const Chunk& chunk);
+[[nodiscard]] wxFileName fullImageFile(const MinimapExportOptions& options, int floor);
 
 [[nodiscard]] MinimapExportResult exportOtmm(Editor& editor, const MinimapExportOptions& options, const MinimapExporter::ProgressCallback& progress);
 [[nodiscard]] MinimapExportResult exportImages(Editor& editor, const MinimapExportOptions& options, const MinimapExporter::ProgressCallback& progress);

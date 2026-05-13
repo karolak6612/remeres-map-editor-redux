@@ -13,6 +13,29 @@
 
 MinimapManager g_minimap;
 
+namespace {
+
+[[nodiscard]] wxAuiPaneInfo minimapPaneInfo() {
+	return wxAuiPaneInfo()
+		.Name("Minimap")
+		.Caption("Minimap")
+		.Right()
+		.Layer(0)
+		.Position(2)
+		.CloseButton(true)
+		.MaximizeButton(true)
+		.BestSize(260, 220);
+}
+
+void normalizeMinimapPaneInfo(wxAuiPaneInfo& info) {
+	info.Name("Minimap")
+		.Caption("Minimap")
+		.CloseButton(true)
+		.MaximizeButton(true);
+}
+
+} // namespace
+
 MinimapManager::MinimapManager() :
 	minimap(nullptr) {
 }
@@ -45,11 +68,13 @@ void MinimapManager::Create() {
 	}
 
 	if (minimap) {
-		g_gui.aui_manager->GetPane(minimap).Show(true);
+		wxAuiPaneInfo& info = g_gui.aui_manager->GetPane(minimap);
+		normalizeMinimapPaneInfo(info);
+		info.Show(true);
 	} else {
 		minimap = newd MinimapWindow(g_gui.root);
 		minimap->Show(true);
-		g_gui.aui_manager->AddPane(minimap, wxAuiPaneInfo().Caption("Minimap"));
+		g_gui.aui_manager->AddPane(minimap, minimapPaneInfo());
 	}
 	g_gui.aui_manager->Update();
 }

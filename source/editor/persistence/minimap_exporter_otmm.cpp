@@ -163,7 +163,7 @@ using FloorBlocks = std::array<std::map<uint32_t, MinimapBlock>, MAP_LAYERS>;
 } // namespace
 
 MinimapExportResult exportOtmm(Editor& editor, const MinimapExportOptions& options, const MinimapExporter::ProgressCallback& progress) {
-	BinaryWriter writer(outputFile(options.outputDirectory, options.fileBaseName, ".otmm"));
+	BinaryWriter writer(outputFile(exportRootDirectory(options), options.fileBaseName, ".otmm"));
 	if (!writer.ok()) {
 		return { .ok = false, .error = "Unable to open OTMM output file." };
 	}

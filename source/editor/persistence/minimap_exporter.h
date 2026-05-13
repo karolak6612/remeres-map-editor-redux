@@ -1,6 +1,9 @@
 #ifndef RME_EDITOR_PERSISTENCE_MINIMAP_EXPORTER_H_
 #define RME_EDITOR_PERSISTENCE_MINIMAP_EXPORTER_H_
 
+#include "app/definitions.h"
+
+#include <array>
 #include <cstdint>
 #include <functional>
 #include <string>
@@ -14,20 +17,22 @@ enum class MinimapExportFormat : uint8_t {
 	Webp,
 };
 
-enum class MinimapExportFloorMode : uint8_t {
-	AllFloors,
-	GroundFloor,
-	SelectedFloor,
-};
+using MinimapExportFloorMask = std::array<bool, MAP_LAYERS>;
+
+[[nodiscard]] constexpr MinimapExportFloorMask allMinimapExportFloors() {
+	MinimapExportFloorMask floors {};
+	floors.fill(true);
+	return floors;
+}
 
 struct MinimapExportOptions {
 	wxFileName outputDirectory;
 	std::string fileBaseName;
 	MinimapExportFormat format = MinimapExportFormat::Otmm;
-	MinimapExportFloorMode floorMode = MinimapExportFloorMode::AllFloors;
-	int selectedFloor = 7;
+	MinimapExportFloorMask selectedFloors = allMinimapExportFloors();
 	int imageSize = 1024;
 	bool showAllFloors = false;
+	bool applyShadeToAdjacentFloors = false;
 };
 
 struct MinimapExportResult {

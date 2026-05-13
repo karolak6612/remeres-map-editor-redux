@@ -14,12 +14,17 @@ class Editor;
 class MapCanvas;
 class PrimitiveRenderer;
 
+struct MinimapDrawOptions {
+	bool drawCameraBox = true;
+	bool drawBoundsBorder = true;
+};
+
 class MinimapDrawer {
 public:
 	MinimapDrawer();
 	~MinimapDrawer();
 
-	void Draw(const wxSize& size, Editor& editor, MapCanvas& canvas, const MinimapViewportState& viewport_state);
+	void Draw(const wxSize& size, Editor& editor, MapCanvas& canvas, const MinimapViewportState& viewport_state, MinimapDrawOptions options = {});
 	void ReleaseGL();
 
 	void ScreenToMap(int screen_x, int screen_y, int& map_x, int& map_y);
@@ -47,6 +52,7 @@ private:
 	VisibleWorldRect BuildVisibleWorldRect(const wxSize& size, Editor& editor, const MinimapViewportState& viewport_state);
 	void DrawFloorShade(const glm::mat4& projection, const wxSize& size);
 	void DrawMainCameraBox(const glm::mat4& projection, const wxSize& size, MapCanvas& canvas, const VisibleWorldRect& visible_rect);
+	void DrawMapBoundsBorder(const glm::mat4& projection, const wxSize& size, const Editor& editor, const VisibleWorldRect& visible_rect);
 
 	std::unique_ptr<MinimapRenderer> renderer;
 	std::unique_ptr<PrimitiveRenderer> primitive_renderer;
