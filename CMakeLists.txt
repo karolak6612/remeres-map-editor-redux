@@ -55,6 +55,7 @@ find_package(tomlplusplus CONFIG REQUIRED)
 find_package(Lua REQUIRED)
 find_package(sol2 CONFIG REQUIRED)
 find_package(cpr CONFIG REQUIRED)
+find_package(WebP CONFIG REQUIRED)
 
 # nanovg: try vcpkg/Conan first, fallback to ext/nanovg
 find_package(nanovg CONFIG QUIET)
@@ -126,6 +127,7 @@ target_link_libraries(rme PRIVATE spdlog::spdlog)
 target_link_libraries(rme PRIVATE tomlplusplus::tomlplusplus)
 target_link_libraries(rme PRIVATE sol2::sol2)
 target_link_libraries(rme PRIVATE cpr::cpr)
+target_link_libraries(rme PRIVATE WebP::webp)
 target_link_libraries(rme PRIVATE ${LUA_LIBRARIES})
 
 set_property(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR} PROPERTY VS_STARTUP_PROJECT "rme")

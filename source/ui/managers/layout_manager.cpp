@@ -23,6 +23,29 @@
 
 LayoutManager g_layout;
 
+namespace {
+
+[[nodiscard]] wxAuiPaneInfo defaultMinimapPaneInfo() {
+	return wxAuiPaneInfo()
+		.Name("Minimap")
+		.Caption("Minimap")
+		.Right()
+		.Layer(0)
+		.Position(2)
+		.CloseButton(true)
+		.MaximizeButton(true)
+		.BestSize(260, 220);
+}
+
+void normalizeMinimapPaneInfo(wxAuiPaneInfo& info) {
+	info.Name("Minimap")
+		.Caption("Minimap")
+		.CloseButton(true)
+		.MaximizeButton(true);
+}
+
+} // namespace
+
 LayoutManager::LayoutManager() {
 }
 
@@ -82,10 +105,13 @@ void LayoutManager::LoadPerspective() {
 
 		if (g_settings.getInteger(Config::MINIMAP_VISIBLE)) {
 			if (!g_minimap.GetWindow()) {
-				wxAuiPaneInfo info;
+				wxAuiPaneInfo info = defaultMinimapPaneInfo();
 
 				const wxString& data = wxstr(g_settings.getString(Config::MINIMAP_LAYOUT));
-				g_gui.aui_manager->LoadPaneInfo(data, info);
+				if (!data.empty()) {
+					g_gui.aui_manager->LoadPaneInfo(data, info);
+				}
+				normalizeMinimapPaneInfo(info);
 
 				g_minimap.SetWindow(newd MinimapWindow(g_gui.root));
 				g_gui.aui_manager->AddPane(g_minimap.GetWindow(), info);
@@ -93,7 +119,10 @@ void LayoutManager::LoadPerspective() {
 				wxAuiPaneInfo& info = g_gui.aui_manager->GetPane(g_minimap.GetWindow());
 
 				const wxString& data = wxstr(g_settings.getString(Config::MINIMAP_LAYOUT));
-				g_gui.aui_manager->LoadPaneInfo(data, info);
+				if (!data.empty()) {
+					g_gui.aui_manager->LoadPaneInfo(data, info);
+				}
+				normalizeMinimapPaneInfo(info);
 			}
 
 			wxAuiPaneInfo& info = g_gui.aui_manager->GetPane(g_minimap.GetWindow());

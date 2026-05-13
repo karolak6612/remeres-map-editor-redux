@@ -1,12 +1,7 @@
 # ============================================================
 #  Build outputs
 # ============================================================
-build/
-build.*/
-build-debug/
-build-release/
-build_conan/
-linux_build/
+/build*/
 build.log
 build_script.log
 build_output*.txt
@@ -117,16 +112,11 @@ data/user/
 /test_selection_mock/
 /test_variant_logic/
 /.agents/rules
-/build-ninja
 compile_commands.json
 /.cache
-/build_clang
 /data/1098_test
 /data/1098dat
 /data/1098
 /data/canary
 /data — kopia
 /assets
-/build-ninja-codex/vcpkg_installed
-/build-ninja-codex
-

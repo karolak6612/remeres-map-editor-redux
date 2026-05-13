@@ -1,17 +1,23 @@
 #include "app/main.h"
 
+#include <cstring>
 #include <format>
 #include <spdlog/spdlog.h>
+#include <vector>
 #include <wx/button.h>
+#include <wx/filedlg.h>
+#include <wx/image.h>
 #include <wx/sizer.h>
 #include <wx/stattext.h>
 #include <wx/tglbtn.h>
 
 #include "editor/editor.h"
 #include "rendering/drawers/minimap_drawer.h"
+#include "rendering/io/screen_capture.h"
 #include "rendering/ui/map_display.h"
 #include "rendering/ui/minimap_viewport.h"
 #include "rendering/ui/minimap_window.h"
+#include "ui/dialog_util.h"
 #include "ui/gui.h"
 #include "ui/map_tab.h"
 #include "ui/map_window.h"
@@ -77,6 +83,7 @@ MinimapWindow::MinimapWindow(wxWindow* parent) :
 	floor_up_button_ = createHeaderButton(this, IMAGE_MANAGER.GetBitmap(ICON_ARROW_UP, icon_size));
 	floor_down_button_ = createHeaderButton(this, IMAGE_MANAGER.GetBitmap(ICON_ARROW_DOWN, icon_size));
 	show_all_floors_button_ = createHeaderToggleButton(this, "All");
+	screenshot_button_ = createHeaderButton(this, IMAGE_MANAGER.GetBitmap(ICON_CAMERA, icon_size));
 	help_button_ = createHeaderButton(this, IMAGE_MANAGER.GetBitmap(ICON_QUESTION_CIRCLE, icon_size));
 	zoom_label_ = new wxStaticText(this, wxID_ANY, "9");
 	floor_label_ = new wxStaticText(this, wxID_ANY, "F: 7");
@@ -91,6 +98,7 @@ MinimapWindow::MinimapWindow(wxWindow* parent) :
 	header_sizer->Add(createSeparator(this), 0, wxLEFT | wxRIGHT | wxALIGN_CENTER_VERTICAL, pad_6);
 	header_sizer->Add(show_all_floors_button_, 0, wxALL | wxALIGN_CENTER_VERTICAL, pad_2);
 	header_sizer->Add(createSeparator(this), 0, wxLEFT | wxRIGHT | wxALIGN_CENTER_VERTICAL, pad_6);
+	header_sizer->Add(screenshot_button_, 0, wxALL | wxALIGN_CENTER_VERTICAL, pad_2);
 	header_sizer->Add(help_button_, 0, wxALL | wxALIGN_CENTER_VERTICAL, pad_2);
 	header_sizer->AddStretchSpacer(1);
 
@@ -119,6 +127,7 @@ MinimapWindow::MinimapWindow(wxWindow* parent) :
 	floor_up_button_->Bind(wxEVT_BUTTON, &MinimapWindow::OnFloorUp, this);
 	floor_down_button_->Bind(wxEVT_BUTTON, &MinimapWindow::OnFloorDown, this);
 	show_all_floors_button_->Bind(wxEVT_TOGGLEBUTTON, &MinimapWindow::OnShowAllFloorsToggle, this);
+	screenshot_button_->Bind(wxEVT_BUTTON, &MinimapWindow::OnScreenshot, this);
 	help_button_->Bind(wxEVT_BUTTON, &MinimapWindow::OnHelpClick, this);
 	help_button_->Bind(wxEVT_ENTER_WINDOW, &MinimapWindow::OnHelpEnter, this);
 	help_button_->Bind(wxEVT_LEAVE_WINDOW, &MinimapWindow::OnHelpLeave, this);
@@ -158,6 +167,7 @@ void MinimapWindow::SyncHeaderState() {
 		floor_down_button_->Enable(false);
 		show_all_floors_button_->SetValue(true);
 		show_all_floors_button_->Enable(false);
+		screenshot_button_->Enable(false);
 	} else if (auto* state = GetActiveViewportState()) {
 		zoom_label_->SetLabel(wxString::FromUTF8(MinimapViewport::GetZoomLabel(state->zoom_step).data()));
 		const std::string floor_label = std::format("F: {}", state->floor);
@@ -168,6 +178,7 @@ void MinimapWindow::SyncHeaderState() {
 		floor_down_button_->Enable(state->floor < MAP_MAX_LAYER);
 		show_all_floors_button_->SetValue(state->show_all_floors);
 		show_all_floors_button_->Enable(true);
+		screenshot_button_->Enable(canvas_ != nullptr);
 	} else {
 		zoom_label_->SetLabel("9");
 		floor_label_->SetLabel("F: -");
@@ -177,6 +188,7 @@ void MinimapWindow::SyncHeaderState() {
 		floor_down_button_->Enable(false);
 		show_all_floors_button_->SetValue(true);
 		show_all_floors_button_->Enable(false);
+		screenshot_button_->Enable(false);
 	}
 }
 
@@ -310,6 +322,27 @@ void MinimapWindow::OnShowAllFloorsToggle(wxCommandEvent& event) {
 	SetShowAllFloors(event.IsChecked());
 }
 
+void MinimapWindow::OnScreenshot(wxCommandEvent& event) {
+	wxUnusedVar(event);
+	if (!canvas_) {
+		return;
+	}
+
+	wxFileDialog dialog(this, "Save minimap screenshot", "", "minimap.png", "PNG image (*.png)|*.png", wxFD_SAVE | wxFD_OVERWRITE_PROMPT);
+	if (dialog.ShowModal() != wxID_OK) {
+		return;
+	}
+
+	wxFileName file(dialog.GetPath());
+	if (file.GetExt().empty()) {
+		file.SetExt("png");
+	}
+
+	if (!canvas_->SaveCleanScreenshot(file)) {
+		DialogUtil::PopupDialog(this, "Screenshot Error", "Failed to save minimap screenshot.", wxOK);
+	}
+}
+
 void MinimapWindow::OnHelpEnter(wxMouseEvent& event) {
 	help_hovered_ = true;
 	UpdateHelpVisibility();
@@ -409,6 +442,56 @@ void MinimapCanvas::NormalizeViewportState() {
 	if (auto* state = owner_->GetActiveViewportState()) {
 		ClampViewportState(*state);
 	}
+}
+
+bool MinimapCanvas::SaveCleanScreenshot(const wxFileName& file) {
+	if (!m_glContext) {
+		return false;
+	}
+
+	const wxSize size = GetClientSize();
+	const int width = size.GetWidth();
+	const int height = size.GetHeight();
+	if (width <= 0 || height <= 0) {
+		return false;
+	}
+
+	SetCurrent(*m_glContext);
+	static bool glad_initialized = false;
+	if (!glad_initialized) {
+		if (!gladLoadGL()) {
+			spdlog::error("MinimapCanvas::SaveCleanScreenshot - Failed to load GLAD");
+			return false;
+		}
+		glad_initialized = true;
+	}
+
+	Editor* editor = owner_->GetActiveEditor();
+	MapCanvas* active_canvas = owner_->GetActiveCanvas();
+	MinimapViewportState* state = owner_->GetActiveViewportState();
+	if (!editor || !active_canvas || !state) {
+		return false;
+	}
+
+	ClampViewportState(*state);
+	drawer->Draw(size, *editor, *active_canvas, *state, {
+		.drawCameraBox = false,
+		.drawBoundsBorder = false,
+	});
+
+	std::vector<uint8_t> pixels(static_cast<size_t>(width) * height * PixelFormatRGB);
+	glReadBuffer(GL_BACK);
+	ScreenCapture::Capture(width, height, pixels.data());
+
+	wxImage image(width, height);
+	if (!image.IsOk() || !image.GetData()) {
+		return false;
+	}
+	std::memcpy(image.GetData(), pixels.data(), pixels.size());
+
+	const bool saved = image.SaveFile(file.GetFullPath(), wxBITMAP_TYPE_PNG);
+	Refresh();
+	return saved;
 }
 
 void MinimapCanvas::OnPaint(wxPaintEvent& event) {

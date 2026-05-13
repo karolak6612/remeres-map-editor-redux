@@ -12,6 +12,7 @@
 #include <algorithm>
 #include <cmath>
 #include <glm/gtc/matrix_transform.hpp>
+#include <wx/settings.h>
 
 namespace {
 
@@ -46,6 +47,16 @@ struct MinimapFloorRenderRange {
 	return {
 		.start_floor = std::min(MAP_MAX_LAYER, current_floor + 2),
 		.current_floor = current_floor,
+	};
+}
+
+[[nodiscard]] glm::vec4 wxColourToVec4(const wxColour& color) {
+	constexpr float channelScale = 1.0f / 255.0f;
+	return {
+		static_cast<float>(color.Red()) * channelScale,
+		static_cast<float>(color.Green()) * channelScale,
+		static_cast<float>(color.Blue()) * channelScale,
+		static_cast<float>(color.Alpha()) * channelScale,
 	};
 }
 
@@ -126,7 +137,24 @@ void MinimapDrawer::DrawFloorShade(const glm::mat4& projection, const wxSize& si
 	primitive_renderer->flush();
 }
 
-void MinimapDrawer::Draw(const wxSize& size, Editor& editor, MapCanvas& canvas, const MinimapViewportState& viewport_state) {
+void MinimapDrawer::DrawMapBoundsBorder(const glm::mat4& projection, const wxSize& size, const Editor& editor, const VisibleWorldRect& visible_rect) {
+	const float scale_x = static_cast<float>(size.GetWidth() / visible_rect.width);
+	const float scale_y = static_cast<float>(size.GetHeight() / visible_rect.height);
+	const float x = static_cast<float>((0.0 - visible_rect.start_x) * scale_x);
+	const float y = static_cast<float>((0.0 - visible_rect.start_y) * scale_y);
+	const float w = static_cast<float>(editor.map.getWidth() * scale_x);
+	const float h = static_cast<float>(editor.map.getHeight() * scale_y);
+
+	primitive_renderer->setProjectionMatrix(projection);
+	const glm::vec4 color = wxColourToVec4(wxSystemSettings::GetColour(wxSYS_COLOUR_GRAYTEXT));
+	primitive_renderer->drawLine(glm::vec2(x, y), glm::vec2(x + w, y), color);
+	primitive_renderer->drawLine(glm::vec2(x, y + h), glm::vec2(x + w, y + h), color);
+	primitive_renderer->drawLine(glm::vec2(x, y), glm::vec2(x, y + h), color);
+	primitive_renderer->drawLine(glm::vec2(x + w, y), glm::vec2(x + w, y + h), color);
+	primitive_renderer->flush();
+}
+
+void MinimapDrawer::Draw(const wxSize& size, Editor& editor, MapCanvas& canvas, const MinimapViewportState& viewport_state, MinimapDrawOptions options) {
 	const int window_width = size.GetWidth();
 	const int window_height = size.GetHeight();
 	if (window_width <= 0 || window_height <= 0) {
@@ -203,7 +231,12 @@ void MinimapDrawer::Draw(const wxSize& size, Editor& editor, MapCanvas& canvas, 
 
 	renderer->flushVisible(editor.map, floor_range.current_floor, visible_rect_pixels);
 	renderer->renderVisible(projection, 0, 0, window_width, window_height, floor_range.current_floor, visible_rect_pixels);
-	DrawMainCameraBox(projection, size, canvas, visible_rect);
+	if (options.drawBoundsBorder) {
+		DrawMapBoundsBorder(projection, size, editor, visible_rect);
+	}
+	if (options.drawCameraBox) {
+		DrawMainCameraBox(projection, size, canvas, visible_rect);
+	}
 }
 
 void MinimapDrawer::ScreenToMap(int screen_x, int screen_y, int& map_x, int& map_y) {
