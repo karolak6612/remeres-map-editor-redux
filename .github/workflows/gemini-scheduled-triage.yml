@@ -36,7 +36,7 @@ jobs:
       pull-requests: 'read'
     outputs:
       available_labels: '${{ steps.get_labels.outputs.available_labels }}'
-      triaged_issues: '${{ env.TRIAGED_ISSUES }}'
+      triaged_issues: '${{ steps.gemini_issue_analysis.outputs.summary }}'
     steps:
       - name: 'Get repository labels'
         id: 'get_labels'
@@ -73,7 +73,7 @@ jobs:
           echo '🔍 Finding unlabeled issues and issues marked for triage...'
           ISSUES="$(gh issue list \
             --state 'open' \
-            --search 'no:label label:"status/needs-triage"' \
+            --search 'no:label OR label:"status/needs-triage"' \
             --json number,title,body \
             --limit '100' \
             --repo "${GITHUB_REPOSITORY}"
@@ -82,8 +82,23 @@ jobs:
           echo '📝 Setting output for GitHub Actions...'
           echo "issues_to_triage=${ISSUES}" >> "${GITHUB_OUTPUT}"
 
+          ISSUE_NUMBERS="$(echo "${ISSUES}" | jq -r '.[].number | tostring' | paste -sd, -)"
+          echo "issue_numbers=${ISSUE_NUMBERS}" >> "${GITHUB_OUTPUT}"
+
           ISSUE_COUNT="$(echo "${ISSUES}" | jq 'length')"
           echo "✅ Found ${ISSUE_COUNT} issue(s) to triage! 🎯"
+
+      - name: 'Prepare prompt context'
+        shell: 'bash'
+        run: |-
+          mkdir -p .gemini
+          jq -n \
+            --arg labels "${AVAILABLE_LABELS}" \
+            --arg issues "${ISSUES_TO_TRIAGE}" \
+            '{available_labels: $labels, issues_to_triage: ($issues | fromjson)}' > .gemini/context.json
+        env:
+          AVAILABLE_LABELS: '${{ steps.get_labels.outputs.available_labels }}'
+          ISSUES_TO_TRIAGE: '${{ steps.find_issues.outputs.issues_to_triage }}'
 
       - name: Przywróć osobiste logowanie Google (OAuth)
         run: |
@@ -110,11 +125,8 @@ jobs:
           ${{ steps.find_issues.outputs.issues_to_triage != '[]' }}
         uses: 'google-github-actions/run-gemini-cli@v0' # ratchet:exclude
         env:
-          GITHUB_TOKEN: '' # Do not pass any auth token here since this runs on untrusted inputs
-          ISSUES_TO_TRIAGE: '${{ steps.find_issues.outputs.issues_to_triage }}'
-          REPOSITORY: '${{ github.repository }}'
-          AVAILABLE_LABELS: '${{ steps.get_labels.outputs.available_labels }}'
           GEMINI_CLI_TRUST_WORKSPACE: 'true'
+          GITHUB_TOKEN: '' # Do not pass any auth token here since this runs on untrusted inputs
         with:
           gcp_location: '${{ vars.GOOGLE_CLOUD_LOCATION }}'
           gcp_project_id: '${{ vars.GOOGLE_CLOUD_PROJECT }}'
@@ -129,6 +141,9 @@ jobs:
           use_vertex_ai: '${{ vars.GOOGLE_GENAI_USE_VERTEXAI }}'
           upload_artifacts: '${{ vars.UPLOAD_ARTIFACTS }}'
           workflow_name: 'gemini-scheduled-triage'
+          # Overriding default telemetry inputs because scheduled workflows lack an event payload
+          # We pass the dynamically generated list of batch issues to the issue number field
+          github_issue_number: '${{ steps.find_issues.outputs.issue_numbers }}'
           settings: |-
             {
               "model": {
@@ -140,11 +155,7 @@ jobs:
                 "outfile": ".gemini/telemetry.log"
               },
               "tools": {
-                "core": [
-                  "run_shell_command(echo)",
-                  "run_shell_command(jq)",
-                  "run_shell_command(printenv)"
-                ]
+                "core": []
               }
             }
           prompt: '/gemini-scheduled-triage'

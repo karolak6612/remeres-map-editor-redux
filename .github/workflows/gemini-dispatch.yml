@@ -10,7 +10,6 @@ on:
   pull_request:
     types:
       - 'opened'
-      - 'synchronize'
   issues:
     types:
       - 'opened'
@@ -44,11 +43,18 @@ jobs:
           env | grep '^DEBUG_'
 
   dispatch:
-    # Trigger for any PR open/commit (including bots) or specific comments
+    # For PRs: only if not from a fork
+    # For issues: only on open/reopen
+    # For comments: only if user types @gemini-cli and is OWNER/MEMBER/COLLABORATOR
     if: |-
-      (github.event_name == 'pull_request') ||
-      (github.event_name == 'issues' && contains(fromJSON('["opened", "reopened"]'), github.event.action)) ||
-      (github.event.sender.type == 'User' &&
+      (
+        github.event_name == 'pull_request' &&
+        github.event.pull_request.head.repo.fork == false
+      ) || (
+        github.event_name == 'issues' &&
+        contains(fromJSON('["opened", "reopened"]'), github.event.action)
+      ) || (
+        github.event.sender.type == 'User' &&
         startsWith(github.event.comment.body || github.event.review.body || github.event.issue.body, '@gemini-cli') &&
         contains(fromJSON('["OWNER", "MEMBER", "COLLABORATOR"]'), github.event.comment.author_association || github.event.review.author_association || github.event.issue.author_association)
       )
@@ -88,8 +94,6 @@ jobs:
             core.setOutput('request', request);
 
             if (eventType === 'pull_request.opened') {
-              core.setOutput('command', 'review-and-triage');
-            } else if (eventType === 'pull_request.synchronize') {
               core.setOutput('command', 'review');
             } else if (['issues.opened', 'issues.reopened'].includes(eventType)) {
               core.setOutput('command', 'triage');
@@ -122,7 +126,7 @@ jobs:
   review:
     needs: 'dispatch'
     if: |-
-      contains(fromJSON('["review", "review-and-triage"]'), needs.dispatch.outputs.command)
+      ${{ needs.dispatch.outputs.command == 'review' }}
     uses: './.github/workflows/gemini-review.yml'
     permissions:
       contents: 'read'
@@ -136,7 +140,7 @@ jobs:
   triage:
     needs: 'dispatch'
     if: |-
-      contains(fromJSON('["triage", "review-and-triage"]'), needs.dispatch.outputs.command)
+      ${{ needs.dispatch.outputs.command == 'triage' }}
     uses: './.github/workflows/gemini-triage.yml'
     permissions:
       contents: 'read'
