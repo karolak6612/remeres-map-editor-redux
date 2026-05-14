@@ -3,9 +3,28 @@
 #include "app/main.h"
 #include "app/preferences/preferences_layout.h"
 #include "app/settings.h"
+#include "rendering/core/floor_visibility_mode.h"
+#include "ui/gui.h"
 
 EditorPage::EditorPage(wxWindow* parent) : ScrollablePreferencesPage(parent) {
 	auto* page_sizer = GetPageSizer();
+
+	auto* modes_section = new PreferencesSectionPanel(
+		GetScrollWindow(),
+		"Editor Modes",
+		"Choose how editor-wide modes behave while mapping."
+	);
+	floor_visibility_mode_choice = new wxChoice(modes_section, wxID_ANY);
+	floor_visibility_mode_choice->Append("Client visible");
+	floor_visibility_mode_choice->Append("All visible");
+	floor_visibility_mode_choice->SetSelection(static_cast<int>(SanitizeFloorVisibilityMode(g_settings.getInteger(Config::FLOOR_VISIBILITY_MODE))));
+	PreferencesLayout::AddControlRow(
+		modes_section,
+		"Show all floors mode",
+		"Choose whether Show all floors uses Tibia client visibility constraints or renders every floor below the active floor.",
+		floor_visibility_mode_choice
+	);
+	page_sizer->Add(modes_section, 0, wxEXPAND | wxLEFT | wxRIGHT | wxTOP, FromDIP(10));
 
 	auto* history_section = new PreferencesSectionPanel(
 		GetScrollWindow(),
@@ -105,6 +124,9 @@ EditorPage::EditorPage(wxWindow* parent) : ScrollablePreferencesPage(parent) {
 }
 
 void EditorPage::Apply() {
+	const int previous_floor_visibility_mode = g_settings.getInteger(Config::FLOOR_VISIBILITY_MODE);
+	const int selected_floor_visibility_mode = floor_visibility_mode_choice ? floor_visibility_mode_choice->GetSelection() : 0;
+	g_settings.setInteger(Config::FLOOR_VISIBILITY_MODE, static_cast<int>(SanitizeFloorVisibilityMode(selected_floor_visibility_mode)));
 	g_settings.setInteger(Config::GROUP_ACTIONS, group_actions_chkbox->GetValue());
 	g_settings.setInteger(Config::WARN_FOR_DUPLICATE_ID, duplicate_id_warn_chkbox->GetValue());
 	g_settings.setInteger(Config::SHOW_MISSING_ITEMS_WARNING, missing_items_warn_chkbox->GetValue());
@@ -116,4 +138,9 @@ void EditorPage::Apply() {
 	g_settings.setInteger(Config::RAW_LIKE_SIMONE, allow_multiple_orderitems_chkbox->GetValue());
 	g_settings.setInteger(Config::MERGE_MOVE, merge_move_chkbox->GetValue());
 	g_settings.setInteger(Config::MERGE_PASTE, merge_paste_chkbox->GetValue());
+
+	if (previous_floor_visibility_mode != g_settings.getInteger(Config::FLOOR_VISIBILITY_MODE)) {
+		g_gui.RefreshView();
+		g_gui.UpdateMinimap(true);
+	}
 }

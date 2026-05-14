@@ -4,6 +4,7 @@
 #include "editor/editor.h"
 #include "map/map.h"
 #include "rendering/core/map_view_math.h"
+#include "rendering/core/floor_visibility_mode.h"
 #include "rendering/core/primitive_renderer.h"
 #include "rendering/ui/map_display.h"
 #include "ui/gui.h"
@@ -26,27 +27,18 @@ namespace {
 struct MinimapFloorRenderRange {
 	int start_floor = GROUND_LAYER;
 	int current_floor = GROUND_LAYER;
+	int end_floor = GROUND_LAYER;
+	bool draw_all_visited_floors = false;
 };
 
 [[nodiscard]] MinimapFloorRenderRange getFloorRenderRange(const MinimapViewportState& viewport_state) {
-	const int current_floor = MinimapViewport::ClampFloor(viewport_state.floor);
-	if (!viewport_state.show_all_floors) {
-		return {
-			.start_floor = current_floor,
-			.current_floor = current_floor,
-		};
-	}
-
-	if (current_floor <= GROUND_LAYER) {
-		return {
-			.start_floor = GROUND_LAYER,
-			.current_floor = current_floor,
-		};
-	}
-
+	const auto mode = SanitizeFloorVisibilityMode(g_settings.getInteger(Config::FLOOR_VISIBILITY_MODE));
+	const auto range = BuildFloorVisibilityRange(viewport_state.floor, viewport_state.show_all_floors, mode);
 	return {
-		.start_floor = std::min(MAP_MAX_LAYER, current_floor + 2),
-		.current_floor = current_floor,
+		.start_floor = range.start_floor,
+		.current_floor = MinimapViewport::ClampFloor(viewport_state.floor),
+		.end_floor = range.end_floor,
+		.draw_all_visited_floors = range.draw_all_visited_floors,
 	};
 }
 
@@ -220,17 +212,15 @@ void MinimapDrawer::Draw(const wxSize& size, Editor& editor, MapCanvas& canvas, 
 		.height = std::max(1, static_cast<int>(std::ceil(visible_rect.start_y + visible_rect.height)) - static_cast<int>(std::floor(visible_rect.start_y))),
 	};
 
-	for (int floor = floor_range.start_floor; floor > floor_range.current_floor; --floor) {
+	const int last_render_floor = floor_range.draw_all_visited_floors ? floor_range.end_floor : floor_range.current_floor;
+	for (int floor = floor_range.start_floor; floor >= last_render_floor; --floor) {
+		if (floor == floor_range.current_floor && floor_range.start_floor > floor_range.current_floor) {
+			DrawFloorShade(projection, size);
+		}
+
 		renderer->flushVisible(editor.map, floor, visible_rect_pixels);
 		renderer->renderVisible(projection, 0, 0, window_width, window_height, floor, visible_rect_pixels);
 	}
-
-	if (floor_range.start_floor > floor_range.current_floor) {
-		DrawFloorShade(projection, size);
-	}
-
-	renderer->flushVisible(editor.map, floor_range.current_floor, visible_rect_pixels);
-	renderer->renderVisible(projection, 0, 0, window_width, window_height, floor_range.current_floor, visible_rect_pixels);
 	if (options.drawBoundsBorder) {
 		DrawMapBoundsBorder(projection, size, editor, visible_rect);
 	}

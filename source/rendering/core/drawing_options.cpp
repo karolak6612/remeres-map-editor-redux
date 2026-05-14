@@ -26,6 +26,7 @@ void DrawingOptions::SetDefault() {
 
 	show_grid = 0;
 	show_all_floors = true;
+	floor_visibility_mode = FloorVisibilityMode::ClientVisible;
 	show_creatures = true;
 	show_spawns = true;
 	show_houses = true;
@@ -71,6 +72,7 @@ void DrawingOptions::SetIngame() {
 
 	show_grid = 0;
 	show_all_floors = true;
+	floor_visibility_mode = FloorVisibilityMode::ClientVisible;
 	show_creatures = true;
 	show_spawns = false;
 	show_houses = false;
@@ -112,6 +114,7 @@ void DrawingOptions::Update() {
 	show_grid = g_settings.getInteger(Config::SHOW_GRID);
 	ingame = !g_settings.getBoolean(Config::SHOW_EXTRA);
 	show_all_floors = g_settings.getBoolean(Config::SHOW_ALL_FLOORS);
+	floor_visibility_mode = SanitizeFloorVisibilityMode(g_settings.getInteger(Config::FLOOR_VISIBILITY_MODE));
 	show_creatures = g_settings.getBoolean(Config::SHOW_CREATURES);
 	show_spawns = g_settings.getBoolean(Config::SHOW_SPAWNS);
 	show_houses = g_settings.getBoolean(Config::SHOW_HOUSES);

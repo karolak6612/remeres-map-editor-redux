@@ -6,6 +6,7 @@
 #include <string>
 #include <optional>
 #include "map/position.h"
+#include "rendering/core/floor_visibility_mode.h"
 #include "rendering/core/sprite_light.h"
 
 struct DrawingOptions {
@@ -33,6 +34,7 @@ struct DrawingOptions {
 
 	int show_grid;
 	bool show_all_floors;
+	FloorVisibilityMode floor_visibility_mode;
 	bool show_creatures;
 	bool show_spawns;
 	bool show_houses;

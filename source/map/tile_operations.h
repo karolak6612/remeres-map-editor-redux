@@ -49,6 +49,7 @@ namespace TileOperations {
 	void removeHouseExit(Tile* tile, House* h);
 
 	void update(Tile* tile);
+	void updateSelectionState(Tile* tile);
 }
 
 #endif

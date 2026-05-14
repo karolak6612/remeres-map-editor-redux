@@ -36,9 +36,6 @@ namespace TileOperations {
 		}
 
 		void UpdateItemFlags(const Item* i, uint16_t& statflags, uint8_t& minimapColor) {
-			if (i->isSelected()) {
-				statflags |= TILESTATE_SELECTED;
-			}
 			if (i->getUniqueID() != 0) {
 				statflags |= TILESTATE_UNIQUE;
 			}
@@ -67,6 +64,21 @@ namespace TileOperations {
 			}
 			if (i->hasLight()) {
 				statflags |= TILESTATE_HAS_LIGHT;
+			}
+		}
+
+		[[nodiscard]] bool computeTileSelected(const Tile* tile) {
+			return (tile->spawn && tile->spawn->isSelected()) ||
+				(tile->creature && tile->creature->isSelected()) ||
+				(tile->ground && tile->ground->isSelected()) ||
+				std::ranges::any_of(tile->items, [](const auto& item) { return item->isSelected(); });
+		}
+
+		void applySelectionState(Tile* tile, bool isSelected) {
+			if (isSelected) {
+				tile->statflags |= TILESTATE_SELECTED;
+			} else {
+				tile->statflags &= ~TILESTATE_SELECTED;
 			}
 		}
 
@@ -325,7 +337,7 @@ namespace TileOperations {
 			i->deselect();
 		}
 
-		TileOperations::update(tile);
+		TileOperations::updateSelectionState(tile);
 	}
 
 	std::vector<std::unique_ptr<Item>> popSelectedItems(Tile* tile, bool ignoreTileSelected) {
@@ -424,23 +436,25 @@ namespace TileOperations {
 		std::erase(*house_exits, h->getID());
 	}
 
+	void updateSelectionState(Tile* tile) {
+		const bool wasSelected = tile->isSelected();
+		const bool isSelected = computeTileSelected(tile);
+		applySelectionState(tile, isSelected);
+
+		if (wasSelected != isSelected) {
+			markSelectionChanged(tile);
+		}
+	}
+
 	void update(Tile* tile) {
 		const bool wasSelected = tile->isSelected();
+		const bool isSelected = computeTileSelected(tile);
 		tile->statflags &= TILESTATE_MODIFIED;
+		applySelectionState(tile, isSelected);
 
-		if (tile->spawn && tile->spawn->isSelected()) {
-			tile->statflags |= TILESTATE_SELECTED;
-		}
-		if (tile->creature && tile->creature->isSelected()) {
-			tile->statflags |= TILESTATE_SELECTED;
-		}
-
-		tile->minimapColor = 0; // Reset to "no color" (valid)
+		tile->minimapColor = 0;
 
 		if (tile->ground) {
-			if (tile->ground->isSelected()) {
-				tile->statflags |= TILESTATE_SELECTED;
-			}
 			if (tile->ground->isBlocking()) {
 				tile->statflags |= TILESTATE_BLOCKING;
 			}
@@ -465,7 +479,7 @@ namespace TileOperations {
 			}
 		}
 
-		if (wasSelected || tile->isSelected()) {
+		if (wasSelected != isSelected) {
 			markSelectionChanged(tile);
 		}
 	}

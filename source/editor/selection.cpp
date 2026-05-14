@@ -114,7 +114,7 @@ void Selection::add(Tile* tile, Item* item) {
 				TileOperations::selectGround(tile);
 			}
 		}
-		TileOperations::update(tile);
+		TileOperations::updateSelectionState(tile);
 		addInternal(tile);
 	}
 }
@@ -136,7 +136,7 @@ void Selection::add(Tile* tile, Spawn* spawn) {
 		subsession->addChange(std::make_unique<Change>(std::move(new_tile)));
 	} else {
 		spawn->select();
-		TileOperations::update(tile);
+		TileOperations::updateSelectionState(tile);
 		addInternal(tile);
 	}
 }
@@ -158,7 +158,7 @@ void Selection::add(Tile* tile, Creature* creature) {
 		subsession->addChange(std::make_unique<Change>(std::move(new_tile)));
 	} else {
 		creature->select();
-		TileOperations::update(tile);
+		TileOperations::updateSelectionState(tile);
 		addInternal(tile);
 	}
 }
@@ -198,7 +198,7 @@ void Selection::remove(Tile* tile, Item* item) {
 		if (item->isBorder() && g_settings.getInteger(Config::BORDER_IS_GROUND)) {
 			TileOperations::deselectGround(tile);
 		} else {
-			TileOperations::update(tile);
+			TileOperations::updateSelectionState(tile);
 		}
 		if (!tile->isSelected()) {
 			removeInternal(tile);
@@ -221,7 +221,7 @@ void Selection::remove(Tile* tile, Spawn* spawn) {
 		subsession->addChange(std::make_unique<Change>(std::move(new_tile)));
 	} else {
 		spawn->deselect();
-		TileOperations::update(tile);
+		TileOperations::updateSelectionState(tile);
 		if (!tile->isSelected()) {
 			removeInternal(tile);
 		}
@@ -243,7 +243,7 @@ void Selection::remove(Tile* tile, Creature* creature) {
 		subsession->addChange(std::make_unique<Change>(std::move(new_tile)));
 	} else {
 		creature->deselect();
-		TileOperations::update(tile);
+		TileOperations::updateSelectionState(tile);
 		if (!tile->isSelected()) {
 			removeInternal(tile);
 		}

@@ -473,6 +473,7 @@ void Settings::IO(IOMode mode) {
 	// Missing items report (added at end to preserve enum stability)
 	section("Editor");
 	Bool(SHOW_MISSING_ITEMS_WARNING, false);
+	Int(FLOOR_VISIBILITY_MODE, 0);
 
 	if (mode == SAVE) {
 		std::ofstream file("config.toml");

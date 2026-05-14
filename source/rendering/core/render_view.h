@@ -29,6 +29,7 @@ struct RenderView {
 	Position camera_pos;
 
 	int mouse_map_x, mouse_map_y;
+	bool draw_all_visited_floors = false;
 
 	glm::mat4 projectionMatrix;
 	glm::mat4 viewMatrix;

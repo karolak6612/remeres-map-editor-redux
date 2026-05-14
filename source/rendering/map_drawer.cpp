@@ -399,7 +399,7 @@ void MapDrawer::DrawMap() {
 			shade_drawer->draw(*sprite_batch, view, options);
 		}
 
-		if (map_z >= view.end_z) {
+		if (view.draw_all_visited_floors || map_z >= view.end_z) {
 			DrawMapLayer(*sprite_batch, map_z, live_client);
 		} else if (options.isDrawLight()) {
 			DrawMapLayer(hidden_floor_light_batch, map_z, live_client, true);

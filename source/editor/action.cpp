@@ -29,6 +29,29 @@
 #include <ranges>
 #include <ctime>
 
+namespace {
+
+void updateCommittedTile(Tile* tile, ActionIdentifier type) {
+	if (type == ACTION_SELECT) {
+		TileOperations::updateSelectionState(tile);
+		return;
+	}
+
+	TileOperations::update(tile);
+	tile->modify();
+}
+
+void updateUndoTile(Tile* tile, ActionIdentifier type) {
+	if (type == ACTION_SELECT) {
+		TileOperations::updateSelectionState(tile);
+		return;
+	}
+
+	TileOperations::update(tile);
+}
+
+} // namespace
+
 Change::Change() :
 	type(CHANGE_NONE), data(std::monostate {}) {
 	////
@@ -184,13 +207,12 @@ void Action::commit(DirtyList* dirty_list) {
 					if (displaced->isSelected()) {
 						editor.selection.removeInternal(displaced);
 					}
-					TileOperations::update(insertedTile);
+					updateCommittedTile(insertedTile, type);
 					if (insertedTile->isSelected()) {
 						editor.selection.addInternal(insertedTile);
 					}
-					insertedTile->modify();
 				} else if (insertedTile) {
-					TileOperations::update(insertedTile);
+					updateCommittedTile(insertedTile, type);
 					if (insertedTile->isSelected()) {
 						editor.selection.addInternal(insertedTile);
 					}
@@ -205,7 +227,6 @@ void Action::commit(DirtyList* dirty_list) {
 					if (insertedTile->spawn) {
 						editor.map.addSpawn(insertedTile);
 					}
-					insertedTile->modify();
 				} else if (displaced) {
 					if (displaced->isSelected()) {
 						editor.selection.removeInternal(displaced);
@@ -353,7 +374,7 @@ void Action::undo(DirtyList* dirty_list) {
 							editor.map.removeSpawn(newtile);
 						}
 
-						TileOperations::update(oldtile);
+						updateUndoTile(oldtile, type);
 						if (oldtile->isSelected()) {
 							editor.selection.addInternal(oldtile);
 						}
@@ -369,7 +390,7 @@ void Action::undo(DirtyList* dirty_list) {
 						if (oldtile->spawn) {
 							editor.map.addSpawn(oldtile);
 						}
-						TileOperations::update(oldtile);
+						updateUndoTile(oldtile, type);
 						if (oldtile->isSelected()) {
 							editor.selection.addInternal(oldtile);
 						}

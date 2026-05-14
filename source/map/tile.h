@@ -22,11 +22,6 @@
 #include "game/item.h"
 #include "io/otbm/invalid_otbm_content.h"
 
-namespace TileOperations {
-	void update(class Tile* tile);
-	void markSelectionChanged(class Tile* tile);
-}
-
 class TileLocation;
 class GroundBrush;
 class WallBrush;
@@ -37,8 +32,6 @@ class Map;
 #include <cstdint>
 #include <memory>
 #include <vector>
-
-// TileOperations functions are now in tile_operations.h
 
 enum {
 	TILESTATE_NONE = 0x0000,

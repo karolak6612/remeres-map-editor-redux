@@ -2,6 +2,7 @@
 #define RME_PREFERENCES_EDITOR_PAGE_H
 
 #include <wx/checkbox.h>
+#include <wx/choice.h>
 
 #include "preferences_page.h"
 
@@ -11,6 +12,7 @@ public:
 	void Apply() override;
 
 private:
+	wxChoice* floor_visibility_mode_choice = nullptr;
 	wxCheckBox* group_actions_chkbox = nullptr;
 	wxCheckBox* duplicate_id_warn_chkbox = nullptr;
 	wxCheckBox* missing_items_warn_chkbox = nullptr;

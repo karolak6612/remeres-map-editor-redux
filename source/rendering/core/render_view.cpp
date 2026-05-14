@@ -4,9 +4,11 @@
 #include "editor/editor.h"
 #include "rendering/ui/map_display.h"
 #include "rendering/core/drawing_options.h"
+#include "rendering/core/floor_visibility_mode.h"
 #include "app/definitions.h" // For TILE_SIZE, GROUND_LAYER, MAP_MAX_LAYER
 #include "ingame_preview/floor_visibility_calculator.h"
-#include <algorithm> // For std::min
+
+#include <algorithm>
 
 void RenderView::Setup(MapCanvas* canvas, const DrawingOptions& options) {
 	canvas->MouseToMap(&mouse_map_x, &mouse_map_y);
@@ -19,23 +21,18 @@ void RenderView::Setup(MapCanvas* canvas, const DrawingOptions& options) {
 	floor = canvas->GetFloor();
 	canvas->GetScreenCenter(&camera_pos.x, &camera_pos.y);
 	camera_pos.z = floor;
+	draw_all_visited_floors = false;
 
 	if (options.show_lights) {
 		IngamePreview::FloorVisibilityCalculator floor_visibility;
 		start_z = floor_visibility.CalcLastVisibleFloor(floor);
 		const Position light_origin = canvas->GetLightVisibilityOrigin().value_or(camera_pos);
 		superend_z = floor_visibility.CalcFirstVisibleFloor(canvas->editor.map, light_origin.x, light_origin.y, floor);
-	} else if (options.show_all_floors) {
-		if (floor <= GROUND_LAYER) {
-			start_z = GROUND_LAYER;
-			superend_z = 0;
-		} else {
-			start_z = std::min(MAP_MAX_LAYER, floor + 2);
-			superend_z = 8;
-		}
 	} else {
-		start_z = floor;
-		superend_z = floor;
+		const auto floor_range = BuildFloorVisibilityRange(floor, options.show_all_floors, options.floor_visibility_mode);
+		start_z = floor_range.start_floor;
+		superend_z = floor_range.end_floor;
+		draw_all_visited_floors = floor_range.draw_all_visited_floors;
 	}
 
 	end_z = floor;

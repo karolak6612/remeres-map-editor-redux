@@ -224,6 +224,7 @@ namespace Config {
 		// Add new settings at the end to preserve enum ordering for persisted settings
 		SHOW_MISSING_ITEMS_WARNING,
 		VSYNC_MODE,
+		FLOOR_VISIBILITY_MODE,
 
 		LAST,
 	};
