@@ -114,6 +114,7 @@ struct ItemDefinitionLoadInput {
 	wxFileName dat_path;
 	wxFileName otb_path;
 	wxFileName xml_path;
+	std::vector<wxFileName> xml_paths;
 	ClientVersion* client_version = nullptr;
 	GraphicManager* graphics = nullptr;
 	const DatCatalog* dat_catalog = nullptr;

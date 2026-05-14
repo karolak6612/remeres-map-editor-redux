@@ -94,17 +94,30 @@ namespace {
 	}
 }
 
+namespace {
+
+[[nodiscard]] std::vector<wxFileName> xmlInputPaths(const ItemDefinitionLoadInput& input) {
+	if (!input.xml_paths.empty()) {
+		return input.xml_paths;
+	}
+	return { input.xml_path };
+}
+
+} // namespace
+
 bool XmlItemParser::parse(const ItemDefinitionLoadInput& input, ItemDefinitionFragments& fragments, wxString& error, std::vector<std::string>& warnings) const {
+	bool parsedAny = false;
+	for (const wxFileName& xmlPath : xmlInputPaths(input)) {
 	pugi::xml_document doc;
-	const pugi::xml_parse_result result = doc.load_file(input.xml_path.GetFullPath().mb_str());
+	const pugi::xml_parse_result result = doc.load_file(xmlPath.GetFullPath().mb_str());
 	if (!result) {
-		error = "Could not load items.xml (syntax error or file missing).";
+		error = "Could not load items XML file: " + xmlPath.GetFullPath();
 		return false;
 	}
 
 	const pugi::xml_node items_node = doc.child("items");
 	if (!items_node) {
-		error = "items.xml has an invalid root node.";
+		error = "Items XML has an invalid root node: " + xmlPath.GetFullPath();
 		return false;
 	}
 
@@ -156,8 +169,10 @@ bool XmlItemParser::parse(const ItemDefinitionLoadInput& input, ItemDefinitionFr
 			fragments.xml[fragment.server_id] = std::move(fragment);
 		}
 	}
+	parsedAny = true;
+	}
 
-	if (fragments.xml.empty()) {
+	if (parsedAny && fragments.xml.empty()) {
 		warnings.push_back("items.xml did not contain any item definitions.");
 	}
 

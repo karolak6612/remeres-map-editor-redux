@@ -100,6 +100,7 @@ GUI::GUI() :
 	aui_manager(nullptr),
 	tabbook(nullptr),
 	root(nullptr),
+	house_palette(nullptr),
 	tool_options(nullptr),
 	tile_properties_panel(nullptr),
 	pasting(false),
@@ -357,6 +358,15 @@ void GUI::SelectBrush() {
 }
 bool GUI::SelectBrush(const Brush* brush, PaletteType pt) {
 	const bool changed = g_brush_manager.SelectBrush(brush, pt);
+	if (tool_options) {
+		tool_options->SetActiveBrush(GetCurrentBrush());
+	}
+	SyncCurrentMapCanvasPreviewState();
+	emitBrushChangeIfNeeded(*this);
+	return changed;
+}
+bool GUI::SelectBrush(const Brush* brush, std::string_view preferredPalette) {
+	const bool changed = g_brush_manager.SelectBrush(brush, preferredPalette);
 	if (tool_options) {
 		tool_options->SetActiveBrush(GetCurrentBrush());
 	}

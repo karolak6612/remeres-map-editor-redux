@@ -5,6 +5,8 @@
 #ifndef RME_HOUSE_PALETTE_H_
 #define RME_HOUSE_PALETTE_H_
 
+#include "palette/palette_common.h"
+
 #include <wx/panel.h>
 #include <wx/choice.h>
 #include <wx/textctrl.h>
@@ -18,16 +20,20 @@ class Map;
 class House;
 class Brush;
 
-class HousePalette : public wxPanel {
+class HousePalette : public PalettePanel {
 public:
 	HousePalette(wxWindow* parent);
-	virtual ~HousePalette();
+	~HousePalette() override;
 
 	void SetMap(Map* map);
 	void UpdateHouses();
 
 	// Palette operations
-	Brush* GetSelectedBrush() const;
+	wxString GetName() const override;
+	PaletteType GetType() const override;
+	Brush* GetSelectedBrush() const override;
+	bool SelectBrush(const Brush* whatbrush) override;
+	void OnUpdate() override;
 	void SelectHouseBrush();
 	void SelectExitBrush();
 

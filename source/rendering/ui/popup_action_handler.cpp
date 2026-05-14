@@ -24,10 +24,8 @@
 #include "game/item.h"
 #include "ui/gui.h"
 #include "ui/browse_tile_window.h"
-#include "ui/tileset_window.h"
 #include "ui/dialog_helper.h"
 #include "brushes/brush.h"
-#include <ranges>
 #include "brushes/door/door_brush.h"
 
 void PopupActionHandler::RotateItem(Editor& editor) {
@@ -113,42 +111,6 @@ void PopupActionHandler::OpenProperties(Editor& editor) {
 }
 
 void PopupActionHandler::SelectMoveTo(Editor& editor) {
-	if (editor.selection.size() != 1) {
-		return;
-	}
-
-	Tile* tile = editor.selection.getSelectedTile();
-	if (!tile) {
-		return;
-	}
-	ASSERT(tile->isSelected());
-	std::unique_ptr<Tile> new_tile(TileOperations::deepCopy(tile, editor.map));
-
-	wxDialog* w = nullptr;
-
-	ItemVector selected_items = TileOperations::getSelectedItems(new_tile.get());
-
-	Item* item = nullptr;
-	for (auto* item_ptr : std::ranges::reverse_view(selected_items)) {
-		if (item_ptr->isSelected()) {
-			item = item_ptr;
-			break;
-		}
-	}
-
-	if (item) {
-		w = newd TilesetWindow(g_gui.root, &editor.map, new_tile.get(), item);
-	} else {
-		return;
-	}
-
-	int ret = w->ShowModal();
-	if (ret != 0) {
-		std::unique_ptr<Action> action = editor.actionQueue->createAction(ACTION_CHANGE_PROPERTIES);
-		action->addChange(std::make_unique<Change>(std::move(new_tile)));
-		editor.addAction(std::move(action));
-
-		g_gui.RebuildPalettes();
-	}
-	w->Destroy();
+	wxUnusedVar(editor);
+	wxMessageBox("Move To Tileset targets the removed legacy palette model and is disabled for the modular data runtime.", "Move To Tileset", wxOK | wxICON_INFORMATION, g_gui.root);
 }

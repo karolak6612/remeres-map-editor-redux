@@ -18,6 +18,7 @@ struct AssetLoadRequest {
 	wxFileName spr_path;
 	wxFileName otb_path;
 	wxFileName xml_path;
+	std::vector<wxFileName> xml_paths;
 	ClientVersion* client_version = nullptr;
 };
 

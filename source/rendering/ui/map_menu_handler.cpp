@@ -188,7 +188,7 @@ void MapMenuHandler::OnSelectSpawnBrush(wxCommandEvent& WXUNUSED(event)) {
 }
 
 void MapMenuHandler::OnSelectMoveTo(wxCommandEvent& WXUNUSED(event)) {
-	PopupActionHandler::SelectMoveTo(editor);
+	wxMessageBox("Move To Tileset targets the removed legacy palette model and is disabled for the modular data runtime.", "Move To Tileset", wxOK | wxICON_INFORMATION, g_gui.root);
 }
 
 void MapMenuHandler::OnProperties(wxCommandEvent& WXUNUSED(event)) {

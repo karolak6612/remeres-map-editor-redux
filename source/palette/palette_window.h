@@ -18,16 +18,21 @@
 #ifndef RME_PALETTE_H_
 #define RME_PALETTE_H_
 
+#include "game/material_database.h"
 #include "palette/palette_common.h"
 
+#include <string_view>
+#include <vector>
+
 class BrushPalettePanel;
-class CreaturePalettePanel;
-class WaypointPalettePanel;
+struct HardcodedPaletteProvider;
+class HousePalette;
+class SpawnPalettePanel;
 class WaypointPalettePanel;
 
 class PaletteWindow : public wxPanel {
 public:
-	PaletteWindow(wxWindow* parent, const TilesetContainer& tilesets);
+	PaletteWindow(wxWindow* parent, const PaletteCatalog& catalog);
 	~PaletteWindow();
 
 	// Interface
@@ -39,6 +44,7 @@ public:
 	void LoadCurrentContents();
 	// Goes to the selected page and selects any brush there
 	void SelectPage(PaletteType palette);
+	void SelectPage(std::string_view paletteName);
 	// The currently selected brush in this palette
 	Brush* GetSelectedBrush() const;
 	Brush* GetSelectedCreatureBrush() const;
@@ -51,6 +57,7 @@ public:
 	// Finds the brush pointed to by whatbrush and selects it as the current brush (also changes page)
 	// Returns if the brush was found in this palette
 	virtual bool OnSelectBrush(const Brush* whatbrush, PaletteType primary = TILESET_UNKNOWN);
+	virtual bool OnSelectBrush(const Brush* whatbrush, std::string_view primary);
 	// Updates the palette window to use the current brush size
 	virtual void OnUpdateBrushSize(BrushShape shape, int size);
 	// Updates the content of the palette (eg. houses, creatures)
@@ -64,23 +71,17 @@ public:
 	void OnClose(wxCloseEvent&);
 
 protected:
-	static PalettePanel* CreateTerrainPalette(wxWindow* parent, const TilesetContainer& tilesets);
-	static PalettePanel* CreateDoodadPalette(wxWindow* parent, const TilesetContainer& tilesets);
-	static PalettePanel* CreateItemPalette(wxWindow* parent, const TilesetContainer& tilesets);
-	static PalettePanel* CreateCollectionPalette(wxWindow* parent, const TilesetContainer& tilesets);
-	static PalettePanel* CreateCreaturePalette(wxWindow* parent, const TilesetContainer& tilesets);
-	static PalettePanel* CreateWaypointPalette(wxWindow* parent, const TilesetContainer& tilesets);
-	static PalettePanel* CreateRAWPalette(wxWindow* parent, const TilesetContainer& tilesets);
+	struct HardcodedPage {
+		PalettePanel* panel = nullptr;
+		const HardcodedPaletteProvider* provider = nullptr;
+	};
 
 	wxChoicebook* choicebook;
-
-	BrushPalettePanel* terrain_palette;
-	BrushPalettePanel* doodad_palette;
-	BrushPalettePanel* item_palette;
-	BrushPalettePanel* collection_palette;
-	CreaturePalettePanel* creature_palette;
+	std::vector<PalettePanel*> palette_pages;
+	std::vector<HardcodedPage> hardcoded_pages;
+	HousePalette* house_palette;
+	SpawnPalettePanel* spawn_palette;
 	WaypointPalettePanel* waypoint_palette;
-	BrushPalettePanel* raw_palette;
 };
 
 #endif

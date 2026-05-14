@@ -27,7 +27,7 @@ BrushPanel::~BrushPanel() {
 	////
 }
 
-void BrushPanel::AssignTileset(const TilesetCategory* _tileset) {
+void BrushPanel::AssignTileset(const DynamicTilesetDefinition* _tileset) {
 	if (_tileset != tileset) {
 		InvalidateContents();
 		tileset = _tileset;
@@ -109,7 +109,7 @@ Brush* BrushPanel::GetSelectedBrush() const {
 	}
 
 	if (tileset && tileset->size() > 0) {
-		return tileset->brushlist[0];
+		return tileset->brushes[0];
 	}
 	return nullptr;
 }
@@ -120,7 +120,7 @@ bool BrushPanel::SelectBrush(const Brush* whatbrush) {
 		return brushbox->SelectBrush(whatbrush);
 	}
 
-	for (const auto* brush : tileset->brushlist) {
+	for (const auto* brush : tileset->brushes) {
 		if (brush == whatbrush) {
 			LoadContents();
 			return brushbox->SelectBrush(whatbrush);

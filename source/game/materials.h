@@ -19,6 +19,7 @@
 #define RME_MATERIALS_H_
 
 #include "app/extension.h"
+#include "game/material_database.h"
 
 class Materials {
 public:
@@ -31,10 +32,17 @@ public:
 	MaterialsExtensionList getExtensionsByVersion(const ClientVersionID& version_id);
 
 	TilesetContainer tilesets;
+	MaterialDatabase database;
+
+	[[nodiscard]] PaletteCatalog& paletteCatalog() {
+		return database.paletteCatalog();
+	}
+
+	[[nodiscard]] const PaletteCatalog& paletteCatalog() const {
+		return database.paletteCatalog();
+	}
 
 	bool loadMaterials(const FileName& identifier, wxString& error, std::vector<std::string>& warnings);
-	bool loadExtensions(FileName identifier, wxString& error, std::vector<std::string>& warnings);
-	void createOtherTileset();
 	void addToTileset(std::string tilesetName, int itemId, TilesetCategoryType categoryType);
 
 	bool isInTileset(Item* item, std::string tileset) const;
@@ -49,7 +57,11 @@ public:
 
 protected:
 	bool unserializeMaterials(const FileName& filename, pugi::xml_node node, wxString& error, std::vector<std::string>& warnings);
-	bool unserializeTileset(pugi::xml_node node, std::vector<std::string>& warnings);
+	bool loadModuleIncludes(const FileName& manifest, pugi::xml_node section, std::string_view expectedNode, wxString& error, std::vector<std::string>& warnings);
+	bool loadPaletteIncludes(const FileName& manifest, pugi::xml_node section, wxString& error, std::vector<std::string>& warnings);
+	bool loadPaletteFile(const FileName& filename, wxString& error, std::vector<std::string>& warnings);
+	bool loadTilesetInclude(const FileName& manifest, pugi::xml_node includeNode, DynamicPaletteDefinition& palette, wxString& error, std::vector<std::string>& warnings);
+	bool loadDynamicTilesetFile(const FileName& filename, DynamicPaletteDefinition& palette, wxString& error, std::vector<std::string>& warnings);
 
 	MaterialsExtensionList extensions;
 

@@ -11,6 +11,7 @@
 #include "util/file_system.h"
 #include "game/sprites.h"
 #include "game/materials.h"
+#include "game/material_manifest.h"
 #include "brushes/brush.h"
 #include "brushes/managers/brush_manager.h"
 #include "ui/managers/loading_manager.h"
@@ -88,9 +89,6 @@ const ClientVersion& VersionManager::GetCurrentVersion() const {
 }
 
 bool VersionManager::LoadDataFiles(wxString& error, std::vector<std::string>& warnings) {
-	FileName data_path = getLoadedVersion()->getDataPath();
-	FileName extension_path = FileSystem::GetExtensionsDirectory();
-
 	g_gui.gfx.client_version = getLoadedVersion();
 
 	// OTFI loading removed. Metadata and sprite files are configured via clients.toml or defaults in ClientVersion.
@@ -100,15 +98,29 @@ bool VersionManager::LoadDataFiles(wxString& error, std::vector<std::string>& wa
 
 	wxFileName metadata_path = getLoadedVersion()->getMetadataPath();
 	wxFileName sprites_path = getLoadedVersion()->getSpritesPath();
-	wxString base_data_path = data_path.GetPath(wxPATH_GET_VOLUME | wxPATH_GET_SEPARATOR);
+	wxString modular_data_path = FileSystem::GetDataDirectory() + "new_data" + FileName::GetPathSeparator() + wxstr(getLoadedVersion()->getDataDirectory()) + FileName::GetPathSeparator();
+	if (!wxFileName(modular_data_path).DirExists()) {
+		error = "Missing modular client data directory: " + modular_data_path;
+		g_loading.DestroyLoadBar();
+		UnloadVersion();
+		return false;
+	}
+
+	const FileName materials_manifest(modular_data_path + "materials.xml");
+	MaterialManifestFiles manifest_files;
+	if (!LoadMaterialManifestFiles(materials_manifest, manifest_files, error)) {
+		g_loading.DestroyLoadBar();
+		UnloadVersion();
+		return false;
+	}
 
 	AssetLoadRequest asset_request;
 	asset_request.mode = getLoadedVersion()->getItemDefinitionMode();
 	asset_request.client_version = getLoadedVersion();
 	asset_request.dat_path = metadata_path;
 	asset_request.spr_path = sprites_path;
-	asset_request.otb_path = wxFileName(base_data_path + "items.otb");
-	asset_request.xml_path = wxFileName(base_data_path + "items.xml");
+	asset_request.otb_path = wxFileName(modular_data_path + "items.otb");
+	asset_request.xml_paths.assign(manifest_files.items.begin(), manifest_files.items.end());
 
 	// Track whether this mode uses OTB
 	last_load_has_otb = (asset_request.mode != ItemDefinitionMode::DatOnly);
@@ -206,8 +218,13 @@ bool VersionManager::LoadDataFiles(wxString& error, std::vector<std::string>& wa
 	}
 
 	g_loading.SetLoadDone(35, "Loading creatures.xml ...");
-	if (!g_creatures.loadFromXML(base_data_path + "creatures.xml", true, error, warnings)) {
-		warnings.push_back(std::format("Couldn't load creatures.xml: {}", error.ToStdString()));
+	for (const FileName& creatureFile : manifest_files.creatures) {
+		if (!g_creatures.loadFromXML(creatureFile, true, error, warnings)) {
+			error = "Couldn't load creatures XML file " + creatureFile.GetFullPath() + ": " + error;
+			g_loading.DestroyLoadBar();
+			UnloadVersion();
+			return false;
+		}
 	}
 
 	// g_loading.SetLoadDone(45, "Loading user creatures.xml ...");
@@ -227,19 +244,15 @@ bool VersionManager::LoadDataFiles(wxString& error, std::vector<std::string>& wa
 	// }
 
 	g_loading.SetLoadDone(50, "Loading materials.xml ...");
-	if (!g_materials.loadMaterials(base_data_path + "materials.xml", error, warnings)) {
-		warnings.push_back("Couldn't load materials.xml: " + std::string(error.mb_str()));
-	}
-
-	g_loading.SetLoadDone(70, "Loading extensions...");
-	if (!g_materials.loadExtensions(extension_path, error, warnings)) {
-		warnings.push_back("Couldn't load extensions: " + std::string(error.mb_str()));
-		spdlog::warn("Couldn't load extensions: {}", error.ToStdString());
+	if (!g_materials.loadMaterials(materials_manifest, error, warnings)) {
+		error = "Couldn't load materials.xml: " + error;
+		g_loading.DestroyLoadBar();
+		UnloadVersion();
+		return false;
 	}
 
 	g_loading.SetLoadDone(70, "Finishing...");
 	g_brushes.init();
-	g_materials.createOtherTileset();
 
 	g_loading.DestroyLoadBar();
 	return true;

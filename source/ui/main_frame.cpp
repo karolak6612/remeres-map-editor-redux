@@ -203,34 +203,7 @@ bool MainFrame::DoQueryClose() {
 }
 
 bool MainFrame::DoQuerySaveTileset(bool doclose) {
-
-	if (!g_materials.needSave()) {
-		// skip dialog when there is nothing to save
-		return true;
-	}
-
-	long ret = DialogUtil::PopupDialog(
-		"Export tileset",
-		"Do you want to export your tileset changes before exiting?",
-		wxYES | wxNO | wxCANCEL
-	);
-
-	if (ret == wxID_NO) {
-		// "no" - exit without saving
-		return true;
-	} else if (ret == wxID_CANCEL) {
-		// "cancel" - just close the dialog
-		return false;
-	}
-
-	// "yes" button was pressed, open tileset exporting dialog
-	if (g_gui.GetCurrentEditor()) {
-		ExportTilesetsWindow dlg(this, *g_gui.GetCurrentEditor());
-		dlg.ShowModal();
-		dlg.Destroy();
-	}
-
-	return !g_materials.needSave();
+	return true;
 }
 
 bool MainFrame::DoQuerySave(bool doclose) {

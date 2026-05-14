@@ -84,6 +84,8 @@ set(rme_H
     ${CMAKE_CURRENT_LIST_DIR}/game/item.h
     ${CMAKE_CURRENT_LIST_DIR}/game/item_attributes.h
     ${CMAKE_CURRENT_LIST_DIR}/game/materials.h
+    ${CMAKE_CURRENT_LIST_DIR}/game/material_database.h
+    ${CMAKE_CURRENT_LIST_DIR}/game/material_manifest.h
     ${CMAKE_CURRENT_LIST_DIR}/game/outfit.h
     ${CMAKE_CURRENT_LIST_DIR}/game/spawn.h
     ${CMAKE_CURRENT_LIST_DIR}/game/sprites.h
@@ -152,7 +154,8 @@ set(rme_H
     ${CMAKE_CURRENT_LIST_DIR}/net/process_com.h
     ${CMAKE_CURRENT_LIST_DIR}/palette/palette_brushlist.h
     ${CMAKE_CURRENT_LIST_DIR}/palette/palette_common.h
-    ${CMAKE_CURRENT_LIST_DIR}/palette/palette_creature.h
+    ${CMAKE_CURRENT_LIST_DIR}/palette/hardcoded_palette_registry.h
+    ${CMAKE_CURRENT_LIST_DIR}/palette/spawn_palette.h
     ${CMAKE_CURRENT_LIST_DIR}/palette/palette_waypoints.h
     ${CMAKE_CURRENT_LIST_DIR}/palette/house/house_palette.h
     ${CMAKE_CURRENT_LIST_DIR}/palette/house/edit_house_dialog.h
@@ -478,6 +481,8 @@ set(rme_SRC
     ${CMAKE_CURRENT_LIST_DIR}/game/item.cpp
     ${CMAKE_CURRENT_LIST_DIR}/game/item_attributes.cpp
     ${CMAKE_CURRENT_LIST_DIR}/game/materials.cpp
+    ${CMAKE_CURRENT_LIST_DIR}/game/material_database.cpp
+    ${CMAKE_CURRENT_LIST_DIR}/game/material_manifest.cpp
     ${CMAKE_CURRENT_LIST_DIR}/game/spawn.cpp
     ${CMAKE_CURRENT_LIST_DIR}/game/town.cpp
     ${CMAKE_CURRENT_LIST_DIR}/game/preview_preferences.cpp
@@ -534,7 +539,8 @@ set(rme_SRC
     ${CMAKE_CURRENT_LIST_DIR}/net/process_com.cpp
     ${CMAKE_CURRENT_LIST_DIR}/palette/palette_brushlist.cpp
     ${CMAKE_CURRENT_LIST_DIR}/palette/palette_common.cpp
-    ${CMAKE_CURRENT_LIST_DIR}/palette/palette_creature.cpp
+    ${CMAKE_CURRENT_LIST_DIR}/palette/hardcoded_palette_registry.cpp
+    ${CMAKE_CURRENT_LIST_DIR}/palette/spawn_palette.cpp
     ${CMAKE_CURRENT_LIST_DIR}/palette/palette_waypoints.cpp
     ${CMAKE_CURRENT_LIST_DIR}/palette/house/house_palette.cpp
     ${CMAKE_CURRENT_LIST_DIR}/palette/house/edit_house_dialog.cpp

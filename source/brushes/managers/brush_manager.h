@@ -9,6 +9,8 @@
 #include "brushes/brush_enums.h"
 #include "brushes/brush_footprint.h"
 
+#include <string_view>
+
 class Brush;
 class HouseBrush;
 class HouseExitBrush;
@@ -29,6 +31,7 @@ public:
 	// Updates the palette AND selects the brush, second parameter is first palette to look in
 	// Returns true if the brush was found and selected
 	bool SelectBrush(const Brush* brush, PaletteType pt = TILESET_UNKNOWN);
+	bool SelectBrush(const Brush* brush, std::string_view preferredPalette);
 	// Selects the brush selected before the current brush
 	void SelectPreviousBrush();
 	// Only selects the brush, doesn't update the palette

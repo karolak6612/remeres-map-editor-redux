@@ -88,11 +88,7 @@ void FileMenuHandler::OnExportMinimap(wxCommandEvent& WXUNUSED(event)) {
 }
 
 void FileMenuHandler::OnExportTilesets(wxCommandEvent& WXUNUSED(event)) {
-	if (g_gui.GetCurrentEditor()) {
-		ExportTilesetsWindow dlg(frame, *g_gui.GetCurrentEditor());
-		dlg.ShowModal();
-		dlg.Destroy();
-	}
+	wxMessageBox("Tileset export targets the removed legacy palette model and is disabled for the modular data runtime.", "Export Tilesets", wxOK | wxICON_INFORMATION, g_gui.root);
 }
 
 void FileMenuHandler::OnReloadDataFiles(wxCommandEvent& WXUNUSED(event)) {

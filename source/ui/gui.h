@@ -69,6 +69,7 @@ wxDECLARE_EVENT(EVT_UPDATE_MENUS, wxCommandEvent);
 	),
 
 #include <mutex>
+#include <string_view>
 #include "brushes/managers/brush_manager.h"
 #include "palette/managers/palette_manager.h"
 #include "editor/managers/editor_manager.h"
@@ -214,6 +215,7 @@ public:
 	// Updates the palette AND selects the brush, second parameter is first palette to look in
 	// Returns true if the brush was found and selected
 	bool SelectBrush(const Brush* brush, PaletteType pt = TILESET_UNKNOWN);
+	bool SelectBrush(const Brush* brush, std::string_view preferredPalette);
 	// Selects the brush selected before the current brush
 	void SelectPreviousBrush();
 	// Only selects the brush, doesn't update the palette

@@ -9,7 +9,7 @@
 
 class BrushPalettePanel : public PalettePanel {
 public:
-	BrushPalettePanel(wxWindow* parent, const TilesetContainer& tilesets, TilesetCategoryType category, wxWindowID id = wxID_ANY);
+	BrushPalettePanel(wxWindow* parent, const DynamicPaletteDefinition& palette, wxWindowID id = wxID_ANY);
 	~BrushPalettePanel() override;
 
 	// Interface
@@ -20,7 +20,7 @@ public:
 	// Loads all content in this panel
 	void LoadAllContents() override;
 
-	PaletteType GetType() const override;
+	wxString GetName() const override;
 
 	// Sets the display type (list or icons)
 	void SetListType(BrushListType ltype);
@@ -43,7 +43,7 @@ public:
 	void OnClickAddItemToTileset(wxCommandEvent& WXUNUSED(event));
 
 protected:
-	PaletteType palette_type;
+	std::string palette_name;
 	wxChoicebook* choicebook;
 
 	// No size_panel, it was unused

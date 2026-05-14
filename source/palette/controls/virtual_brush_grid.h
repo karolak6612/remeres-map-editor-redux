@@ -19,10 +19,10 @@ public:
 	/**
 	 * @brief Constructs a VirtualBrushGrid.
 	 * @param parent Parent window
-	 * @param _tileset The tileset category containing brushes
+	 * @param _tileset The dynamic tileset containing brushes
 	 * @param rsz Icon render size (16x16 or 32x32)
 	 */
-	VirtualBrushGrid(wxWindow* parent, const TilesetCategory* _tileset, RenderSize rsz);
+	VirtualBrushGrid(wxWindow* parent, const DynamicTilesetDefinition* _tileset, RenderSize rsz);
 	~VirtualBrushGrid() override;
 
 	wxWindow* GetSelfWindow() override {

@@ -31,11 +31,7 @@ void PaletteMenuHandler::OnSelectCollectionPalette(wxCommandEvent& WXUNUSED(even
 }
 
 void PaletteMenuHandler::OnSelectHousePalette(wxCommandEvent& WXUNUSED(event)) {
-	if (g_gui.house_palette) {
-		wxAuiPaneInfo& info = g_gui.aui_manager->GetPane(g_gui.house_palette);
-		info.Show(!info.IsShown());
-		g_gui.aui_manager->Update();
-	}
+	g_gui.SelectPalettePage(TILESET_HOUSE);
 }
 
 void PaletteMenuHandler::OnSelectCreaturePalette(wxCommandEvent& WXUNUSED(event)) {
