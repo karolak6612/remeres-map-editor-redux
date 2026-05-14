@@ -21,7 +21,6 @@
 #include "map/position.h"
 #include "game/item.h"
 #include "io/otbm/invalid_otbm_content.h"
-#include "map/tile_operations.h"
 
 class TileLocation;
 class GroundBrush;
@@ -33,8 +32,6 @@ class Map;
 #include <cstdint>
 #include <memory>
 #include <vector>
-
-// TileOperations functions are now in tile_operations.h
 
 enum {
 	TILESTATE_NONE = 0x0000,

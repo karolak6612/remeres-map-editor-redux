@@ -8,6 +8,8 @@
 #include "app/definitions.h" // For TILE_SIZE, GROUND_LAYER, MAP_MAX_LAYER
 #include "ingame_preview/floor_visibility_calculator.h"
 
+#include <algorithm>
+
 void RenderView::Setup(MapCanvas* canvas, const DrawingOptions& options) {
 	canvas->MouseToMap(&mouse_map_x, &mouse_map_y);
 	canvas->GetViewBox(&view_scroll_x, &view_scroll_y, &screensize_x, &screensize_y);
