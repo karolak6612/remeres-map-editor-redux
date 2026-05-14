@@ -18,7 +18,8 @@ BrushPanel::BrushPanel(wxWindow* parent) :
 	tileset(nullptr),
 	brushbox(nullptr),
 	loaded(false),
-	list_type(BRUSHLIST_LISTBOX) {
+	list_type(BRUSHLIST_LISTBOX),
+	force_list_mode(std::nullopt) {
 	sizer = newd wxBoxSizer(wxVERTICAL);
 	SetSizerAndFit(sizer);
 }
@@ -50,6 +51,22 @@ void BrushPanel::SetListType(wxString ltype) {
 		SetListType(BRUSHLIST_LISTBOX);
 	} else if (ltype == "textlistbox") {
 		SetListType(BRUSHLIST_TEXT_LISTBOX);
+	}
+}
+
+void BrushPanel::SetForceListMode(std::optional<bool> next_force_list_mode) {
+	if (force_list_mode == next_force_list_mode) {
+		return;
+	}
+	force_list_mode = next_force_list_mode;
+
+	if (!loaded || !brushbox) {
+		return;
+	}
+
+	if (auto* vbg = dynamic_cast<VirtualBrushGrid*>(brushbox->GetSelfWindow())) {
+		const bool list_mode = force_list_mode.value_or(list_type == BRUSHLIST_LISTBOX || list_type == BRUSHLIST_TEXT_LISTBOX);
+		vbg->SetDisplayMode(list_mode ? VirtualBrushGrid::DisplayMode::List : VirtualBrushGrid::DisplayMode::Grid);
 	}
 }
 
@@ -86,6 +103,11 @@ void BrushPanel::LoadContents() {
 
 	if (!brushbox) {
 		return;
+	}
+
+	if (auto* vbg = dynamic_cast<VirtualBrushGrid*>(brushbox->GetSelfWindow())) {
+		const bool list_mode = force_list_mode.value_or(list_type == BRUSHLIST_LISTBOX || list_type == BRUSHLIST_TEXT_LISTBOX);
+		vbg->SetDisplayMode(list_mode ? VirtualBrushGrid::DisplayMode::List : VirtualBrushGrid::DisplayMode::Grid);
 	}
 
 	loaded = true;

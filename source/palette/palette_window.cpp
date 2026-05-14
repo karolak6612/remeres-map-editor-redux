@@ -206,6 +206,44 @@ void PaletteWindow::InvalidateContents() {
 	}
 }
 
+void PaletteWindow::InvalidatePage(PaletteType palette) {
+	PalettePanel* page = nullptr;
+	switch (palette) {
+		case TILESET_TERRAIN:
+			page = terrain_palette;
+			break;
+		case TILESET_DOODAD:
+			page = doodad_palette;
+			break;
+		case TILESET_COLLECTION:
+			page = collection_palette;
+			break;
+		case TILESET_ITEM:
+			page = item_palette;
+			break;
+		case TILESET_CREATURE:
+			page = creature_palette;
+			break;
+		case TILESET_WAYPOINT:
+			page = waypoint_palette;
+			break;
+		case TILESET_RAW:
+			page = raw_palette;
+			break;
+		default:
+			break;
+	}
+
+	if (!page) {
+		return;
+	}
+
+	page->InvalidateContents();
+	if (page->GetType() == GetSelectedPage()) {
+		page->LoadCurrentContents();
+	}
+}
+
 void PaletteWindow::SelectPage(PaletteType id) {
 	if (!choicebook) {
 		return;
@@ -255,32 +293,42 @@ PaletteType PaletteWindow::GetSelectedPage() const {
 	return panel->GetType();
 }
 
-bool PaletteWindow::OnSelectBrush(const Brush* whatbrush, PaletteType primary) {
+bool PaletteWindow::OnSelectBrush(const Brush* whatbrush, PaletteType primary, int tileset_index, bool align_to_top) {
 	if (!choicebook || !whatbrush) {
 		return false;
 	}
 
+	const auto select_brush_panel = [whatbrush, tileset_index, align_to_top](BrushPalettePanel* panel) {
+		if (!panel) {
+			return false;
+		}
+		return tileset_index >= 0 ? panel->SelectBrushInTileset(whatbrush, tileset_index, align_to_top) : panel->SelectBrushWithOptions(whatbrush, align_to_top);
+	};
+
 	switch (primary) {
 		case TILESET_TERRAIN: {
-			// This is already searched first
+			if (select_brush_panel(terrain_palette)) {
+				SelectPage(TILESET_TERRAIN);
+				return true;
+			}
 			break;
 		}
 		case TILESET_DOODAD: {
-			// Ok, search doodad before terrain
-			if (doodad_palette && doodad_palette->SelectBrush(whatbrush)) {
+			if (select_brush_panel(doodad_palette)) {
 				SelectPage(TILESET_DOODAD);
 				return true;
 			}
 			break;
 		}
 		case TILESET_COLLECTION: {
-			if (collection_palette && collection_palette->SelectBrush(whatbrush)) {
+			if (select_brush_panel(collection_palette)) {
 				SelectPage(TILESET_COLLECTION);
 				return true;
 			}
+			break;
 		}
 		case TILESET_ITEM: {
-			if (item_palette && item_palette->SelectBrush(whatbrush)) {
+			if (select_brush_panel(item_palette)) {
 				SelectPage(TILESET_ITEM);
 				return true;
 			}
@@ -294,7 +342,7 @@ bool PaletteWindow::OnSelectBrush(const Brush* whatbrush, PaletteType primary) {
 			break;
 		}
 		case TILESET_RAW: {
-			if (raw_palette && raw_palette->SelectBrush(whatbrush)) {
+			if (select_brush_panel(raw_palette)) {
 				SelectPage(TILESET_RAW);
 				return true;
 			}

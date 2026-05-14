@@ -60,22 +60,24 @@ std::istream& operator>>(std::istream& os, Hotkey& hotkey) {
 }
 
 HotkeyManager::HotkeyManager() :
-	hotkeys_enabled(true) {
+	hotkeys_disable_depth(0) {
 }
 
 HotkeyManager::~HotkeyManager() {
 }
 
 void HotkeyManager::EnableHotkeys() {
-	hotkeys_enabled = true;
+	if (hotkeys_disable_depth > 0) {
+		--hotkeys_disable_depth;
+	}
 }
 
 void HotkeyManager::DisableHotkeys() {
-	hotkeys_enabled = false;
+	++hotkeys_disable_depth;
 }
 
 bool HotkeyManager::AreHotkeysEnabled() const {
-	return hotkeys_enabled;
+	return hotkeys_disable_depth == 0;
 }
 
 void HotkeyManager::SetHotkey(int index, Hotkey& hotkey) {

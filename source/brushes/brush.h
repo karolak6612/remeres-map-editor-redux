@@ -227,6 +227,10 @@ public:
 
 	bool friendOf(TerrainBrush* other);
 
+	const std::vector<uint32_t>& getFriendIds() const {
+		return friends;
+	}
+
 protected:
 	std::vector<uint32_t> friends;
 	std::string name;

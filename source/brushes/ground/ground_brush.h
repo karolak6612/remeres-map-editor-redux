@@ -41,6 +41,7 @@ public:
 	void draw(BaseMap* map, Tile* tile, void* parameter) override;
 	void undraw(BaseMap* map, Tile* tile) override;
 	void getRelatedItems(std::vector<uint16_t>& items) override;
+	void getItemChanceEntries(std::vector<std::pair<uint16_t, int>>& items) const;
 
 	static void doBorders(BaseMap* map, Tile* tile);
 	static const BorderBlock* getBrushTo(GroundBrush* first, GroundBrush* second);

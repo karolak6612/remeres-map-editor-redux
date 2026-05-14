@@ -22,7 +22,6 @@
 #include "brushes/ground/auto_border.h"
 #include "brushes/ground/ground_brush_loader.h"
 #include "brushes/ground/ground_border_calculator.h"
-#include "brushes/ground/terrain_placement.h"
 #include "map/basemap.h"
 
 uint32_t GroundBrush::border_types[256];
@@ -83,7 +82,7 @@ void GroundBrush::draw(BaseMap* map, Tile* tile, void* parameter) {
 		id = border_items.front().id;
 	}
 
-	TerrainPlacement::placeBrushItem(*tile, id);
+	tile->addItem(Item::Create(id));
 }
 
 const GroundBrush::BorderBlock* GroundBrush::getBrushTo(GroundBrush* first, GroundBrush* second) {
@@ -170,6 +169,16 @@ void GroundBrush::getRelatedItems(std::vector<uint16_t>& items) {
 			if (sc->with_id != 0) {
 				items.push_back(sc->with_id);
 			}
+		}
+	}
+}
+
+void GroundBrush::getItemChanceEntries(std::vector<std::pair<uint16_t, int>>& items) const {
+	items.clear();
+	items.reserve(border_items.size());
+	for (const auto& item_block : border_items) {
+		if (item_block.id != 0) {
+			items.emplace_back(item_block.id, item_block.chance);
 		}
 	}
 }
