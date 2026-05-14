@@ -455,9 +455,6 @@ namespace TileOperations {
 		tile->minimapColor = 0;
 
 		if (tile->ground) {
-			if (tile->ground->isSelected()) {
-				tile->statflags |= TILESTATE_SELECTED;
-			}
 			if (tile->ground->isBlocking()) {
 				tile->statflags |= TILESTATE_BLOCKING;
 			}
