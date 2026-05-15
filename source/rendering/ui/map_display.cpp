@@ -35,7 +35,6 @@
 #include "game/item.h"
 #include "ui/properties/old_properties_window.h"
 #include "ui/properties/properties_window.h"
-#include "ui/tileset_window.h"
 #include "palette/palette_window.h"
 #include "rendering/ui/screenshot_controller.h"
 #include "rendering/utilities/tile_describer.h"

@@ -17,11 +17,10 @@
 
 #include "app/main.h"
 
-#include <wx/dir.h>
-
 #include "editor/editor.h"
 #include "item_definitions/core/item_definition_store.h"
 #include "game/creatures.h"
+#include "game/material_include_resolver.h"
 
 #include "ui/gui.h"
 #include "game/materials.h"
@@ -32,38 +31,8 @@
 Materials g_materials;
 
 namespace {
-	std::vector<FileName> collectXmlFiles(const FileName& directory, bool recursive) {
-		wxArrayString files;
-		const int flags = wxDIR_FILES | (recursive ? wxDIR_DIRS : 0);
-		wxDir::GetAllFiles(directory.GetFullPath(), &files, "*.xml", flags);
-		std::vector<FileName> result;
-		result.reserve(files.size());
-		for (const auto& file : files) {
-			result.emplace_back(file);
-		}
-		std::ranges::sort(result, [](const FileName& lhs, const FileName& rhs) {
-			return lhs.GetFullPath().CmpNoCase(rhs.GetFullPath()) < 0;
-		});
-		return result;
-	}
-
-	FileName resolveRelativePath(const FileName& baseFile, const std::string& relative) {
-		wxString normalized = wxString(relative);
-		normalized.Replace("\\", "/");
-		FileName path(baseFile.GetPath(wxPATH_GET_VOLUME | wxPATH_GET_SEPARATOR) + normalized);
-		path.Normalize(wxPATH_NORM_ALL);
-		return path;
-	}
-
-	FileName resolveRelativeFolder(const FileName& baseFile, const std::string& relative) {
-		wxString normalized = wxString(relative);
-		normalized.Replace("\\", "/");
-		if (!normalized.empty() && !normalized.EndsWith("/")) {
-			normalized += "/";
-		}
-		FileName path(baseFile.GetPath(wxPATH_GET_VOLUME | wxPATH_GET_SEPARATOR) + normalized);
-		path.Normalize(wxPATH_NORM_ALL);
-		return path;
+	[[nodiscard]] std::string normalizedPathKey(const FileName& file) {
+		return file.GetFullPath().ToStdString();
 	}
 }
 
@@ -76,15 +45,10 @@ Materials::~Materials() {
 }
 
 void Materials::clear() {
-	for (TilesetContainer::iterator iter = tilesets.begin(); iter != tilesets.end(); ++iter) {
-		delete iter->second;
-	}
-
 	for (MaterialsExtensionList::iterator iter = extensions.begin(); iter != extensions.end(); ++iter) {
 		delete *iter;
 	}
 
-	tilesets.clear();
 	extensions.clear();
 	database.clear();
 }
@@ -118,6 +82,7 @@ bool Materials::loadMaterials(const FileName& identifier, wxString& error, std::
 	}
 
 	database.clear();
+	database.bindSourceTruth(g_brushes, g_item_definitions, g_creatures);
 	if (!unserializeMaterials(identifier, node, error, warnings)) {
 		return false;
 	}
@@ -163,9 +128,16 @@ bool Materials::unserializeMaterials(const FileName& filename, pugi::xml_node no
 			return false;
 		} else if (childName == "tilesets") {
 			sawTilesets = true;
-			if (!loadModuleIncludes(filename, childNode, {}, error, warnings)) {
+			std::vector<FileName> tilesetFiles;
+			if (!MaterialIncludeResolver::collectSectionFiles(filename, childNode, "tilesets", tilesetFiles, error)) {
 				return false;
 			}
+			std::vector<std::string> sourceKeys;
+			sourceKeys.reserve(tilesetFiles.size());
+			for (const FileName& tilesetFile : tilesetFiles) {
+				sourceKeys.push_back(normalizedPathKey(tilesetFile));
+			}
+			database.setTilesetSources(std::move(sourceKeys));
 		} else if (childName == "palettes") {
 			sawPalettes = true;
 			if (!loadPaletteIncludes(filename, childNode, error, warnings)) {
@@ -186,19 +158,19 @@ bool Materials::loadModuleIncludes(const FileName& manifest, pugi::xml_node sect
 	for (pugi::xml_node includeNode = section.child("include"); includeNode; includeNode = includeNode.next_sibling("include")) {
 		std::vector<FileName> files;
 		if (const auto fileAttribute = includeNode.attribute("file")) {
-			FileName includeFile = resolveRelativePath(manifest, fileAttribute.as_string());
+			FileName includeFile = MaterialIncludeResolver::resolveRelativePath(manifest, fileAttribute.as_string());
 			if (!includeFile.FileExists()) {
 				error = "Missing modular include file: " + includeFile.GetFullPath();
 				return false;
 			}
 			files.push_back(includeFile);
 		} else if (const auto folderAttribute = includeNode.attribute("folder")) {
-			FileName folder = resolveRelativeFolder(manifest, folderAttribute.as_string());
+			FileName folder = MaterialIncludeResolver::resolveRelativeFolder(manifest, folderAttribute.as_string());
 			if (!folder.DirExists()) {
 				error = "Missing modular include folder: " + folder.GetFullPath();
 				return false;
 			}
-			files = collectXmlFiles(folder, includeNode.attribute("subfolders").as_bool(false));
+			files = MaterialIncludeResolver::collectXmlFiles(folder, includeNode.attribute("subfolders").as_bool(false));
 		}
 
 		for (const FileName& file : files) {
@@ -240,7 +212,7 @@ bool Materials::loadPaletteIncludes(const FileName& manifest, pugi::xml_node sec
 	bool loadedAny = false;
 	for (pugi::xml_node includeNode = section.child("include"); includeNode; includeNode = includeNode.next_sibling("include")) {
 		if (const auto fileAttribute = includeNode.attribute("file")) {
-			FileName includeFile = resolveRelativePath(manifest, fileAttribute.as_string());
+			FileName includeFile = MaterialIncludeResolver::resolveRelativePath(manifest, fileAttribute.as_string());
 			if (!includeFile.FileExists()) {
 				error = "Missing palettes include file: " + includeFile.GetFullPath();
 				return false;
@@ -250,12 +222,12 @@ bool Materials::loadPaletteIncludes(const FileName& manifest, pugi::xml_node sec
 				return false;
 			}
 		} else if (const auto folderAttribute = includeNode.attribute("folder")) {
-			FileName folder = resolveRelativeFolder(manifest, folderAttribute.as_string());
+			FileName folder = MaterialIncludeResolver::resolveRelativeFolder(manifest, folderAttribute.as_string());
 			if (!folder.DirExists()) {
 				error = "Missing palettes include folder: " + folder.GetFullPath();
 				return false;
 			}
-			for (const FileName& file : collectXmlFiles(folder, includeNode.attribute("subfolders").as_bool(false))) {
+			for (const FileName& file : MaterialIncludeResolver::collectXmlFiles(folder, includeNode.attribute("subfolders").as_bool(false))) {
 				loadedAny = true;
 				if (!loadPaletteFile(file, error, warnings)) {
 					return false;
@@ -335,21 +307,29 @@ bool Materials::loadPaletteFile(const FileName& filename, wxString& error, std::
 
 bool Materials::loadTilesetInclude(const FileName& manifest, pugi::xml_node includeNode, DynamicPaletteDefinition& palette, wxString& error, std::vector<std::string>& warnings) {
 	if (const auto fileAttribute = includeNode.attribute("file")) {
-		FileName includeFile = resolveRelativePath(manifest, fileAttribute.as_string());
+		FileName includeFile = MaterialIncludeResolver::resolveRelativePath(manifest, fileAttribute.as_string());
 		if (!includeFile.FileExists()) {
 			error = "Missing tileset include file: " + includeFile.GetFullPath();
+			return false;
+		}
+		if (!database.isKnownTilesetSource(normalizedPathKey(includeFile))) {
+			error = "Tileset include is not declared in materials.xml <tilesets>: " + includeFile.GetFullPath();
 			return false;
 		}
 		return loadDynamicTilesetFile(includeFile, palette, error, warnings);
 	}
 
 	if (const auto folderAttribute = includeNode.attribute("folder")) {
-		FileName folder = resolveRelativeFolder(manifest, folderAttribute.as_string());
+		FileName folder = MaterialIncludeResolver::resolveRelativeFolder(manifest, folderAttribute.as_string());
 		if (!folder.DirExists()) {
 			error = "Missing tileset include folder: " + folder.GetFullPath();
 			return false;
 		}
-		for (const FileName& file : collectXmlFiles(folder, includeNode.attribute("subfolders").as_bool(false))) {
+		for (const FileName& file : MaterialIncludeResolver::collectXmlFiles(folder, includeNode.attribute("subfolders").as_bool(false))) {
+			if (!database.isKnownTilesetSource(normalizedPathKey(file))) {
+				error = "Tileset include is not declared in materials.xml <tilesets>: " + file.GetFullPath();
+				return false;
+			}
 			if (!loadDynamicTilesetFile(file, palette, error, warnings)) {
 				return false;
 			}
@@ -437,36 +417,4 @@ bool Materials::loadDynamicTilesetFile(const FileName& filename, DynamicPaletteD
 
 	palette.tilesets.push_back(std::move(tileset));
 	return true;
-}
-
-void Materials::addToTileset(std::string tilesetName, int itemId, TilesetCategoryType categoryType) {
-	wxUnusedVar(tilesetName);
-	wxUnusedVar(itemId);
-	wxUnusedVar(categoryType);
-}
-
-bool Materials::isInTileset(Item* item, std::string tilesetName) const {
-	const auto definition = g_item_definitions.get(item->getID());
-	if (!definition) {
-		return false;
-	}
-
-	const ItemEditorData& editor_data = definition.editorData();
-	return (isInTileset(editor_data.brush, tilesetName) || isInTileset(editor_data.doodad_brush, tilesetName) || isInTileset(editor_data.raw_brush, tilesetName) || isInTileset(editor_data.collection_brush, tilesetName));
-}
-
-bool Materials::isInTileset(Brush* brush, std::string tilesetName) const {
-	if (!brush) {
-		return false;
-	}
-
-	for (const auto& palette : database.paletteCatalog().dynamicPalettes()) {
-		for (const auto& tileset : palette.tilesets) {
-			if (tileset.name == tilesetName && tileset.containsBrush(brush)) {
-				return true;
-			}
-		}
-	}
-
-	return false;
 }

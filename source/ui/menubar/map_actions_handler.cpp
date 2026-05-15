@@ -41,31 +41,6 @@ void MapActionsHandler::OnMapRemoveItems(wxCommandEvent& WXUNUSED(event)) {
 	dialog.Destroy();
 }
 
-void MapActionsHandler::OnMapRemoveCorpses(wxCommandEvent& WXUNUSED(event)) {
-	if (!g_gui.IsEditorOpen()) {
-		return;
-	}
-
-	int ok = DialogUtil::PopupDialog("Remove Corpses", "Do you want to remove all corpses from the map?", wxYES | wxNO);
-
-	if (ok == wxID_YES) {
-		g_gui.GetCurrentEditor()->selection.clear();
-		g_gui.GetCurrentEditor()->actionQueue->clear();
-
-		EditorOperations::RemoveCorpsesCondition func;
-		g_gui.CreateLoadBar("Searching map for items to remove...");
-
-		int64_t count = RemoveItemOnMap(g_gui.GetCurrentMap(), func, false);
-
-		g_gui.DestroyLoadBar();
-
-		wxString msg;
-		msg << count << " items deleted.";
-		g_gui.SetStatusText(msg);
-		g_gui.GetCurrentMap().doChange();
-	}
-}
-
 void MapActionsHandler::OnMapRemoveUnreachable(wxCommandEvent& WXUNUSED(event)) {
 	if (!g_gui.IsEditorOpen()) {
 		return;

@@ -39,7 +39,6 @@ namespace MenuBar {
 		IMPORT_MINIMAP,
 
 		EXPORT_MINIMAP,
-		EXPORT_TILESETS,
 		RELOAD_DATA,
 		RECENT_FILES,
 		PREFERENCES,
@@ -85,7 +84,6 @@ namespace MenuBar {
 		MAP_CLEANUP,
 		MAP_CLEAN_INVALID_ZONES,
 		MAP_REMOVE_ITEMS,
-		MAP_REMOVE_CORPSES,
 		MAP_REMOVE_UNREACHABLE_TILES,
 		MAP_CLEAN_HOUSE_ITEMS,
 		MAP_PROPERTIES,
@@ -133,18 +131,14 @@ namespace MenuBar {
 		WIN_INGAME_PREVIEW,
 		WIN_TILE_PROPERTIES,
 		NEW_PALETTE,
+		SHOW_PALETTE,
+		SELECT_HOUSE,
+		SELECT_SPAWN,
+		SELECT_WAYPOINT,
 		TAKE_SCREENSHOT,
 		LIVE_START,
 		LIVE_JOIN,
 		LIVE_CLOSE,
-		SELECT_TERRAIN,
-		SELECT_DOODAD,
-		SELECT_ITEM,
-		SELECT_COLLECTION,
-		SELECT_CREATURE,
-		SELECT_HOUSE,
-		SELECT_WAYPOINT,
-		SELECT_RAW,
 		FLOOR_0,
 		FLOOR_1,
 		FLOOR_2,
@@ -215,7 +209,6 @@ public:
 	void OnImportMinimap(wxCommandEvent& event);
 
 	void OnExportMinimap(wxCommandEvent& event);
-	void OnExportTilesets(wxCommandEvent& event);
 	void OnReloadDataFiles(wxCommandEvent& event); // RELOAD_DATA
 	void OnMissingItemsReport(wxCommandEvent& event);
 	void OnPreferences(wxCommandEvent& event);
@@ -262,7 +255,6 @@ public:
 	void OnJumpToItemBrush(wxCommandEvent& event);
 
 	void OnMapRemoveItems(wxCommandEvent& event);
-	void OnMapRemoveCorpses(wxCommandEvent& event);
 	void OnMapRemoveUnreachable(wxCommandEvent& event);
 	void OnClearHouseTiles(wxCommandEvent& event);
 	void OnClearModifiedState(wxCommandEvent& event);
@@ -295,19 +287,14 @@ public:
 	void OnIngamePreviewWindow(wxCommandEvent& event);
 	void OnTilePropertiesWindow(wxCommandEvent& event);
 	void OnNewPalette(wxCommandEvent& event);
+	void OnShowPalette(wxCommandEvent& event);
+	void OnSelectHousePalette(wxCommandEvent& event);
+	void OnSelectSpawnPalette(wxCommandEvent& event);
+	void OnSelectWaypointPalette(wxCommandEvent& event);
 
 	void OnStartLive(wxCommandEvent& event);
 	void OnJoinLive(wxCommandEvent& event);
 	void OnCloseLive(wxCommandEvent& event);
-
-	void OnSelectTerrainPalette(wxCommandEvent& event);
-	void OnSelectDoodadPalette(wxCommandEvent& event);
-	void OnSelectItemPalette(wxCommandEvent& event);
-	void OnSelectCollectionPalette(wxCommandEvent& event);
-	void OnSelectHousePalette(wxCommandEvent& event);
-	void OnSelectCreaturePalette(wxCommandEvent& event);
-	void OnSelectWaypointPalette(wxCommandEvent& event);
-	void OnSelectRawPalette(wxCommandEvent& event);
 
 	void OnScriptsOpenFolder(wxCommandEvent& event);
 	void OnScriptsReload(wxCommandEvent& event);

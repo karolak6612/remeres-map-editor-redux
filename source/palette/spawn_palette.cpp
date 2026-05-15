@@ -33,5 +33,5 @@ void SpawnPalettePanel::OnSwitchIn() {
 	PalettePanel::OnSwitchIn();
 	g_gui.SetSpawnTime(g_settings.getInteger(Config::DEFAULT_SPAWNTIME));
 	g_gui.SetBrushSize(g_settings.getInteger(Config::CURRENT_SPAWN_RADIUS));
-	g_gui.SelectBrush(g_brush_manager.spawn_brush);
+	g_gui.SelectBrushInternal(g_brush_manager.spawn_brush);
 }

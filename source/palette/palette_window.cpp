@@ -22,23 +22,8 @@
 
 namespace {
 
-[[nodiscard]] wxString brushListTypeForPalette(std::string_view name) {
-	if (name == "Terrain") {
-		return wxstr(g_settings.getString(Config::PALETTE_TERRAIN_STYLE));
-	}
-	if (name == "Doodad") {
-		return wxstr(g_settings.getString(Config::PALETTE_DOODAD_STYLE));
-	}
-	if (name == "Item") {
-		return wxstr(g_settings.getString(Config::PALETTE_ITEM_STYLE));
-	}
-	if (name == "Collection") {
-		return wxstr(g_settings.getString(Config::PALETTE_COLLECTION_STYLE));
-	}
-	if (name == "Raw" || name == "RAW") {
-		return wxstr(g_settings.getString(Config::PALETTE_RAW_STYLE));
-	}
-	return wxstr(g_settings.getString(Config::PALETTE_TERRAIN_STYLE));
+[[nodiscard]] wxString dynamicBrushListType() {
+	return wxstr(g_settings.getString(Config::PALETTE_DYNAMIC_STYLE));
 }
 
 [[nodiscard]] bool paletteNameMatches(const PalettePanel* panel, std::string_view name) {
@@ -64,7 +49,7 @@ PaletteWindow::PaletteWindow(wxWindow* parent, const PaletteCatalog& catalog) :
 
 	for (const auto& palette : catalog.dynamicPalettes()) {
 		auto* panel = newd BrushPalettePanel(choicebook, palette);
-		panel->SetListType(brushListTypeForPalette(palette.name));
+		panel->SetListType(dynamicBrushListType());
 		palette_pages.push_back(panel);
 		choicebook->AddPage(panel, panel->GetName());
 	}
@@ -111,7 +96,7 @@ PaletteWindow::~PaletteWindow() {
 void PaletteWindow::ReloadSettings(Map* map) {
 	for (auto* panel : palette_pages) {
 		if (auto* brushPanel = dynamic_cast<BrushPalettePanel*>(panel)) {
-			brushPanel->SetListType(brushListTypeForPalette(nstr(brushPanel->GetName())));
+			brushPanel->SetListType(dynamicBrushListType());
 		}
 	}
 	for (const auto& hardcodedPage : hardcoded_pages) {

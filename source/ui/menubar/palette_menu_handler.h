@@ -12,15 +12,10 @@ public:
 	~PaletteMenuHandler();
 
 	void OnNewPalette(wxCommandEvent& event);
-
-	void OnSelectTerrainPalette(wxCommandEvent& event);
-	void OnSelectDoodadPalette(wxCommandEvent& event);
-	void OnSelectItemPalette(wxCommandEvent& event);
-	void OnSelectCollectionPalette(wxCommandEvent& event);
+	void OnShowPalette(wxCommandEvent& event);
 	void OnSelectHousePalette(wxCommandEvent& event);
-	void OnSelectCreaturePalette(wxCommandEvent& event);
+	void OnSelectSpawnPalette(wxCommandEvent& event);
 	void OnSelectWaypointPalette(wxCommandEvent& event);
-	void OnSelectRawPalette(wxCommandEvent& event);
 
 protected:
 	MainFrame* frame;

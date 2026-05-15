@@ -46,4 +46,43 @@ const DynamicPaletteDefinition* PaletteCatalog::findPaletteContainingBrush(const
 
 void MaterialDatabase::clear() {
 	palettes.clear();
+	brush_registry = nullptr;
+	item_registry = nullptr;
+	creature_registry = nullptr;
+	tileset_sources.clear();
+}
+
+void MaterialDatabase::bindSourceTruth(Brushes& brushRegistry, ItemDefinitionStore& itemRegistry, CreatureDatabase& creatureRegistry) {
+	brush_registry = &brushRegistry;
+	item_registry = &itemRegistry;
+	creature_registry = &creatureRegistry;
+}
+
+void MaterialDatabase::setTilesetSources(std::vector<std::string> sources) {
+	tileset_sources = std::move(sources);
+	std::ranges::sort(tileset_sources);
+	tileset_sources.erase(std::ranges::unique(tileset_sources).begin(), tileset_sources.end());
+}
+
+Brushes& MaterialDatabase::brushes() const {
+	ASSERT(brush_registry != nullptr);
+	return *brush_registry;
+}
+
+ItemDefinitionStore& MaterialDatabase::items() const {
+	ASSERT(item_registry != nullptr);
+	return *item_registry;
+}
+
+CreatureDatabase& MaterialDatabase::creatures() const {
+	ASSERT(creature_registry != nullptr);
+	return *creature_registry;
+}
+
+bool MaterialDatabase::hasSourceTruth() const {
+	return brush_registry && item_registry && creature_registry;
+}
+
+bool MaterialDatabase::isKnownTilesetSource(std::string_view source) const {
+	return std::ranges::binary_search(tileset_sources, source);
 }

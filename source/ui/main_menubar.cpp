@@ -257,10 +257,6 @@ void MainMenuBar::OnExportMinimap(wxCommandEvent& event) {
 	fileMenuHandler->OnExportMinimap(event);
 }
 
-void MainMenuBar::OnExportTilesets(wxCommandEvent& event) {
-	fileMenuHandler->OnExportTilesets(event);
-}
-
 void MainMenuBar::OnDebugViewDat(wxCommandEvent& event) {
 	wxDialog dlg(frame, wxID_ANY, "Debug .dat file", wxDefaultPosition, wxDefaultSize, wxDEFAULT_DIALOG_STYLE | wxRESIZE_BORDER);
 	new DatDebugView(&dlg);
@@ -411,10 +407,6 @@ void MainMenuBar::OnMapRemoveItems(wxCommandEvent& event) {
 	mapActionsHandler->OnMapRemoveItems(event);
 }
 
-void MainMenuBar::OnMapRemoveCorpses(wxCommandEvent& event) {
-	mapActionsHandler->OnMapRemoveCorpses(event);
-}
-
 void MainMenuBar::OnMapRemoveUnreachable(wxCommandEvent& event) {
 	mapActionsHandler->OnMapRemoveUnreachable(event);
 }
@@ -556,36 +548,20 @@ void MainMenuBar::OnNewPalette(wxCommandEvent& event) {
 	paletteMenuHandler->OnNewPalette(event);
 }
 
-void MainMenuBar::OnSelectTerrainPalette(wxCommandEvent& event) {
-	paletteMenuHandler->OnSelectTerrainPalette(event);
-}
-
-void MainMenuBar::OnSelectDoodadPalette(wxCommandEvent& event) {
-	paletteMenuHandler->OnSelectDoodadPalette(event);
-}
-
-void MainMenuBar::OnSelectItemPalette(wxCommandEvent& event) {
-	paletteMenuHandler->OnSelectItemPalette(event);
-}
-
-void MainMenuBar::OnSelectCollectionPalette(wxCommandEvent& event) {
-	paletteMenuHandler->OnSelectCollectionPalette(event);
+void MainMenuBar::OnShowPalette(wxCommandEvent& event) {
+	paletteMenuHandler->OnShowPalette(event);
 }
 
 void MainMenuBar::OnSelectHousePalette(wxCommandEvent& event) {
 	paletteMenuHandler->OnSelectHousePalette(event);
 }
 
-void MainMenuBar::OnSelectCreaturePalette(wxCommandEvent& event) {
-	paletteMenuHandler->OnSelectCreaturePalette(event);
+void MainMenuBar::OnSelectSpawnPalette(wxCommandEvent& event) {
+	paletteMenuHandler->OnSelectSpawnPalette(event);
 }
 
 void MainMenuBar::OnSelectWaypointPalette(wxCommandEvent& event) {
 	paletteMenuHandler->OnSelectWaypointPalette(event);
-}
-
-void MainMenuBar::OnSelectRawPalette(wxCommandEvent& event) {
-	paletteMenuHandler->OnSelectRawPalette(event);
 }
 
 void MainMenuBar::OnScriptsOpenFolder(wxCommandEvent& event) {

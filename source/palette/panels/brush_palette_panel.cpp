@@ -1,7 +1,5 @@
 #include "palette/panels/brush_palette_panel.h"
 #include "ui/gui.h"
-#include "ui/add_tileset_window.h"
-#include "ui/add_item_window.h"
 #include "game/materials.h"
 #include "palette/palette_window.h"
 #include <spdlog/spdlog.h>
@@ -187,7 +185,7 @@ void BrushPalettePanel::OnPageChanged(wxChoicebookEvent& event) {
 
 	g_gui.ActivatePalette(GetParentPalette());
 	if (new_brush) {
-		g_gui.SelectBrush(new_brush);
+		g_gui.SelectBrushInternal(new_brush);
 	} else {
 		g_gui.SelectBrush();
 	}

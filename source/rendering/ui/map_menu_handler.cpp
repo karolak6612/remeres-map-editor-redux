@@ -54,8 +54,6 @@ void MapMenuHandler::BindEvents() {
 	canvas->Bind(wxEVT_MENU, &MapMenuHandler::OnSelectCreatureBrush, this, MAP_POPUP_MENU_SELECT_CREATURE_BRUSH);
 	canvas->Bind(wxEVT_MENU, &MapMenuHandler::OnSelectSpawnBrush, this, MAP_POPUP_MENU_SELECT_SPAWN_BRUSH);
 	canvas->Bind(wxEVT_MENU, &MapMenuHandler::OnSelectHouseBrush, this, MAP_POPUP_MENU_SELECT_HOUSE_BRUSH);
-	canvas->Bind(wxEVT_MENU, &MapMenuHandler::OnSelectMoveTo, this, MAP_POPUP_MENU_MOVE_TO_TILESET);
-
 	canvas->Bind(wxEVT_MENU, &MapMenuHandler::OnProperties, this, MAP_POPUP_MENU_PROPERTIES);
 	canvas->Bind(wxEVT_MENU, &MapMenuHandler::OnAdvancedReplace, this, MAP_POPUP_MENU_ADVANCED_REPLACE);
 	canvas->Bind(wxEVT_MENU, &MapMenuHandler::OnBrowseTile, this, MAP_POPUP_MENU_BROWSE_TILE);
@@ -185,10 +183,6 @@ void MapMenuHandler::OnSelectCreatureBrush(wxCommandEvent& WXUNUSED(event)) {
 
 void MapMenuHandler::OnSelectSpawnBrush(wxCommandEvent& WXUNUSED(event)) {
 	BrushSelector::SelectSpawnBrush();
-}
-
-void MapMenuHandler::OnSelectMoveTo(wxCommandEvent& WXUNUSED(event)) {
-	wxMessageBox("Move To Tileset targets the removed legacy palette model and is disabled for the modular data runtime.", "Move To Tileset", wxOK | wxICON_INFORMATION, g_gui.root);
 }
 
 void MapMenuHandler::OnProperties(wxCommandEvent& WXUNUSED(event)) {

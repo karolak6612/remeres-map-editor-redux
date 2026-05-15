@@ -40,14 +40,10 @@ InterfacePage::InterfacePage(wxWindow* parent) : ScrollablePreferencesPage(paren
 	auto* palette_style_section = new PreferencesSectionPanel(
 		GetScrollWindow(),
 		"Palette Style",
-		"Pick the presentation style for each major palette so browsing tools and assets feels consistent."
+		"Pick the presentation style used by XML-defined dynamic palettes."
 	);
 	auto* palette_style_sizer = palette_style_section->GetBodySizer();
-	terrain_palette_style_choice = AddPaletteStyleChoice(palette_style_section, palette_style_sizer, "Terrain palette style", "Choose how the terrain palette is presented.", g_settings.getString(Config::PALETTE_TERRAIN_STYLE));
-	collection_palette_style_choice = AddPaletteStyleChoice(palette_style_section, palette_style_sizer, "Collections palette style", "Choose how the collections palette is presented.", g_settings.getString(Config::PALETTE_COLLECTION_STYLE));
-	doodad_palette_style_choice = AddPaletteStyleChoice(palette_style_section, palette_style_sizer, "Doodad palette style", "Choose how the doodad palette is presented.", g_settings.getString(Config::PALETTE_DOODAD_STYLE));
-	item_palette_style_choice = AddPaletteStyleChoice(palette_style_section, palette_style_sizer, "Item palette style", "Choose how the item palette is presented.", g_settings.getString(Config::PALETTE_ITEM_STYLE));
-	raw_palette_style_choice = AddPaletteStyleChoice(palette_style_section, palette_style_sizer, "RAW palette style", "Choose how the RAW palette is presented.", g_settings.getString(Config::PALETTE_RAW_STYLE));
+	dynamic_palette_style_choice = AddPaletteStyleChoice(palette_style_section, palette_style_sizer, "Dynamic palette style", "Choose how XML-defined dynamic palettes are presented.", g_settings.getString(Config::PALETTE_DYNAMIC_STYLE));
 	page_sizer->Add(palette_style_section, 0, wxEXPAND | wxALL, FromDIP(10));
 
 	auto* density_section = new PreferencesSectionPanel(
@@ -160,19 +156,7 @@ bool InterfacePage::SetPaletteStyleChoice(wxChoice* ctrl, int key) {
 void InterfacePage::Apply() {
 	bool palette_update_needed = false;
 
-	if (SetPaletteStyleChoice(terrain_palette_style_choice, Config::PALETTE_TERRAIN_STYLE)) {
-		palette_update_needed = true;
-	}
-	if (SetPaletteStyleChoice(collection_palette_style_choice, Config::PALETTE_COLLECTION_STYLE)) {
-		palette_update_needed = true;
-	}
-	if (SetPaletteStyleChoice(doodad_palette_style_choice, Config::PALETTE_DOODAD_STYLE)) {
-		palette_update_needed = true;
-	}
-	if (SetPaletteStyleChoice(item_palette_style_choice, Config::PALETTE_ITEM_STYLE)) {
-		palette_update_needed = true;
-	}
-	if (SetPaletteStyleChoice(raw_palette_style_choice, Config::PALETTE_RAW_STYLE)) {
+	if (SetPaletteStyleChoice(dynamic_palette_style_choice, Config::PALETTE_DYNAMIC_STYLE)) {
 		palette_update_needed = true;
 	}
 

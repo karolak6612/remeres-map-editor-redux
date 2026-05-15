@@ -276,7 +276,7 @@ void VirtualBrushGrid::OnMouseDown(wxMouseEvent& event) {
 			w = w->GetParent();
 		}
 
-		g_gui.SelectBrush(tileset->brushes[selected_index]);
+		g_gui.SelectBrushInternal(tileset->brushes[selected_index]);
 		Refresh();
 	}
 }

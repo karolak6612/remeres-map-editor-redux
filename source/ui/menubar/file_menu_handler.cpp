@@ -3,7 +3,6 @@
 #include "app/main.h"
 #include "ui/gui.h"
 #include "ui/map/export_minimap_window.h"
-#include "ui/map/export_tilesets_window.h"
 #include "ui/dialogs/missing_items_dialog.h"
 
 #include "ui/map/import_map_window.h"
@@ -85,10 +84,6 @@ void FileMenuHandler::OnExportMinimap(wxCommandEvent& WXUNUSED(event)) {
 		dlg.ShowModal();
 		dlg.Destroy();
 	}
-}
-
-void FileMenuHandler::OnExportTilesets(wxCommandEvent& WXUNUSED(event)) {
-	wxMessageBox("Tileset export targets the removed legacy palette model and is disabled for the modular data runtime.", "Export Tilesets", wxOK | wxICON_INFORMATION, g_gui.root);
 }
 
 void FileMenuHandler::OnReloadDataFiles(wxCommandEvent& WXUNUSED(event)) {

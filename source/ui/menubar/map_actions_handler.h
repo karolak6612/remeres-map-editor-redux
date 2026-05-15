@@ -10,7 +10,6 @@ public:
 	MapActionsHandler(MainFrame* frame);
 
 	void OnMapRemoveItems(wxCommandEvent& event);
-	void OnMapRemoveCorpses(wxCommandEvent& event);
 	void OnMapRemoveUnreachable(wxCommandEvent& event);
 	void OnClearHouseTiles(wxCommandEvent& event);
 	void OnClearModifiedState(wxCommandEvent& event);

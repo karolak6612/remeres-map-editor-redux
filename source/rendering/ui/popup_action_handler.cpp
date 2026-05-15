@@ -109,8 +109,3 @@ void PopupActionHandler::OpenProperties(Editor& editor) {
 		DialogHelper::OpenProperties(editor, tile);
 	}
 }
-
-void PopupActionHandler::SelectMoveTo(Editor& editor) {
-	wxUnusedVar(editor);
-	wxMessageBox("Move To Tileset targets the removed legacy palette model and is disabled for the modular data runtime.", "Move To Tileset", wxOK | wxICON_INFORMATION, g_gui.root);
-}

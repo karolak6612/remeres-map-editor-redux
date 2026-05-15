@@ -31,7 +31,6 @@ public:
 	const MaterialsExtensionList& getExtensions();
 	MaterialsExtensionList getExtensionsByVersion(const ClientVersionID& version_id);
 
-	TilesetContainer tilesets;
 	MaterialDatabase database;
 
 	[[nodiscard]] PaletteCatalog& paletteCatalog() {
@@ -43,10 +42,6 @@ public:
 	}
 
 	bool loadMaterials(const FileName& identifier, wxString& error, std::vector<std::string>& warnings);
-	void addToTileset(std::string tilesetName, int itemId, TilesetCategoryType categoryType);
-
-	bool isInTileset(Item* item, std::string tileset) const;
-	bool isInTileset(Brush* brush, std::string tileset) const;
 	bool needSave() const {
 		return modified;
 	}

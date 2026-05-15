@@ -48,7 +48,6 @@ class SearchResultWindow;
 class MinimapWindow;
 class PaletteWindow;
 class OldPropertiesWindow;
-class TilesetWindow;
 class EditTownsDialog;
 class ItemButton;
 class HousePalette;

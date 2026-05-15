@@ -18,11 +18,7 @@ private:
 	wxChoice* AddPaletteStyleChoice(wxWindow* parent, wxSizer* sizer, const wxString& short_description, const wxString& description, const std::string& setting);
 	bool SetPaletteStyleChoice(wxChoice* ctrl, int key);
 
-	wxChoice* terrain_palette_style_choice = nullptr;
-	wxChoice* collection_palette_style_choice = nullptr;
-	wxChoice* doodad_palette_style_choice = nullptr;
-	wxChoice* item_palette_style_choice = nullptr;
-	wxChoice* raw_palette_style_choice = nullptr;
+	wxChoice* dynamic_palette_style_choice = nullptr;
 
 	wxChoice* theme_choice = nullptr;
 

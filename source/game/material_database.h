@@ -5,6 +5,9 @@
 #include <vector>
 
 class Brush;
+class Brushes;
+class CreatureDatabase;
+class ItemDefinitionStore;
 
 struct DynamicTilesetDefinition {
 	std::string name;
@@ -43,6 +46,14 @@ private:
 class MaterialDatabase {
 public:
 	void clear();
+	void bindSourceTruth(Brushes& brushRegistry, ItemDefinitionStore& itemRegistry, CreatureDatabase& creatureRegistry);
+	void setTilesetSources(std::vector<std::string> sources);
+
+	[[nodiscard]] Brushes& brushes() const;
+	[[nodiscard]] ItemDefinitionStore& items() const;
+	[[nodiscard]] CreatureDatabase& creatures() const;
+	[[nodiscard]] bool hasSourceTruth() const;
+	[[nodiscard]] bool isKnownTilesetSource(std::string_view source) const;
 
 	[[nodiscard]] PaletteCatalog& paletteCatalog() {
 		return palettes;
@@ -54,6 +65,10 @@ public:
 
 private:
 	PaletteCatalog palettes;
+	Brushes* brush_registry = nullptr;
+	ItemDefinitionStore* item_registry = nullptr;
+	CreatureDatabase* creature_registry = nullptr;
+	std::vector<std::string> tileset_sources;
 };
 
 #endif

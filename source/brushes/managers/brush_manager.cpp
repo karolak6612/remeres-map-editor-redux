@@ -71,17 +71,21 @@ void BrushManager::SelectBrush() {
 }
 
 bool BrushManager::SelectBrush(const Brush* whatbrush) {
+	if (!whatbrush) {
+		return false;
+	}
+
 	if (g_palettes.palettes.empty()) {
 		if (!g_palettes.CreatePalette()) {
 			return false;
 		}
 	}
 
-	g_palettes.palettes.front()->OnSelectBrush(whatbrush);
+	const bool foundInPalette = g_palettes.palettes.front()->OnSelectBrush(whatbrush);
 
 	SelectBrushInternal(const_cast<Brush*>(whatbrush));
 	g_gui.root->GetAuiToolBar()->UpdateBrushButtons();
-	return true;
+	return foundInPalette;
 }
 
 void BrushManager::SelectBrushInternal(Brush* brush) {
