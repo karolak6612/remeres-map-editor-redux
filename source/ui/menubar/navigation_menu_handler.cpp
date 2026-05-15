@@ -42,8 +42,7 @@ namespace {
 
 	void selectFoundBrush(const FindItemDialog& dialog) {
 		if (const Brush* brush = dialog.getResult()) {
-			const PaletteType palette = dialog.getResultKind() == AdvancedFinderCatalogKind::Creature ? TILESET_CREATURE : TILESET_RAW;
-			g_gui.SelectBrush(brush, palette);
+			g_gui.SelectBrush(brush);
 		}
 	}
 
@@ -160,7 +159,7 @@ void NavigationMenuHandler::OnJumpToBrush(wxCommandEvent& WXUNUSED(event)) {
 	// Retrieve result, if null user canceled
 	const Brush* brush = dlg->getResult();
 	if (brush) {
-		g_gui.SelectBrush(brush, TILESET_UNKNOWN);
+		g_gui.SelectBrush(brush);
 	}
 	dlg->Destroy();
 }

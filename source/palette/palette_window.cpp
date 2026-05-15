@@ -22,58 +22,6 @@
 
 namespace {
 
-[[nodiscard]] std::string_view legacyPaletteName(PaletteType palette) {
-	switch (palette) {
-		case TILESET_TERRAIN:
-			return "Terrain";
-		case TILESET_DOODAD:
-			return "Doodad";
-		case TILESET_ITEM:
-			return "Item";
-		case TILESET_COLLECTION:
-			return "Collection";
-		case TILESET_CREATURE:
-			return "Creature";
-		case TILESET_HOUSE:
-			return "House";
-		case TILESET_RAW:
-			return "Raw";
-		case TILESET_WAYPOINT:
-			return "Waypoint";
-		case TILESET_UNKNOWN:
-			return {};
-	}
-	return {};
-}
-
-[[nodiscard]] PaletteType legacyPaletteType(std::string_view name) {
-	if (name == "Terrain") {
-		return TILESET_TERRAIN;
-	}
-	if (name == "Doodad") {
-		return TILESET_DOODAD;
-	}
-	if (name == "Item") {
-		return TILESET_ITEM;
-	}
-	if (name == "Collection") {
-		return TILESET_COLLECTION;
-	}
-	if (name == "Creature") {
-		return TILESET_CREATURE;
-	}
-	if (name == "House") {
-		return TILESET_HOUSE;
-	}
-	if (name == "Raw" || name == "RAW") {
-		return TILESET_RAW;
-	}
-	if (name == "Waypoint") {
-		return TILESET_WAYPOINT;
-	}
-	return TILESET_UNKNOWN;
-}
-
 [[nodiscard]] wxString brushListTypeForPalette(std::string_view name) {
 	if (name == "Terrain") {
 		return wxstr(g_settings.getString(Config::PALETTE_TERRAIN_STYLE));
@@ -197,10 +145,6 @@ void PaletteWindow::InvalidateContents() {
 	}
 }
 
-void PaletteWindow::SelectPage(PaletteType palette) {
-	SelectPage(legacyPaletteName(palette));
-}
-
 void PaletteWindow::SelectPage(std::string_view paletteName) {
 	if (!choicebook || paletteName.empty()) {
 		return;
@@ -236,40 +180,16 @@ int PaletteWindow::GetSelectedBrushSize() const {
 	return panel ? panel->GetSelectedBrushSize() : 0;
 }
 
-PaletteType PaletteWindow::GetSelectedPage() const {
-	if (!choicebook) {
-		return TILESET_UNKNOWN;
-	}
-	const auto* panel = dynamic_cast<const PalettePanel*>(choicebook->GetCurrentPage());
-	return panel ? legacyPaletteType(nstr(panel->GetName())) : TILESET_UNKNOWN;
-}
-
-bool PaletteWindow::OnSelectBrush(const Brush* whatbrush, PaletteType primary) {
-	return OnSelectBrush(whatbrush, legacyPaletteName(primary));
-}
-
-bool PaletteWindow::OnSelectBrush(const Brush* whatbrush, std::string_view primary) {
+bool PaletteWindow::OnSelectBrush(const Brush* whatbrush) {
 	if (!choicebook || !whatbrush) {
 		return false;
 	}
 
-	if (!primary.empty()) {
-		for (size_t index = 0; index < choicebook->GetPageCount(); ++index) {
-			auto* panel = dynamic_cast<PalettePanel*>(choicebook->GetPage(index));
-			if (paletteNameMatches(panel, primary) && panel->SelectBrush(whatbrush)) {
-				choicebook->SetSelection(index);
-				return true;
-			}
-		}
-	}
-
 	for (size_t index = 0; index < choicebook->GetPageCount(); ++index) {
 		auto* panel = dynamic_cast<PalettePanel*>(choicebook->GetPage(index));
-		if (primary.empty() || !paletteNameMatches(panel, primary)) {
-			if (panel && panel->SelectBrush(whatbrush)) {
-				choicebook->SetSelection(index);
-				return true;
-			}
+		if (panel && panel->SelectBrush(whatbrush)) {
+			choicebook->SetSelection(index);
+			return true;
 		}
 	}
 

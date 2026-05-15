@@ -90,12 +90,8 @@ int WaypointPalettePanel::GetSelectedBrushSize() const {
 	return 0;
 }
 
-PaletteType WaypointPalettePanel::GetType() const {
-	return TILESET_WAYPOINT;
-}
-
 wxString WaypointPalettePanel::GetName() const {
-	return "Waypoint Palette";
+	return "Waypoint";
 }
 
 void WaypointPalettePanel::OnUpdate() {

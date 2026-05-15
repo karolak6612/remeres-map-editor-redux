@@ -124,10 +124,6 @@ wxString HousePalette::GetName() const {
 	return "House";
 }
 
-PaletteType HousePalette::GetType() const {
-	return TILESET_HOUSE;
-}
-
 void HousePalette::SetMap(Map* m) {
 	if (map != m) {
 		g_brush_manager.house_brush->setHouse(nullptr);

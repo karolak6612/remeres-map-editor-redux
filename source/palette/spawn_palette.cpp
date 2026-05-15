@@ -17,10 +17,6 @@ wxString SpawnPalettePanel::GetName() const {
 	return "Spawn";
 }
 
-PaletteType SpawnPalettePanel::GetType() const {
-	return TILESET_CREATURE;
-}
-
 Brush* SpawnPalettePanel::GetSelectedBrush() const {
 	return g_brush_manager.spawn_brush;
 }

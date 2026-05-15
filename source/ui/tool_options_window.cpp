@@ -22,14 +22,6 @@ ToolOptionsWindow::~ToolOptionsWindow() {
 	// Children deleted automatically
 }
 
-void ToolOptionsWindow::SetPaletteType(PaletteType type) {
-	if (surface) {
-		surface->SetPaletteType(type);
-		Layout(); // Re-trigger layout in case best size changed
-		GetParent()->Layout(); // Inform parent (AUI pane)
-	}
-}
-
 void ToolOptionsWindow::SetActiveBrush(Brush* brush) {
 	if (surface) {
 		surface->SetActiveBrush(brush);

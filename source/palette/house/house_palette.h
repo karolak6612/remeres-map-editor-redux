@@ -30,7 +30,6 @@ public:
 
 	// Palette operations
 	wxString GetName() const override;
-	PaletteType GetType() const override;
 	Brush* GetSelectedBrush() const override;
 	bool SelectBrush(const Brush* whatbrush) override;
 	void OnUpdate() override;

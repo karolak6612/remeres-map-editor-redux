@@ -43,21 +43,16 @@ public:
 	// (Re)Loads all currently displayed data, called from InvalidateContents implicitly
 	void LoadCurrentContents();
 	// Goes to the selected page and selects any brush there
-	void SelectPage(PaletteType palette);
 	void SelectPage(std::string_view paletteName);
 	// The currently selected brush in this palette
 	Brush* GetSelectedBrush() const;
 	Brush* GetSelectedCreatureBrush() const;
 	// The currently selected brush size in this palette
 	int GetSelectedBrushSize() const;
-	// The currently selected page (terrain, doodad...)
-	PaletteType GetSelectedPage() const;
-
 	// Custom Event handlers (something has changed?)
 	// Finds the brush pointed to by whatbrush and selects it as the current brush (also changes page)
 	// Returns if the brush was found in this palette
-	virtual bool OnSelectBrush(const Brush* whatbrush, PaletteType primary = TILESET_UNKNOWN);
-	virtual bool OnSelectBrush(const Brush* whatbrush, std::string_view primary);
+	virtual bool OnSelectBrush(const Brush* whatbrush);
 	// Updates the palette window to use the current brush size
 	virtual void OnUpdateBrushSize(BrushShape shape, int size);
 	// Updates the content of the palette (eg. houses, creatures)

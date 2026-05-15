@@ -8,7 +8,6 @@ public:
 	explicit SpawnPalettePanel(wxWindow* parent, wxWindowID id = wxID_ANY);
 
 	wxString GetName() const override;
-	PaletteType GetType() const override;
 	Brush* GetSelectedBrush() const override;
 	int GetSelectedBrushSize() const override;
 	bool SelectBrush(const Brush* whatbrush) override;

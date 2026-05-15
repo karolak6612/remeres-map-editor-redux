@@ -45,7 +45,7 @@ void BrushSelector::SelectRAWBrush(Selection& selection) {
 	Item* item = TileOperations::getTopSelectedItem(tile);
 
 	if (item && item->getRAWBrush()) {
-		g_gui.SelectBrush(item->getRAWBrush(), TILESET_RAW);
+		g_gui.SelectBrush(item->getRAWBrush());
 	}
 }
 
@@ -60,7 +60,7 @@ void BrushSelector::SelectGroundBrush(Selection& selection) {
 	GroundBrush* bb = tile->getGroundBrush();
 
 	if (bb) {
-		g_gui.SelectBrush(bb, TILESET_TERRAIN);
+		g_gui.SelectBrush(bb);
 	}
 }
 
@@ -75,7 +75,7 @@ void BrushSelector::SelectDoodadBrush(Selection& selection) {
 	Item* item = TileOperations::getTopSelectedItem(tile);
 
 	if (item) {
-		g_gui.SelectBrush(item->getDoodadBrush(), TILESET_DOODAD);
+		g_gui.SelectBrush(item->getDoodadBrush());
 	}
 }
 
@@ -90,7 +90,7 @@ void BrushSelector::SelectDoorBrush(Selection& selection) {
 	Item* item = TileOperations::getTopSelectedItem(tile);
 
 	if (item) {
-		g_gui.SelectBrush(item->getDoorBrush(), TILESET_TERRAIN);
+		g_gui.SelectBrush(item->getDoorBrush());
 	}
 }
 
@@ -106,7 +106,7 @@ void BrushSelector::SelectWallBrush(Selection& selection) {
 	WallBrush* wb = wall->getWallBrush();
 
 	if (wb) {
-		g_gui.SelectBrush(wb, TILESET_TERRAIN);
+		g_gui.SelectBrush(wb);
 	}
 }
 
@@ -152,7 +152,7 @@ void BrushSelector::SelectHouseBrush(Editor& editor, Selection& selection) {
 		House* house = editor.map.houses.getHouse(tile->getHouseID());
 		if (house) {
 			g_brush_manager.house_brush->setHouse(house);
-			g_gui.SelectBrush(g_brush_manager.house_brush, TILESET_HOUSE);
+			g_gui.SelectBrush(g_brush_manager.house_brush);
 		}
 	}
 }
@@ -167,41 +167,41 @@ void BrushSelector::SelectCollectionBrush(Selection& selection) {
 		if (item->isWall()) {
 			WallBrush* wb = item->getWallBrush();
 			if (wb && wb->visibleInPalette() && wb->hasCollection()) {
-				g_gui.SelectBrush(wb, TILESET_COLLECTION);
+				g_gui.SelectBrush(wb);
 				return;
 			}
 		}
 		if (item->isTable()) {
 			TableBrush* tb = item->getTableBrush();
 			if (tb && tb->visibleInPalette() && tb->hasCollection()) {
-				g_gui.SelectBrush(tb, TILESET_COLLECTION);
+				g_gui.SelectBrush(tb);
 				return;
 			}
 		}
 		if (item->isCarpet()) {
 			CarpetBrush* cb = item->getCarpetBrush();
 			if (cb && cb->visibleInPalette() && cb->hasCollection()) {
-				g_gui.SelectBrush(cb, TILESET_COLLECTION);
+				g_gui.SelectBrush(cb);
 				return;
 			}
 		}
 		if (Brush* db = item->getDoodadBrush()) {
 			if (db && db->visibleInPalette() && db->hasCollection()) {
-				g_gui.SelectBrush(db, TILESET_COLLECTION);
+				g_gui.SelectBrush(db);
 				return;
 			}
 		}
 		if (item->isSelected()) {
 			RAWBrush* rb = item->getRAWBrush();
 			if (rb && rb->hasCollection()) {
-				g_gui.SelectBrush(rb, TILESET_COLLECTION);
+				g_gui.SelectBrush(rb);
 				return;
 			}
 		}
 	}
 	GroundBrush* gb = tile->getGroundBrush();
 	if (gb && gb->visibleInPalette() && gb->hasCollection()) {
-		g_gui.SelectBrush(gb, TILESET_COLLECTION);
+		g_gui.SelectBrush(gb);
 		return;
 	}
 }
@@ -213,12 +213,12 @@ void BrushSelector::SelectCreatureBrush(Selection& selection) {
 	}
 
 	if (tile->creature) {
-		g_gui.SelectBrush(tile->creature->getBrush(), TILESET_CREATURE);
+		g_gui.SelectBrush(tile->creature->getBrush());
 	}
 }
 
 void BrushSelector::SelectSpawnBrush() {
-	g_gui.SelectBrush(g_brush_manager.spawn_brush, TILESET_CREATURE);
+	g_gui.SelectBrush(g_brush_manager.spawn_brush);
 }
 
 void BrushSelector::SelectSmartBrush(Editor& editor, Tile* tile) {
@@ -227,14 +227,14 @@ void BrushSelector::SelectSmartBrush(Editor& editor, Tile* tile) {
 		if (tile->creature && g_settings.getInteger(Config::SHOW_CREATURES)) {
 			CreatureBrush* brush = tile->creature->getBrush();
 			if (brush) {
-				g_gui.SelectBrush(brush, TILESET_CREATURE);
+				g_gui.SelectBrush(brush);
 				return;
 			}
 		}
 		// Fall back to item selection
 		Item* item = tile->getTopItem();
 		if (item && item->getRAWBrush()) {
-			g_gui.SelectBrush(item->getRAWBrush(), TILESET_RAW);
+			g_gui.SelectBrush(item->getRAWBrush());
 		}
 	}
 }

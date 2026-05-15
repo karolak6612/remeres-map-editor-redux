@@ -184,11 +184,6 @@ void ToolOptionsSurface::BuildUi() {
 	spawn_size_spin->Bind(wxEVT_SPINCTRL, &ToolOptionsSurface::OnSpawnSizeChanged, this);
 }
 
-void ToolOptionsSurface::SetPaletteType(PaletteType type) {
-	(void)type;
-	RefreshFromState();
-}
-
 void ToolOptionsSurface::SetActiveBrush(Brush* brush) {
 	active_brush = brush;
 	RefreshFromState();
@@ -571,7 +566,7 @@ void ToolOptionsSurface::OnToolButton(wxCommandEvent& event) {
 				if (Brush* creature_brush = GetSelectedCreatureBrush()) {
 					active_brush = creature_brush;
 					g_gui.SetSpawnTime(spawn_time_spin->GetValue());
-					g_gui.SelectBrush(creature_brush, TILESET_CREATURE);
+					g_gui.SelectBrush(creature_brush);
 					g_gui.SetStatusText("Selected Tool: Place Creature");
 				}
 				break;
@@ -580,7 +575,7 @@ void ToolOptionsSurface::OnToolButton(wxCommandEvent& event) {
 					active_brush = g_brush_manager.spawn_brush;
 					g_gui.SetSpawnTime(spawn_time_spin->GetValue());
 					g_gui.SetBrushSize(spawn_size_spin->GetValue());
-					g_gui.SelectBrush(g_brush_manager.spawn_brush, TILESET_CREATURE);
+					g_gui.SelectBrush(g_brush_manager.spawn_brush);
 					g_gui.SetStatusText("Selected Tool: Place Spawn");
 				}
 				break;

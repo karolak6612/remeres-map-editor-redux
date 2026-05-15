@@ -19,7 +19,6 @@ public:
 	ToolOptionsSurface(wxWindow* parent);
 	~ToolOptionsSurface() override = default;
 
-	void SetPaletteType(PaletteType type);
 	void SetActiveBrush(Brush* brush);
 	void UpdateBrushSize(BrushShape shape, int size);
 	void ReloadSettings();

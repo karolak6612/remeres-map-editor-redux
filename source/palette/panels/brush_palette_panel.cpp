@@ -187,7 +187,7 @@ void BrushPalettePanel::OnPageChanged(wxChoicebookEvent& event) {
 
 	g_gui.ActivatePalette(GetParentPalette());
 	if (new_brush) {
-		g_gui.SelectBrush(new_brush, palette_name);
+		g_gui.SelectBrush(new_brush);
 	} else {
 		g_gui.SelectBrush();
 	}

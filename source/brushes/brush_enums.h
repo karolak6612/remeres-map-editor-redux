@@ -35,8 +35,6 @@ enum TilesetCategoryType {
 	TILESET_UNKNOWN,
 };
 
-using PaletteType = TilesetCategoryType;
-
 enum BorderType {
 	// Border types (also used for carpets)
 	BORDER_NONE = 0,

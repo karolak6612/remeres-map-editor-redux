@@ -70,32 +70,14 @@ void BrushManager::SelectBrush() {
 	g_gui.RefreshView();
 }
 
-bool BrushManager::SelectBrush(const Brush* whatbrush, PaletteType primary) {
+bool BrushManager::SelectBrush(const Brush* whatbrush) {
 	if (g_palettes.palettes.empty()) {
 		if (!g_palettes.CreatePalette()) {
 			return false;
 		}
 	}
 
-	g_palettes.palettes.front()->OnSelectBrush(whatbrush, primary);
-
-	SelectBrushInternal(const_cast<Brush*>(whatbrush));
-	g_gui.root->GetAuiToolBar()->UpdateBrushButtons();
-	return true;
-}
-
-bool BrushManager::SelectBrush(const Brush* whatbrush, std::string_view preferredPalette) {
-	if (g_palettes.palettes.empty()) {
-		if (!g_palettes.CreatePalette()) {
-			return false;
-		}
-	}
-
-	if (preferredPalette.empty()) {
-		g_palettes.palettes.front()->OnSelectBrush(whatbrush);
-	} else if (g_palettes.palettes.front()->OnSelectBrush(whatbrush, preferredPalette)) {
-		// Found in a palette, OnSelectBrush handled the focus/switching
-	}
+	g_palettes.palettes.front()->OnSelectBrush(whatbrush);
 
 	SelectBrushInternal(const_cast<Brush*>(whatbrush));
 	g_gui.root->GetAuiToolBar()->UpdateBrushButtons();

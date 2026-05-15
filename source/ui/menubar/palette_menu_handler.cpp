@@ -3,6 +3,12 @@
 #include "ui/gui.h"
 #include "palette/house/house_palette.h"
 
+namespace {
+void ShowDynamicPaletteMenuRemoved() {
+	wxMessageBox("Dynamic palettes are defined by palettes.xml. Use the palette dropdown; fixed Terrain/Doodad/Raw menu targets are no longer valid.", "Dynamic Palettes", wxOK | wxICON_INFORMATION, g_gui.root);
+}
+}
+
 PaletteMenuHandler::PaletteMenuHandler(MainFrame* frame, MainMenuBar* menubar) :
 	frame(frame), menubar(menubar) {
 }
@@ -15,33 +21,33 @@ void PaletteMenuHandler::OnNewPalette(wxCommandEvent& event) {
 }
 
 void PaletteMenuHandler::OnSelectTerrainPalette(wxCommandEvent& WXUNUSED(event)) {
-	g_gui.SelectPalettePage(TILESET_TERRAIN);
+	ShowDynamicPaletteMenuRemoved();
 }
 
 void PaletteMenuHandler::OnSelectDoodadPalette(wxCommandEvent& WXUNUSED(event)) {
-	g_gui.SelectPalettePage(TILESET_DOODAD);
+	ShowDynamicPaletteMenuRemoved();
 }
 
 void PaletteMenuHandler::OnSelectItemPalette(wxCommandEvent& WXUNUSED(event)) {
-	g_gui.SelectPalettePage(TILESET_ITEM);
+	ShowDynamicPaletteMenuRemoved();
 }
 
 void PaletteMenuHandler::OnSelectCollectionPalette(wxCommandEvent& WXUNUSED(event)) {
-	g_gui.SelectPalettePage(TILESET_COLLECTION);
+	ShowDynamicPaletteMenuRemoved();
 }
 
 void PaletteMenuHandler::OnSelectHousePalette(wxCommandEvent& WXUNUSED(event)) {
-	g_gui.SelectPalettePage(TILESET_HOUSE);
+	g_gui.SelectPalettePage("House");
 }
 
 void PaletteMenuHandler::OnSelectCreaturePalette(wxCommandEvent& WXUNUSED(event)) {
-	g_gui.SelectPalettePage(TILESET_CREATURE);
+	ShowDynamicPaletteMenuRemoved();
 }
 
 void PaletteMenuHandler::OnSelectWaypointPalette(wxCommandEvent& WXUNUSED(event)) {
-	g_gui.SelectPalettePage(TILESET_WAYPOINT);
+	g_gui.SelectPalettePage("Waypoint");
 }
 
 void PaletteMenuHandler::OnSelectRawPalette(wxCommandEvent& WXUNUSED(event)) {
-	g_gui.SelectPalettePage(TILESET_RAW);
+	ShowDynamicPaletteMenuRemoved();
 }

@@ -84,7 +84,7 @@ void PaletteManager::ShowPalette() {
 	g_gui.aui_manager->Update();
 }
 
-void PaletteManager::SelectPalettePage(PaletteType pt) {
+void PaletteManager::SelectPalettePage(std::string_view name) {
 	if (palettes.empty()) {
 		CreatePalette();
 	}
@@ -94,7 +94,7 @@ void PaletteManager::SelectPalettePage(PaletteType pt) {
 	}
 
 	ShowPalette();
-	p->SelectPage(pt);
+	p->SelectPage(name);
 	g_gui.aui_manager->Update();
 	g_brush_manager.SelectBrushInternal(p->GetSelectedBrush());
 }
