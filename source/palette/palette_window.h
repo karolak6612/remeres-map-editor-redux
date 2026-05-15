@@ -27,7 +27,6 @@
 class BrushPalettePanel;
 struct HardcodedPaletteProvider;
 class HousePalette;
-class SpawnPalettePanel;
 class WaypointPalettePanel;
 
 class PaletteWindow : public wxPanel {
@@ -75,7 +74,6 @@ protected:
 	std::vector<PalettePanel*> palette_pages;
 	std::vector<HardcodedPage> hardcoded_pages;
 	HousePalette* house_palette;
-	SpawnPalettePanel* spawn_palette;
 	WaypointPalettePanel* waypoint_palette;
 };
 

@@ -22,10 +22,6 @@ void PaletteMenuHandler::OnSelectHousePalette(wxCommandEvent& event) {
 	g_gui.SelectPalettePage("House");
 }
 
-void PaletteMenuHandler::OnSelectSpawnPalette(wxCommandEvent& event) {
-	g_gui.SelectPalettePage("Spawn");
-}
-
 void PaletteMenuHandler::OnSelectWaypointPalette(wxCommandEvent& event) {
 	g_gui.SelectPalettePage("Waypoint");
 }

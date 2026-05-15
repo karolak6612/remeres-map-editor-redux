@@ -13,7 +13,6 @@
 #include "palette/house/house_palette.h"
 #include "palette/palette_waypoints.h"
 #include "palette/panels/brush_palette_panel.h"
-#include "palette/spawn_palette.h"
 #include "rendering/ui/map_display.h"
 #include "ui/gui.h"
 
@@ -36,7 +35,6 @@ PaletteWindow::PaletteWindow(wxWindow* parent, const PaletteCatalog& catalog) :
 	wxPanel(parent, wxID_ANY, wxDefaultPosition, wxSize(230, 250)),
 	choicebook(nullptr),
 	house_palette(nullptr),
-	spawn_palette(nullptr),
 	waypoint_palette(nullptr) {
 	SetMinSize(wxSize(225, 250));
 
@@ -64,8 +62,6 @@ PaletteWindow::PaletteWindow(wxWindow* parent, const PaletteCatalog& catalog) :
 		if (auto* housePanel = dynamic_cast<HousePalette*>(panel)) {
 			house_palette = housePanel;
 			g_gui.house_palette = house_palette;
-		} else if (auto* spawnPanel = dynamic_cast<SpawnPalettePanel*>(panel)) {
-			spawn_palette = spawnPanel;
 		} else if (auto* waypointPanel = dynamic_cast<WaypointPalettePanel*>(panel)) {
 			waypoint_palette = waypointPanel;
 		}

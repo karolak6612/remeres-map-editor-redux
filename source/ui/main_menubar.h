@@ -133,7 +133,6 @@ namespace MenuBar {
 		NEW_PALETTE,
 		SHOW_PALETTE,
 		SELECT_HOUSE,
-		SELECT_SPAWN,
 		SELECT_WAYPOINT,
 		TAKE_SCREENSHOT,
 		LIVE_START,
@@ -289,7 +288,6 @@ public:
 	void OnNewPalette(wxCommandEvent& event);
 	void OnShowPalette(wxCommandEvent& event);
 	void OnSelectHousePalette(wxCommandEvent& event);
-	void OnSelectSpawnPalette(wxCommandEvent& event);
 	void OnSelectWaypointPalette(wxCommandEvent& event);
 
 	void OnStartLive(wxCommandEvent& event);

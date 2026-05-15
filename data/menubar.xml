@@ -212,7 +212,6 @@
 			<item name="Show Palettes" action="SHOW_PALETTE" help="Displays the primary palette window."/>
 			<separator/>
 			<item name="House" hotkey="H" action="SELECT_HOUSE" help="Select the House palette."/>
-			<item name="Spawn" action="SELECT_SPAWN" help="Select the Spawn palette."/>
 			<item name="Waypoint" hotkey="W" action="SELECT_WAYPOINT" help="Select the Waypoint palette."/>
 		</menu>
 		<menu name="Toolbars">

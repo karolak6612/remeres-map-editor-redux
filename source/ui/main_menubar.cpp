@@ -556,10 +556,6 @@ void MainMenuBar::OnSelectHousePalette(wxCommandEvent& event) {
 	paletteMenuHandler->OnSelectHousePalette(event);
 }
 
-void MainMenuBar::OnSelectSpawnPalette(wxCommandEvent& event) {
-	paletteMenuHandler->OnSelectSpawnPalette(event);
-}
-
 void MainMenuBar::OnSelectWaypointPalette(wxCommandEvent& event) {
 	paletteMenuHandler->OnSelectWaypointPalette(event);
 }
