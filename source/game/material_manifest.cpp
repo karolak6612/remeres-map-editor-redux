@@ -4,13 +4,32 @@
 #include "game/material_include_resolver.h"
 #include "util/common.h"
 
+#include <array>
+#include <format>
+
+namespace {
+
+struct ManifestSection {
+	std::string_view name;
+	std::vector<FileName> MaterialManifestFiles::* files;
+	bool* seen = nullptr;
+};
+
+[[nodiscard]] bool collectManifestSection(const FileName& manifestFile, pugi::xml_node node, const ManifestSection& section, MaterialManifestFiles& files, wxString& error) {
+	*section.seen = true;
+	return MaterialIncludeResolver::collectSectionFiles(manifestFile, node, section.name, files.*section.files, error);
+}
+
+} // namespace
+
 bool LoadMaterialManifestFiles(const FileName& manifestFile, MaterialManifestFiles& files, wxString& error) {
 	files = {};
 
 	pugi::xml_document doc;
 	const pugi::xml_parse_result result = doc.load_file(manifestFile.GetFullPath().mb_str());
 	if (!result) {
-		error = "Could not parse materials manifest: " + manifestFile.GetFullPath();
+		error = wxstr(std::format("Could not parse materials manifest: {}: {} at offset {}",
+			manifestFile.GetFullPath().ToStdString(), result.description(), result.offset));
 		return false;
 	}
 
@@ -26,42 +45,25 @@ bool LoadMaterialManifestFiles(const FileName& manifestFile, MaterialManifestFil
 	bool sawItems = false;
 	bool sawTilesets = false;
 	bool sawPalettes = false;
+	const std::array sections {
+		ManifestSection { .name = "borders", .files = &MaterialManifestFiles::borders, .seen = &sawBorders },
+		ManifestSection { .name = "brushes", .files = &MaterialManifestFiles::brushes, .seen = &sawBrushes },
+		ManifestSection { .name = "creatures", .files = &MaterialManifestFiles::creatures, .seen = &sawCreatures },
+		ManifestSection { .name = "items", .files = &MaterialManifestFiles::items, .seen = &sawItems },
+		ManifestSection { .name = "tilesets", .files = &MaterialManifestFiles::tilesets, .seen = &sawTilesets },
+		ManifestSection { .name = "palettes", .files = &MaterialManifestFiles::palettes, .seen = &sawPalettes },
+	};
 
 	for (pugi::xml_node childNode = root.first_child(); childNode; childNode = childNode.next_sibling()) {
 		const std::string childName = as_lower_str(childNode.name());
-		if (childName == "borders") {
-			sawBorders = true;
-			if (!MaterialIncludeResolver::collectSectionFiles(manifestFile, childNode, "borders", files.borders, error)) {
-				return false;
-			}
-		} else if (childName == "brushes") {
-			sawBrushes = true;
-			if (!MaterialIncludeResolver::collectSectionFiles(manifestFile, childNode, "brushes", files.brushes, error)) {
-				return false;
-			}
-		} else if (childName == "creatures") {
-			sawCreatures = true;
-			if (!MaterialIncludeResolver::collectSectionFiles(manifestFile, childNode, "creatures", files.creatures, error)) {
-				return false;
-			}
-		} else if (childName == "items") {
-			sawItems = true;
-			if (!MaterialIncludeResolver::collectSectionFiles(manifestFile, childNode, "items", files.items, error)) {
-				return false;
-			}
-		} else if (childName == "tilesets") {
-			sawTilesets = true;
-			if (!MaterialIncludeResolver::collectSectionFiles(manifestFile, childNode, "tilesets", files.tilesets, error)) {
-				return false;
-			}
-		} else if (childName == "palettes") {
-			sawPalettes = true;
-			if (!MaterialIncludeResolver::collectSectionFiles(manifestFile, childNode, "palettes", files.palettes, error)) {
-				return false;
-			}
-		} else if (childName == "tileset") {
+		if (childName == "tileset") {
 			error = "Legacy <tileset> nodes are not supported by the modular material loader.";
 			return false;
+		}
+		for (const ManifestSection& section : sections) {
+			if (childName == section.name && !collectManifestSection(manifestFile, childNode, section, files, error)) {
+				return false;
+			}
 		}
 	}
 

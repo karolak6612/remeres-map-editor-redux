@@ -1,7 +1,6 @@
 #include "palette/panels/brush_panel.h"
 #include "ui/gui.h"
 #include "app/settings.h"
-#include "app/settings.h"
 #include "palette/palette_window.h" // For PaletteWindow dynamic_casts
 #include "palette/controls/virtual_brush_grid.h"
 #include <spdlog/spdlog.h>

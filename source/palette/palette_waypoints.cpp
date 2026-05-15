@@ -82,7 +82,6 @@ Brush* WaypointPalettePanel::GetSelectedBrush() const {
 }
 
 bool WaypointPalettePanel::SelectBrush(const Brush* whatbrush) {
-	ASSERT(whatbrush == g_brush_manager.waypoint_brush);
 	return whatbrush == g_brush_manager.waypoint_brush;
 }
 

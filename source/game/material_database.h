@@ -22,6 +22,7 @@ struct DynamicTilesetDefinition {
 
 struct DynamicPaletteDefinition {
 	std::string name;
+	// Palette UI panels keep pointers to elements in this vector; treat loaded tilesets as immutable until the catalog is rebuilt.
 	std::vector<DynamicTilesetDefinition> tilesets;
 
 	[[nodiscard]] bool containsBrush(const Brush* brush) const;

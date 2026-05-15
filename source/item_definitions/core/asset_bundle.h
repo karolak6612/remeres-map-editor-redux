@@ -17,7 +17,9 @@ struct AssetLoadRequest {
 	wxFileName dat_path;
 	wxFileName spr_path;
 	wxFileName otb_path;
+	// Legacy single XML path kept for migration; xmlInputPaths() falls back to it when xml_paths is empty.
 	wxFileName xml_path;
+	// Preferred modular XML inputs. xmlInputPaths() uses these first and xml_path can be removed after migration.
 	std::vector<wxFileName> xml_paths;
 	ClientVersion* client_version = nullptr;
 };

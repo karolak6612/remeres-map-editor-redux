@@ -29,6 +29,13 @@ namespace {
 	return panel && nstr(panel->GetName()) == name;
 }
 
+[[nodiscard]] wxWindow* choicebookPageAt(wxChoicebook* choicebook, int index) {
+	if (!choicebook || index == wxNOT_FOUND || index < 0 || static_cast<size_t>(index) >= choicebook->GetPageCount()) {
+		return nullptr;
+	}
+	return choicebook->GetPage(static_cast<size_t>(index));
+}
+
 } // namespace
 
 PaletteWindow::PaletteWindow(wxWindow* parent, const PaletteCatalog& catalog) :
@@ -183,13 +190,13 @@ void PaletteWindow::OnSwitchingPage(wxChoicebookEvent& event) {
 		return;
 	}
 
-	if (wxWindow* oldPage = choicebook->GetPage(choicebook->GetSelection())) {
+	if (wxWindow* oldPage = choicebookPageAt(choicebook, event.GetOldSelection())) {
 		if (auto* oldPanel = dynamic_cast<PalettePanel*>(oldPage)) {
 			oldPanel->OnSwitchOut();
 		}
 	}
 
-	if (wxWindow* page = choicebook->GetPage(event.GetSelection())) {
+	if (wxWindow* page = choicebookPageAt(choicebook, event.GetSelection())) {
 		if (auto* panel = dynamic_cast<PalettePanel*>(page)) {
 			panel->OnSwitchIn();
 		}

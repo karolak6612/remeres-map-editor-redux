@@ -28,6 +28,9 @@
 #include "brushes/creature/creature_brush.h"
 #include "brushes/raw/raw_brush.h"
 
+#include <format>
+#include <limits>
+
 Materials g_materials;
 
 namespace {
@@ -90,12 +93,7 @@ bool Materials::loadMaterials(const FileName& identifier, wxString& error, std::
 }
 
 bool Materials::unserializeMaterials(const FileName& filename, pugi::xml_node node, wxString& error, std::vector<std::string>& warnings) {
-	bool sawBorders = false;
-	bool sawBrushes = false;
-	bool sawCreatures = false;
-	bool sawItems = false;
-	bool sawTilesets = false;
-	bool sawPalettes = false;
+	ManifestSectionsSeen seen;
 
 	for (pugi::xml_node childNode = node.first_child(); childNode; childNode = childNode.next_sibling()) {
 		const std::string childName = as_lower_str(childNode.name());
@@ -103,53 +101,60 @@ bool Materials::unserializeMaterials(const FileName& filename, pugi::xml_node no
 			if (const auto attribute = childNode.attribute("id")) {
 				g_item_definitions.ensureMetaItem(attribute.as_ushort());
 			}
-		} else if (childName == "borders") {
-			sawBorders = true;
-			if (!loadModuleIncludes(filename, childNode, "border", error, warnings)) {
-				return false;
-			}
-		} else if (childName == "brushes") {
-			sawBrushes = true;
-			if (!loadModuleIncludes(filename, childNode, "brush", error, warnings)) {
-				return false;
-			}
-		} else if (childName == "creatures") {
-			sawCreatures = true;
-			if (!loadModuleIncludes(filename, childNode, {}, error, warnings)) {
-				return false;
-			}
-		} else if (childName == "items") {
-			sawItems = true;
-			if (!loadModuleIncludes(filename, childNode, {}, error, warnings)) {
-				return false;
-			}
 		} else if (childName == "tileset") {
 			error = "Legacy <tileset> nodes are not supported by the modular material loader.";
 			return false;
-		} else if (childName == "tilesets") {
-			sawTilesets = true;
-			std::vector<FileName> tilesetFiles;
-			if (!MaterialIncludeResolver::collectSectionFiles(filename, childNode, "tilesets", tilesetFiles, error)) {
-				return false;
-			}
-			std::vector<std::string> sourceKeys;
-			sourceKeys.reserve(tilesetFiles.size());
-			for (const FileName& tilesetFile : tilesetFiles) {
-				sourceKeys.push_back(normalizedPathKey(tilesetFile));
-			}
-			database.setTilesetSources(std::move(sourceKeys));
-		} else if (childName == "palettes") {
-			sawPalettes = true;
-			if (!loadPaletteIncludes(filename, childNode, error, warnings)) {
-				return false;
-			}
+		} else if (!loadMaterialsSection(filename, childNode, childName, seen, error, warnings)) {
+			return false;
 		}
 	}
 
-	if (!sawBorders || !sawBrushes || !sawCreatures || !sawItems || !sawTilesets || !sawPalettes) {
+	if (!seen.complete()) {
 		error = "Modular materials.xml must define borders, brushes, creatures, items, tilesets, and palettes sections.";
 		return false;
 	}
+	return true;
+}
+
+bool Materials::loadMaterialsSection(const FileName& filename, pugi::xml_node section, std::string_view sectionName, ManifestSectionsSeen& seen, wxString& error, std::vector<std::string>& warnings) {
+	if (sectionName == "borders") {
+		seen.borders = true;
+		return loadModuleIncludes(filename, section, "border", error, warnings);
+	}
+	if (sectionName == "brushes") {
+		seen.brushes = true;
+		return loadModuleIncludes(filename, section, "brush", error, warnings);
+	}
+	if (sectionName == "creatures") {
+		seen.creatures = true;
+		return loadModuleIncludes(filename, section, {}, error, warnings);
+	}
+	if (sectionName == "items") {
+		seen.items = true;
+		return loadModuleIncludes(filename, section, {}, error, warnings);
+	}
+	if (sectionName == "tilesets") {
+		seen.tilesets = true;
+		return loadTilesetSources(filename, section, error);
+	}
+	if (sectionName == "palettes") {
+		seen.palettes = true;
+		return loadPaletteIncludes(filename, section, error, warnings);
+	}
+	return true;
+}
+
+bool Materials::loadTilesetSources(const FileName& filename, pugi::xml_node section, wxString& error) {
+	std::vector<FileName> tilesetFiles;
+	if (!MaterialIncludeResolver::collectSectionFiles(filename, section, "tilesets", tilesetFiles, error)) {
+		return false;
+	}
+	std::vector<std::string> sourceKeys;
+	sourceKeys.reserve(tilesetFiles.size());
+	for (const FileName& tilesetFile : tilesetFiles) {
+		sourceKeys.push_back(normalizedPathKey(tilesetFile));
+	}
+	database.setTilesetSources(std::move(sourceKeys));
 	return true;
 }
 
@@ -268,6 +273,73 @@ static CreatureBrush* ensureCreatureBrush(CreatureType* type) {
 	return brush;
 }
 
+static void loadTilesetBrushEntry(pugi::xml_node node, DynamicTilesetDefinition& tileset, std::vector<std::string>& warnings) {
+	const auto brushName = node.attribute("name");
+	if (!brushName) {
+		return;
+	}
+	if (Brush* brush = g_brushes.getBrush(brushName.as_string())) {
+		brush->flagAsVisible();
+		tileset.brushes.push_back(brush);
+	} else {
+		warnings.push_back(std::format("tileset_brush_references: tileset=\"{}\" brush=\"{}\"", tileset.name, brushName.as_string()));
+	}
+}
+
+static bool readTilesetItemRange(pugi::xml_node node, uint32_t& fromId, uint32_t& toId) {
+	if (const auto idAttribute = node.attribute("id")) {
+		fromId = idAttribute.as_uint();
+		toId = fromId;
+		return true;
+	}
+	if (const auto fromAttribute = node.attribute("fromid")) {
+		fromId = fromAttribute.as_uint();
+		toId = node.attribute("toid").as_uint(fromId);
+		return true;
+	}
+	return false;
+}
+
+static void loadTilesetItemEntry(pugi::xml_node node, DynamicTilesetDefinition& tileset, std::vector<std::string>& warnings) {
+	uint32_t fromId = 0;
+	uint32_t toId = 0;
+	if (!readTilesetItemRange(node, fromId, toId)) {
+		return;
+	}
+
+	constexpr uint32_t maxItemId = std::numeric_limits<uint16_t>::max();
+	if (fromId > toId || fromId > maxItemId || toId > maxItemId) {
+		warnings.push_back(std::format("tileset_item_references: tileset=\"{}\" invalid_range={}..{}", tileset.name, fromId, toId));
+		return;
+	}
+
+	for (uint32_t id = fromId; id <= toId; ++id) {
+		const auto definition = g_item_definitions.get(static_cast<ServerItemId>(id));
+		if (!definition) {
+			warnings.push_back(std::format("tileset_item_references: tileset=\"{}\" missing_id={}", tileset.name, id));
+			continue;
+		}
+		RAWBrush* brush = ensureRawBrush(static_cast<ServerItemId>(id));
+		brush->flagAsVisible();
+		tileset.brushes.push_back(brush);
+	}
+}
+
+static void loadTilesetCreatureEntry(pugi::xml_node node, DynamicTilesetDefinition& tileset, std::vector<std::string>& warnings) {
+	const auto creatureName = node.attribute("name");
+	if (!creatureName) {
+		return;
+	}
+	CreatureType* type = g_creatures[creatureName.as_string()];
+	if (!type) {
+		warnings.push_back(std::format("tileset_creature_references: tileset=\"{}\" creature=\"{}\"", tileset.name, creatureName.as_string()));
+		return;
+	}
+	CreatureBrush* brush = ensureCreatureBrush(type);
+	brush->flagAsVisible();
+	tileset.brushes.push_back(brush);
+}
+
 bool Materials::loadPaletteFile(const FileName& filename, wxString& error, std::vector<std::string>& warnings) {
 	pugi::xml_document doc;
 	pugi::xml_parse_result result = doc.load_file(filename.GetFullPath().mb_str());
@@ -364,54 +436,11 @@ bool Materials::loadDynamicTilesetFile(const FileName& filename, DynamicPaletteD
 	for (pugi::xml_node childNode = root.first_child(); childNode; childNode = childNode.next_sibling()) {
 		const std::string childName = as_lower_str(childNode.name());
 		if (childName == "brush") {
-			const auto brushName = childNode.attribute("name");
-			if (!brushName) {
-				continue;
-			}
-			if (Brush* brush = g_brushes.getBrush(brushName.as_string())) {
-				brush->flagAsVisible();
-				tileset.brushes.push_back(brush);
-			} else {
-				warnings.push_back("tileset_brush_references: tileset=\"" + tileset.name + "\" brush=\"" + std::string(brushName.as_string()) + "\"");
-			}
+			loadTilesetBrushEntry(childNode, tileset, warnings);
 		} else if (childName == "item") {
-			uint16_t fromId = 0;
-			uint16_t toId = 0;
-			if (const auto idAttribute = childNode.attribute("id")) {
-				fromId = idAttribute.as_ushort();
-				toId = fromId;
-			} else if (const auto fromAttribute = childNode.attribute("fromid")) {
-				fromId = fromAttribute.as_ushort();
-				toId = childNode.attribute("toid").as_ushort(fromId);
-			} else {
-				continue;
-			}
-			if (toId < fromId) {
-				std::swap(fromId, toId);
-			}
-			for (uint16_t id = fromId; id <= toId; ++id) {
-				const auto definition = g_item_definitions.get(id);
-				if (!definition) {
-					warnings.push_back("tileset_item_references: tileset=\"" + tileset.name + "\" missing_id=" + std::to_string(id));
-					continue;
-				}
-				RAWBrush* brush = ensureRawBrush(id);
-				brush->flagAsVisible();
-				tileset.brushes.push_back(brush);
-			}
+			loadTilesetItemEntry(childNode, tileset, warnings);
 		} else if (childName == "creature") {
-			const auto creatureName = childNode.attribute("name");
-			if (!creatureName) {
-				continue;
-			}
-			CreatureType* type = g_creatures[creatureName.as_string()];
-			if (!type) {
-				warnings.push_back("tileset_creature_references: tileset=\"" + tileset.name + "\" creature=\"" + std::string(creatureName.as_string()) + "\"");
-				continue;
-			}
-			CreatureBrush* brush = ensureCreatureBrush(type);
-			brush->flagAsVisible();
-			tileset.brushes.push_back(brush);
+			loadTilesetCreatureEntry(childNode, tileset, warnings);
 		}
 	}
 

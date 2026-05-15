@@ -26,6 +26,7 @@ BrushPalettePanel::BrushPalettePanel(wxWindow* parent, const DynamicPaletteDefin
 	for (const auto& tileset : palette.tilesets) {
 		if (tileset.size() > 0) {
 			BrushPanel* panel = newd BrushPanel(tmp_choicebook);
+			// Dynamic palette definitions are immutable after load; BrushPanel keeps this stable tileset address.
 			panel->AssignTileset(&tileset);
 			tmp_choicebook->AddPage(panel, wxstr(tileset.name));
 		}
@@ -198,10 +199,3 @@ void BrushPalettePanel::OnSwitchIn() {
 	LoadCurrentContents();
 }
 
-void BrushPalettePanel::OnClickAddTileset(wxCommandEvent& WXUNUSED(event)) {
-	// Legacy tileset editing is disabled for the modular palette runtime.
-}
-
-void BrushPalettePanel::OnClickAddItemToTileset(wxCommandEvent& WXUNUSED(event)) {
-	// Legacy tileset editing is disabled for the modular palette runtime.
-}

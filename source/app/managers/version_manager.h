@@ -9,6 +9,8 @@
 #include "app/client_version.h"
 #include "item_definitions/core/missing_item_report.h"
 
+struct MaterialManifestFiles;
+
 class VersionManager {
 public:
 	VersionManager();
@@ -42,6 +44,13 @@ public:
 
 private:
 	bool LoadDataFiles(wxString& error, std::vector<std::string>& warnings);
+	[[nodiscard]] wxString GetModularDataPath() const;
+	void FailDataLoad();
+	bool LoadMaterialManifest(const FileName& materials_manifest, MaterialManifestFiles& manifest_files, wxString& error);
+	bool LoadCanonicalAssets(const wxString& modular_data_path, const MaterialManifestFiles& manifest_files, wxString& error, std::vector<std::string>& warnings);
+	void AppendMissingItemWarnings(std::vector<std::string>& warnings) const;
+	bool LoadCreatureFiles(const MaterialManifestFiles& manifest_files, wxString& error, std::vector<std::string>& warnings);
+	bool LoadModularMaterials(const FileName& materials_manifest, wxString& error, std::vector<std::string>& warnings);
 
 	ClientVersionID loaded_version;
 	MissingItemReport last_missing_items;
