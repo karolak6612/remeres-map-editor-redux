@@ -48,8 +48,8 @@ Materials::~Materials() {
 }
 
 void Materials::clear() {
-	for (MaterialsExtensionList::iterator iter = extensions.begin(); iter != extensions.end(); ++iter) {
-		delete *iter;
+	for (auto* extension : extensions) {
+		delete extension;
 	}
 
 	extensions.clear();
@@ -412,9 +412,13 @@ bool Materials::loadTilesetInclude(const FileName& manifest, pugi::xml_node incl
 				return false;
 			}
 		}
+		return true;
 	}
-	warnings.push_back(std::format("tileset_include: manifest=\"{}\" include node is missing both file and folder attributes", manifest.GetFullPath().ToStdString()));
-	return true;
+
+	const std::string message = std::format("tileset_include: manifest=\"{}\" include node is missing both file and folder attributes", manifest.GetFullPath().ToStdString());
+	warnings.push_back(message);
+	error = wxstr(message);
+	return false;
 }
 
 bool Materials::loadDynamicTilesetFile(const FileName& filename, DynamicPaletteDefinition& palette, wxString& error, std::vector<std::string>& warnings) {

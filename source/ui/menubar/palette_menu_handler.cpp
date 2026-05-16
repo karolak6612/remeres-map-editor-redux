@@ -138,9 +138,9 @@ void PaletteMenuHandler::RebuildPaletteMenu() {
 
 	if (loaded) {
 		const auto& palettes = g_materials.paletteCatalog().dynamicPalettes();
+		const size_t maxMenuCount = static_cast<size_t>(PALETTE_MENU_LAST - PALETTE_MENU_FIRST + 1);
 		if (!palettes.empty()) {
 			palette_menu->AppendSeparator();
-			const size_t maxMenuCount = static_cast<size_t>(PALETTE_MENU_LAST - PALETTE_MENU_FIRST + 1);
 			for (size_t index = 0; index < palettes.size() && index < maxMenuCount; ++index) {
 				const int menuId = MAIN_FRAME_MENU + PALETTE_MENU_FIRST + static_cast<int>(index);
 				const wxString label = wxString::FromUTF8(palettes[index].name.c_str());
@@ -150,17 +150,18 @@ void PaletteMenuHandler::RebuildPaletteMenu() {
 			}
 		}
 
-		palette_menu->AppendSeparator();
 		const size_t providerOffset = palettes.size();
-		const size_t maxMenuCount = static_cast<size_t>(PALETTE_MENU_LAST - PALETTE_MENU_FIRST + 1);
 		const auto& providers = GetHardcodedPaletteProviders();
-		for (size_t index = 0; index < providers.size() && providerOffset + index < maxMenuCount; ++index) {
-			const int menuId = MAIN_FRAME_MENU + PALETTE_MENU_FIRST + static_cast<int>(providerOffset + index);
-			const std::string providerName(providers[index].name);
-			const wxString label = PaletteLabel(providers[index].name);
-			wxMenuItem* item = palette_menu->Append(menuId, label, "Select the " + wxString::FromUTF8(providerName.c_str()) + " palette.");
-			SetMenuIcon(item, PaletteIcon(providers[index].name));
-			catalog_menu_ids.emplace(menuId, providerName);
+		if (!providers.empty() && providerOffset < maxMenuCount) {
+			palette_menu->AppendSeparator();
+			for (size_t index = 0; index < providers.size() && providerOffset + index < maxMenuCount; ++index) {
+				const int menuId = MAIN_FRAME_MENU + PALETTE_MENU_FIRST + static_cast<int>(providerOffset + index);
+				const std::string providerName(providers[index].name);
+				const wxString label = PaletteLabel(providers[index].name);
+				wxMenuItem* item = palette_menu->Append(menuId, label, "Select the " + wxString::FromUTF8(providerName.c_str()) + " palette.");
+				SetMenuIcon(item, PaletteIcon(providers[index].name));
+				catalog_menu_ids.emplace(menuId, providerName);
+			}
 		}
 	}
 

@@ -13,7 +13,6 @@
 
 class MainFrame;
 class MainMenuBar;
-class wxMenu;
 
 class PaletteMenuHandler : public wxEvtHandler {
 public:

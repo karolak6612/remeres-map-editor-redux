@@ -296,8 +296,8 @@ void VirtualBrushGrid::OnMotion(wxMouseEvent& event) {
 	}
 
 	// Tooltip
-	if (index != -1) {
-			Brush* brush = tileset->brushes[index];
+	if (tileset && index >= 0 && static_cast<size_t>(index) < tileset->size()) {
+		Brush* brush = tileset->brushes[index];
 		if (brush) {
 			wxString tip = wxstr(brush->getName());
 			if (GetToolTipText() != tip) {

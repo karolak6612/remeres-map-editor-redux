@@ -77,8 +77,8 @@ protected:
 private:
 	MaterialDatabase database;
 	bool modified = false;
-	Materials(const Materials&);
-	Materials& operator=(const Materials&);
+	Materials(const Materials&) = delete;
+	Materials& operator=(const Materials&) = delete;
 };
 
 extern Materials g_materials;
