@@ -23,20 +23,6 @@ enum BrushShape {
 	BRUSHSHAPE_SQUARE,
 };
 
-enum TilesetCategoryType {
-	TILESET_TERRAIN,
-	TILESET_DOODAD,
-	TILESET_ITEM,
-	TILESET_COLLECTION,
-	TILESET_CREATURE,
-	TILESET_HOUSE,
-	TILESET_RAW,
-	TILESET_WAYPOINT,
-	TILESET_UNKNOWN,
-};
-
-using PaletteType = TilesetCategoryType;
-
 enum BorderType {
 	// Border types (also used for carpets)
 	BORDER_NONE = 0,

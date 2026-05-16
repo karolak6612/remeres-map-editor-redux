@@ -11,6 +11,8 @@
 #include "util/nvg_utils.h"
 #include "ui/theme.h"
 
+#include <algorithm>
+
 #include <spdlog/spdlog.h>
 
 namespace {
@@ -24,10 +26,10 @@ namespace {
 	static constexpr float INTER_FACTOR = 0.2f;
 }
 
-VirtualBrushGrid::VirtualBrushGrid(wxWindow* parent, const TilesetCategory* _tileset, RenderSize rsz) :
+VirtualBrushGrid::VirtualBrushGrid(wxWindow* parent, const DynamicTilesetDefinition* _tileset, int iconSizePx) :
 	NanoVGCanvas(parent, wxID_ANY, wxVSCROLL | wxWANTS_CHARS),
 	BrushBoxInterface(_tileset),
-	icon_size(rsz),
+	icon_size_px(std::clamp(iconSizePx, 32, 128)),
 	selected_index(-1),
 	hover_index(-1),
 	columns(1),
@@ -35,11 +37,7 @@ VirtualBrushGrid::VirtualBrushGrid(wxWindow* parent, const TilesetCategory* _til
 	padding(4),
 	m_animTimer(this) {
 
-	if (icon_size == RENDER_SIZE_16x16) {
-		item_size = 18;
-	} else {
-		item_size = GRID_ITEM_SIZE_BASE + 2; // + borders
-	}
+	item_size = icon_size_px + 2 * ICON_OFFSET;
 
 	Bind(wxEVT_LEFT_DOWN, &VirtualBrushGrid::OnMouseDown, this);
 	Bind(wxEVT_MOTION, &VirtualBrushGrid::OnMotion, this);
@@ -162,7 +160,7 @@ void VirtualBrushGrid::DrawBrushItem(NVGcontext* vg, int i, const wxRect& rect) 
 	}
 
 	// Draw brush sprite
-	Brush* brush = (i < static_cast<int>(tileset->size())) ? tileset->brushlist[i] : nullptr;
+	Brush* brush = (i < static_cast<int>(tileset->size())) ? tileset->brushes[i] : nullptr;
 	if (brush) {
 		Sprite* spr = brush->getSprite();
 		if (!spr) {
@@ -276,7 +274,7 @@ void VirtualBrushGrid::OnMouseDown(wxMouseEvent& event) {
 			w = w->GetParent();
 		}
 
-		g_gui.SelectBrush(tileset->brushlist[selected_index], tileset->getType());
+		g_gui.SelectBrushInternal(tileset->brushes[selected_index]);
 		Refresh();
 	}
 }
@@ -298,8 +296,8 @@ void VirtualBrushGrid::OnMotion(wxMouseEvent& event) {
 	}
 
 	// Tooltip
-	if (index != -1) {
-		Brush* brush = tileset->brushlist[index];
+	if (tileset && index >= 0 && static_cast<size_t>(index) < tileset->size()) {
+		Brush* brush = tileset->brushes[index];
 		if (brush) {
 			wxString tip = wxstr(brush->getName());
 			if (GetToolTipText() != tip) {
@@ -341,14 +339,14 @@ void VirtualBrushGrid::SelectFirstBrush() {
 
 Brush* VirtualBrushGrid::GetSelectedBrush() const {
 	if (selected_index >= 0 && selected_index < static_cast<int>(tileset->size())) {
-		return tileset->brushlist[selected_index];
+		return tileset->brushes[selected_index];
 	}
 	return nullptr;
 }
 
 bool VirtualBrushGrid::SelectBrush(const Brush* brush) {
 	for (size_t i = 0; i < tileset->size(); ++i) {
-		if (tileset->brushlist[i] == brush) {
+		if (tileset->brushes[i] == brush) {
 			selected_index = static_cast<int>(i);
 
 			// Ensure visible

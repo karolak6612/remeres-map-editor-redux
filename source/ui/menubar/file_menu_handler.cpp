@@ -3,7 +3,6 @@
 #include "app/main.h"
 #include "ui/gui.h"
 #include "ui/map/export_minimap_window.h"
-#include "ui/map/export_tilesets_window.h"
 #include "ui/dialogs/missing_items_dialog.h"
 
 #include "ui/map/import_map_window.h"
@@ -82,14 +81,6 @@ void FileMenuHandler::OnImportMinimap(wxCommandEvent& WXUNUSED(event)) {
 void FileMenuHandler::OnExportMinimap(wxCommandEvent& WXUNUSED(event)) {
 	if (g_gui.GetCurrentEditor()) {
 		ExportMinimapWindow dlg(frame, *g_gui.GetCurrentEditor());
-		dlg.ShowModal();
-		dlg.Destroy();
-	}
-}
-
-void FileMenuHandler::OnExportTilesets(wxCommandEvent& WXUNUSED(event)) {
-	if (g_gui.GetCurrentEditor()) {
-		ExportTilesetsWindow dlg(frame, *g_gui.GetCurrentEditor());
 		dlg.ShowModal();
 		dlg.Destroy();
 	}

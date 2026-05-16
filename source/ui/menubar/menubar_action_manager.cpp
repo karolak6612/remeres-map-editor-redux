@@ -31,7 +31,6 @@ void MenuBarActionManager::RegisterActions(MainMenuBar* mb, std::unordered_map<s
 	MAKE_ACTION_ICON(IMPORT_MINIMAP, wxITEM_NORMAL, ICON_IMAGE, OnImportMinimap);
 
 	MAKE_ACTION_ICON(EXPORT_MINIMAP, wxITEM_NORMAL, ICON_MAP, OnExportMinimap);
-	MAKE_ACTION_ICON(EXPORT_TILESETS, wxITEM_NORMAL, ICON_FILE_EXPORT, OnExportTilesets);
 
 	MAKE_ACTION_ICON(RELOAD_DATA, wxITEM_NORMAL, ICON_SYNC, OnReloadDataFiles);
 	// MAKE_ACTION(RECENT_FILES, wxITEM_NORMAL, OnRecent);
@@ -82,7 +81,6 @@ void MenuBarActionManager::RegisterActions(MainMenuBar* mb, std::unordered_map<s
 	MAKE_ACTION_ICON(CLEAR_INVALID_HOUSES, wxITEM_NORMAL, ICON_HOUSE_CRACK, OnClearHouseTiles);
 	MAKE_ACTION_ICON(CLEAR_MODIFIED_STATE, wxITEM_NORMAL, ICON_ERASER, OnClearModifiedState);
 	MAKE_ACTION_ICON(MAP_REMOVE_ITEMS, wxITEM_NORMAL, ICON_TRASH_CAN, OnMapRemoveItems);
-	MAKE_ACTION_ICON(MAP_REMOVE_CORPSES, wxITEM_NORMAL, ICON_SKULL, OnMapRemoveCorpses);
 	MAKE_ACTION_ICON(MAP_REMOVE_UNREACHABLE_TILES, wxITEM_NORMAL, ICON_BAN, OnMapRemoveUnreachable);
 	MAKE_ACTION_ICON(MAP_CLEANUP, wxITEM_NORMAL, ICON_BROOM, OnMapCleanup);
 	MAKE_ACTION_ICON(MAP_CLEAN_INVALID_ZONES, wxITEM_NORMAL, ICON_BROOM, OnMapCleanInvalidZones);
@@ -136,20 +134,14 @@ void MenuBarActionManager::RegisterActions(MainMenuBar* mb, std::unordered_map<s
 	MAKE_ACTION_ICON(WIN_INGAME_PREVIEW, wxITEM_NORMAL, ICON_GAMEPAD, OnIngamePreviewWindow);
 	MAKE_ACTION_ICON(WIN_TILE_PROPERTIES, wxITEM_NORMAL, ICON_LIST, OnTilePropertiesWindow);
 	MAKE_ACTION_ICON(NEW_PALETTE, wxITEM_NORMAL, ICON_PLUS, OnNewPalette);
+	MAKE_ACTION_ICON(SHOW_PALETTE, wxITEM_NORMAL, ICON_PALETTE, OnShowPalette);
+	MAKE_ACTION_ICON(SELECT_HOUSE, wxITEM_NORMAL, ICON_HOUSE, OnSelectHousePalette);
+	MAKE_ACTION_ICON(SELECT_WAYPOINT, wxITEM_NORMAL, ICON_FLAG, OnSelectWaypointPalette);
 	MAKE_ACTION_ICON(TAKE_SCREENSHOT, wxITEM_NORMAL, ICON_CAMERA, OnTakeScreenshot);
 
 	MAKE_ACTION_ICON(LIVE_START, wxITEM_NORMAL, ICON_SIGNAL, OnStartLive);
 	MAKE_ACTION_ICON(LIVE_JOIN, wxITEM_NORMAL, ICON_NETWORK_WIRED, OnJoinLive);
 	MAKE_ACTION_ICON(LIVE_CLOSE, wxITEM_NORMAL, ICON_POWER_OFF, OnCloseLive);
-
-	MAKE_ACTION_ICON(SELECT_TERRAIN, wxITEM_NORMAL, ICON_MOUNTAIN, OnSelectTerrainPalette);
-	MAKE_ACTION_ICON(SELECT_DOODAD, wxITEM_NORMAL, ICON_TREE, OnSelectDoodadPalette);
-	MAKE_ACTION_ICON(SELECT_ITEM, wxITEM_NORMAL, ICON_CUBE, OnSelectItemPalette);
-	MAKE_ACTION_ICON(SELECT_COLLECTION, wxITEM_NORMAL, ICON_LAYER_GROUP, OnSelectCollectionPalette);
-	MAKE_ACTION_ICON(SELECT_CREATURE, wxITEM_NORMAL, ICON_DRAGON, OnSelectCreaturePalette);
-	MAKE_ACTION_ICON(SELECT_HOUSE, wxITEM_NORMAL, ICON_HOUSE, OnSelectHousePalette);
-	MAKE_ACTION_ICON(SELECT_WAYPOINT, wxITEM_NORMAL, ICON_FLAG, OnSelectWaypointPalette);
-	MAKE_ACTION_ICON(SELECT_RAW, wxITEM_NORMAL, ICON_CUBE, OnSelectRawPalette);
 
 	MAKE_ACTION_ICON(FLOOR_0, wxITEM_RADIO, ICON_0, OnChangeFloor);
 	MAKE_ACTION_ICON(FLOOR_1, wxITEM_RADIO, ICON_1, OnChangeFloor);
@@ -221,7 +213,6 @@ void MenuBarActionManager::UpdateState(MainMenuBar* mb) {
 	mb->EnableItem(IMPORT_MINIMAP, false);
 
 	mb->EnableItem(EXPORT_MINIMAP, has_map);
-	mb->EnableItem(EXPORT_TILESETS, loaded);
 
 	mb->EnableItem(FIND_ITEM, is_host);
 	mb->EnableItem(REPLACE_ITEMS, is_local);
@@ -253,7 +244,6 @@ void MenuBarActionManager::UpdateState(MainMenuBar* mb) {
 	mb->EnableItem(JUMP_TO_ITEM_BRUSH, loaded);
 
 	mb->EnableItem(MAP_REMOVE_ITEMS, is_host);
-	mb->EnableItem(MAP_REMOVE_CORPSES, is_local);
 	mb->EnableItem(MAP_REMOVE_UNREACHABLE_TILES, is_local);
 	mb->EnableItem(MAP_CLEAN_INVALID_ZONES, is_local);
 	mb->EnableItem(CLEAR_INVALID_HOUSES, is_local);
@@ -282,15 +272,9 @@ void MenuBarActionManager::UpdateState(MainMenuBar* mb) {
 	mb->EnableItem(WIN_INGAME_PREVIEW, loaded);
 	mb->EnableItem(WIN_TILE_PROPERTIES, loaded);
 	mb->EnableItem(NEW_PALETTE, loaded);
-	mb->EnableItem(SELECT_TERRAIN, loaded);
-	mb->EnableItem(SELECT_DOODAD, loaded);
-	mb->EnableItem(SELECT_ITEM, loaded);
-	mb->EnableItem(SELECT_COLLECTION, loaded);
+	mb->EnableItem(SHOW_PALETTE, loaded);
 	mb->EnableItem(SELECT_HOUSE, loaded);
-	mb->EnableItem(SELECT_CREATURE, loaded);
 	mb->EnableItem(SELECT_WAYPOINT, loaded);
-	mb->EnableItem(SELECT_RAW, loaded);
-
 	mb->EnableItem(LIVE_START, is_local);
 	mb->EnableItem(LIVE_JOIN, loaded);
 	mb->EnableItem(LIVE_CLOSE, is_live);

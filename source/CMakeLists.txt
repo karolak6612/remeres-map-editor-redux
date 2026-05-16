@@ -69,7 +69,6 @@ set(rme_H
     ${CMAKE_CURRENT_LIST_DIR}/editor/persistence/map_load_options.h
     ${CMAKE_CURRENT_LIST_DIR}/editor/persistence/minimap_exporter.h
     ${CMAKE_CURRENT_LIST_DIR}/editor/persistence/minimap_exporter_internal.h
-    ${CMAKE_CURRENT_LIST_DIR}/editor/persistence/tileset_exporter.h
 
     ${CMAKE_CURRENT_LIST_DIR}/editor/editor_tabs.h
     ${CMAKE_CURRENT_LIST_DIR}/editor/selection.h
@@ -84,6 +83,9 @@ set(rme_H
     ${CMAKE_CURRENT_LIST_DIR}/game/item.h
     ${CMAKE_CURRENT_LIST_DIR}/game/item_attributes.h
     ${CMAKE_CURRENT_LIST_DIR}/game/materials.h
+    ${CMAKE_CURRENT_LIST_DIR}/game/material_database.h
+    ${CMAKE_CURRENT_LIST_DIR}/game/material_include_resolver.h
+    ${CMAKE_CURRENT_LIST_DIR}/game/material_manifest.h
     ${CMAKE_CURRENT_LIST_DIR}/game/outfit.h
     ${CMAKE_CURRENT_LIST_DIR}/game/spawn.h
     ${CMAKE_CURRENT_LIST_DIR}/game/sprites.h
@@ -147,12 +149,11 @@ set(rme_H
     ${CMAKE_CURRENT_LIST_DIR}/map/spatial_hash_grid.h
     ${CMAKE_CURRENT_LIST_DIR}/map/tile.h
     ${CMAKE_CURRENT_LIST_DIR}/map/tile_operations.h
-    ${CMAKE_CURRENT_LIST_DIR}/map/tileset.h
     ${CMAKE_CURRENT_LIST_DIR}/net/net_connection.h
     ${CMAKE_CURRENT_LIST_DIR}/net/process_com.h
     ${CMAKE_CURRENT_LIST_DIR}/palette/palette_brushlist.h
     ${CMAKE_CURRENT_LIST_DIR}/palette/palette_common.h
-    ${CMAKE_CURRENT_LIST_DIR}/palette/palette_creature.h
+    ${CMAKE_CURRENT_LIST_DIR}/palette/hardcoded_palette_registry.h
     ${CMAKE_CURRENT_LIST_DIR}/palette/palette_waypoints.h
     ${CMAKE_CURRENT_LIST_DIR}/palette/house/house_palette.h
     ${CMAKE_CURRENT_LIST_DIR}/palette/house/edit_house_dialog.h
@@ -244,7 +245,6 @@ set(rme_H
     ${CMAKE_CURRENT_LIST_DIR}/rendering/utilities/tile_describer.h
     ${CMAKE_CURRENT_LIST_DIR}/rendering/postprocess/post_process_manager.h
     ${CMAKE_CURRENT_LIST_DIR}/ui/about_window.h
-    ${CMAKE_CURRENT_LIST_DIR}/ui/add_item_window.h
     ${CMAKE_CURRENT_LIST_DIR}/ui/browse_tile_window.h
     ${CMAKE_CURRENT_LIST_DIR}/ui/controls/item_buttons.h
     ${CMAKE_CURRENT_LIST_DIR}/ui/controls/outfit_color_palette.h
@@ -293,7 +293,6 @@ set(rme_H
     ${CMAKE_CURRENT_LIST_DIR}/ui/map/import_map_window.h
 
     ${CMAKE_CURRENT_LIST_DIR}/ui/map/export_minimap_window.h
-    ${CMAKE_CURRENT_LIST_DIR}/ui/map/export_tilesets_window.h
     ${CMAKE_CURRENT_LIST_DIR}/ui/gui.h
     ${CMAKE_CURRENT_LIST_DIR}/ui/gui_ids.h
     ${CMAKE_CURRENT_LIST_DIR}/ui/managers/loading_manager.h
@@ -350,7 +349,6 @@ set(rme_H
     ${CMAKE_CURRENT_LIST_DIR}/ui/replace_tool/rule_manager.h
     ${CMAKE_CURRENT_LIST_DIR}/ui/replace_tool/visual_similarity_service.h
     ${CMAKE_CURRENT_LIST_DIR}/ui/result_window.h
-    ${CMAKE_CURRENT_LIST_DIR}/ui/tileset_window.h
     ${CMAKE_CURRENT_LIST_DIR}/ui/welcome_dialog.h
     ${CMAKE_CURRENT_LIST_DIR}/ui/welcome/startup_button.h
     ${CMAKE_CURRENT_LIST_DIR}/ui/welcome/startup_card.h
@@ -464,7 +462,6 @@ set(rme_SRC
     ${CMAKE_CURRENT_LIST_DIR}/editor/persistence/minimap_exporter.cpp
     ${CMAKE_CURRENT_LIST_DIR}/editor/persistence/minimap_exporter_images.cpp
     ${CMAKE_CURRENT_LIST_DIR}/editor/persistence/minimap_exporter_otmm.cpp
-    ${CMAKE_CURRENT_LIST_DIR}/editor/persistence/tileset_exporter.cpp
 
     ${CMAKE_CURRENT_LIST_DIR}/editor/editor_tabs.cpp
     ${CMAKE_CURRENT_LIST_DIR}/editor/selection.cpp
@@ -478,6 +475,9 @@ set(rme_SRC
     ${CMAKE_CURRENT_LIST_DIR}/game/item.cpp
     ${CMAKE_CURRENT_LIST_DIR}/game/item_attributes.cpp
     ${CMAKE_CURRENT_LIST_DIR}/game/materials.cpp
+    ${CMAKE_CURRENT_LIST_DIR}/game/material_database.cpp
+    ${CMAKE_CURRENT_LIST_DIR}/game/material_include_resolver.cpp
+    ${CMAKE_CURRENT_LIST_DIR}/game/material_manifest.cpp
     ${CMAKE_CURRENT_LIST_DIR}/game/spawn.cpp
     ${CMAKE_CURRENT_LIST_DIR}/game/town.cpp
     ${CMAKE_CURRENT_LIST_DIR}/game/preview_preferences.cpp
@@ -528,13 +528,12 @@ set(rme_SRC
 
     ${CMAKE_CURRENT_LIST_DIR}/map/tile.cpp
     ${CMAKE_CURRENT_LIST_DIR}/map/tile_operations.cpp
-    ${CMAKE_CURRENT_LIST_DIR}/map/tileset.cpp
     ${CMAKE_CURRENT_LIST_DIR}/mkpch.cpp
     ${CMAKE_CURRENT_LIST_DIR}/net/net_connection.cpp
     ${CMAKE_CURRENT_LIST_DIR}/net/process_com.cpp
     ${CMAKE_CURRENT_LIST_DIR}/palette/palette_brushlist.cpp
     ${CMAKE_CURRENT_LIST_DIR}/palette/palette_common.cpp
-    ${CMAKE_CURRENT_LIST_DIR}/palette/palette_creature.cpp
+    ${CMAKE_CURRENT_LIST_DIR}/palette/hardcoded_palette_registry.cpp
     ${CMAKE_CURRENT_LIST_DIR}/palette/palette_waypoints.cpp
     ${CMAKE_CURRENT_LIST_DIR}/palette/house/house_palette.cpp
     ${CMAKE_CURRENT_LIST_DIR}/palette/house/edit_house_dialog.cpp
@@ -627,8 +626,6 @@ set(rme_SRC
     ${CMAKE_CURRENT_LIST_DIR}/rendering/postprocess/effects/scanline.cpp
     ${CMAKE_CURRENT_LIST_DIR}/rendering/postprocess/effects/xbrz.cpp
     ${CMAKE_CURRENT_LIST_DIR}/ui/about_window.cpp
-    ${CMAKE_CURRENT_LIST_DIR}/ui/add_item_window.cpp
-    ${CMAKE_CURRENT_LIST_DIR}/ui/add_tileset_window.cpp
     ${CMAKE_CURRENT_LIST_DIR}/ui/browse_tile_window.cpp
     ${CMAKE_CURRENT_LIST_DIR}/ui/controls/outfit_color_palette.cpp
     ${CMAKE_CURRENT_LIST_DIR}/ui/controls/sortable_list_box.cpp
@@ -676,7 +673,6 @@ set(rme_SRC
     ${CMAKE_CURRENT_LIST_DIR}/ui/map/import_map_window.cpp
 
     ${CMAKE_CURRENT_LIST_DIR}/ui/map/export_minimap_window.cpp
-    ${CMAKE_CURRENT_LIST_DIR}/ui/map/export_tilesets_window.cpp
     ${CMAKE_CURRENT_LIST_DIR}/ui/gui.cpp
     ${CMAKE_CURRENT_LIST_DIR}/ui/gui_autoborder_ext.cpp
     ${CMAKE_CURRENT_LIST_DIR}/ui/main_frame.cpp
@@ -733,7 +729,6 @@ set(rme_SRC
     ${CMAKE_CURRENT_LIST_DIR}/ui/replace_tool/rule_manager.cpp
     ${CMAKE_CURRENT_LIST_DIR}/ui/replace_tool/visual_similarity_service.cpp
     ${CMAKE_CURRENT_LIST_DIR}/ui/result_window.cpp
-    ${CMAKE_CURRENT_LIST_DIR}/ui/tileset_window.cpp
     ${CMAKE_CURRENT_LIST_DIR}/ui/theme.cpp
     ${CMAKE_CURRENT_LIST_DIR}/ui/welcome_dialog.cpp
     ${CMAKE_CURRENT_LIST_DIR}/ui/welcome/startup_button.cpp

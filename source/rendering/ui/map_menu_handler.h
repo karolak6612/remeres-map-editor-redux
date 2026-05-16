@@ -45,7 +45,6 @@ public:
 	void OnSelectSpawnBrush(wxCommandEvent& event);
 	void OnSelectHouseBrush(wxCommandEvent& event);
 	void OnSelectCollectionBrush(wxCommandEvent& event);
-	void OnSelectMoveTo(wxCommandEvent& event);
 
 	void OnProperties(wxCommandEvent& event);
 	void OnAdvancedReplace(wxCommandEvent& event);

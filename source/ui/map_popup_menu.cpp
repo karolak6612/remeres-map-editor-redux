@@ -16,7 +16,6 @@
 #include "util/image_manager.h"
 #include "ui/properties/properties_window.h"
 #include "ui/properties/old_properties_window.h"
-#include "ui/tileset_window.h"
 #include "ui/browse_tile_window.h"
 
 #include "brushes/doodad/doodad_brush.h"
@@ -162,10 +161,6 @@ void MapPopupMenu::Update() {
 				}
 
 				Append(MAP_POPUP_MENU_SELECT_RAW_BRUSH, "Select RAW", "Uses the top item as a RAW brush")->SetBitmap(IMAGE_MANAGER.GetBitmap(ICON_CUBE, wxSize(16, 16)));
-
-				if (g_settings.getBoolean(Config::SHOW_TILESET_EDITOR)) {
-					Append(MAP_POPUP_MENU_MOVE_TO_TILESET, "Move To Tileset", "Move this item to any tileset")->SetBitmap(IMAGE_MANAGER.GetBitmap(ICON_SHARE_FROM_SQUARE, wxSize(16, 16)));
-				}
 
 				if (hasWall) {
 					Append(MAP_POPUP_MENU_SELECT_WALL_BRUSH, "Select Wallbrush", "Uses the current item as a wallbrush")->SetBitmap(IMAGE_MANAGER.GetBitmap(ICON_DUNGEON, wxSize(16, 16)));

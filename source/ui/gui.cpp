@@ -100,6 +100,7 @@ GUI::GUI() :
 	aui_manager(nullptr),
 	tabbook(nullptr),
 	root(nullptr),
+	house_palette(nullptr),
 	tool_options(nullptr),
 	tile_properties_panel(nullptr),
 	pasting(false),
@@ -355,8 +356,8 @@ void GUI::SelectBrush() {
 	SyncCurrentMapCanvasPreviewState();
 	emitBrushChangeIfNeeded(*this);
 }
-bool GUI::SelectBrush(const Brush* brush, PaletteType pt) {
-	const bool changed = g_brush_manager.SelectBrush(brush, pt);
+bool GUI::SelectBrush(const Brush* brush) {
+	const bool changed = g_brush_manager.SelectBrush(brush);
 	if (tool_options) {
 		tool_options->SetActiveBrush(GetCurrentBrush());
 	}
@@ -622,7 +623,6 @@ PaletteWindow* GUI::NewPalette() {
 void GUI::ActivatePalette(PaletteWindow* p) {
 	g_palettes.ActivatePalette(p);
 	if (p && tool_options) {
-		tool_options->SetPaletteType(p->GetSelectedPage());
 		tool_options->SetActiveBrush(GetCurrentBrush());
 	}
 }
@@ -641,8 +641,8 @@ void GUI::RefreshOtherPalettes(PaletteWindow* p) {
 void GUI::ShowPalette() {
 	g_palettes.ShowPalette();
 }
-void GUI::SelectPalettePage(PaletteType pt) {
-	g_palettes.SelectPalettePage(pt);
+void GUI::SelectPalettePage(std::string_view name) {
+	g_palettes.SelectPalettePage(name);
 }
 PaletteWindow* GUI::GetPalette() {
 	return g_palettes.GetPalette();

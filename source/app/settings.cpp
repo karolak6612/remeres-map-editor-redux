@@ -474,6 +474,8 @@ void Settings::IO(IOMode mode) {
 	section("Editor");
 	Bool(SHOW_MISSING_ITEMS_WARNING, false);
 	Int(FLOOR_VISIBILITY_MODE, 0);
+	section("UI");
+	String(PALETTE_DYNAMIC_STYLE, "32x32 px");
 
 	if (mode == SAVE) {
 		std::ofstream file("config.toml");

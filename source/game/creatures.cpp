@@ -335,21 +335,10 @@ static void ensureCreatureBrush(CreatureType* creatureType) {
 		return;
 	}
 
-	Tileset* tileSet = nullptr;
-	if (creatureType->isNpc) {
-		tileSet = g_materials.tilesets["NPCs"];
-	} else {
-		tileSet = g_materials.tilesets["Others"];
-	}
-	ASSERT(tileSet != nullptr);
-
 	auto brush = std::make_unique<CreatureBrush>(creatureType);
 	creatureType->brush = brush.get();
+	creatureType->brush->flagAsVisible();
 	g_brushes.addBrush(std::move(brush));
-	creatureType->in_other_tileset = true;
-
-	TilesetCategory* tileSetCategory = tileSet->getCategory(TILESET_CREATURE);
-	tileSetCategory->brushlist.push_back(creatureType->brush);
 }
 
 bool CreatureDatabase::importXMLFromOT(const FileName& filename, wxString& error, std::vector<std::string>& warnings) {

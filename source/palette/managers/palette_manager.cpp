@@ -71,6 +71,9 @@ void PaletteManager::RefreshOtherPalettes(PaletteWindow* p) {
 
 void PaletteManager::ShowPalette() {
 	if (palettes.empty()) {
+		CreatePalette();
+	}
+	if (palettes.empty()) {
 		return;
 	}
 
@@ -84,7 +87,7 @@ void PaletteManager::ShowPalette() {
 	g_gui.aui_manager->Update();
 }
 
-void PaletteManager::SelectPalettePage(PaletteType pt) {
+void PaletteManager::SelectPalettePage(std::string_view name) {
 	if (palettes.empty()) {
 		CreatePalette();
 	}
@@ -94,7 +97,7 @@ void PaletteManager::SelectPalettePage(PaletteType pt) {
 	}
 
 	ShowPalette();
-	p->SelectPage(pt);
+	p->SelectPage(name);
 	g_gui.aui_manager->Update();
 	g_brush_manager.SelectBrushInternal(p->GetSelectedBrush());
 }
@@ -125,7 +128,7 @@ PaletteWindow* PaletteManager::CreatePalette() {
 		return nullptr;
 	}
 
-	auto* palette = newd PaletteWindow(g_gui.root, g_materials.tilesets);
+	auto* palette = newd PaletteWindow(g_gui.root, g_materials.paletteCatalog());
 	wxString name = wxstr(std::format("Palette_{}", ++palette_creation_counter));
 	g_gui.aui_manager->AddPane(palette, wxAuiPaneInfo().Name(name).Caption("Palette").TopDockable(true).BottomDockable(true));
 	g_gui.aui_manager->Update();

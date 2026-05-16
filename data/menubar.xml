@@ -46,7 +46,6 @@
 		</menu>
 		<menu name="Export">
 			<item name="Export Minimap..." action="EXPORT_MINIMAP" help="Export minimap to an image file."/>
-			<item name="Export Tilesets..." action="EXPORT_TILESETS" help="Export tilesets to an xml file."/>
 		</menu>
 		<menu name="Reload">
 			<item name="Reload Data Files" hotkey="F5" action="RELOAD_DATA" help="Reloads all data files."/>
@@ -73,7 +72,6 @@
 		</menu>
 		<menu name="Other Options">
 			<item name="Remove Items by ID..." hotkey="Ctrl+Shift+R" action="MAP_REMOVE_ITEMS" help="Removes all items with the selected ID from the map."/>
-			<item name="Remove all Corpses..." action="MAP_REMOVE_CORPSES" help="Removes all corpses from the map."/>
 			<item name="Remove all Unreachable Tiles..." action="MAP_REMOVE_UNREACHABLE_TILES" help="Removes all tiles that cannot be reached (or seen) by the player from the map."/>
 			<item name="Clear Invalid Houses" action="CLEAR_INVALID_HOUSES" help="Clears house tiles not belonging to any house."/>
 			<item name="Clear Modified State" action="CLEAR_MODIFIED_STATE" help="Clears the modified state from all tiles."/>
@@ -210,16 +208,7 @@
 		<item name="Tile Properties" action="WIN_TILE_PROPERTIES" help="Displays the tile properties panel."/>
 		<item name="In-game Preview" action="WIN_INGAME_PREVIEW" help="Displays the in-game preview window."/>
 		<item name="New Palette" action="NEW_PALETTE" help="Creates a new palette."/>
-		<menu name="Palette">
-			<item name="Terrain" hotkey="T" action="SELECT_TERRAIN" help="Select the Terrain palette."/>
-			<item name="Doodad" hotkey="D" action="SELECT_DOODAD" help="Select the Doodad palette."/>
-			<item name="Item" hotkey="I" action="SELECT_ITEM" help="Select the Item palette."/>
-			<item name="Collection" hotkey="N" action="SELECT_COLLECTION" help="Select the Collection palette."/>
-			<item name="House" hotkey="H" action="SELECT_HOUSE" help="Select the House palette."/>
-			<item name="Creature" hotkey="C" action="SELECT_CREATURE" help="Select the Creature palette."/>
-			<item name="Waypoint" hotkey="W" action="SELECT_WAYPOINT" help="Select the Waypoint palette."/>
-			<item name="RAW" hotkey="R" action="SELECT_RAW" help="Select the RAW palette."/>
-		</menu>
+		<menu name="Palette" special="PALETTE"/>
 		<menu name="Toolbars">
 			<item name="Brushes" action="VIEW_TOOLBARS_BRUSHES" help="Show or hide the Brushes toolbar."/>
 			<item name="Position" action="VIEW_TOOLBARS_POSITION" help="Show or hide the Position toolbar."/>

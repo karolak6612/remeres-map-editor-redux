@@ -28,7 +28,7 @@ bool ItemDefinitionsLoader::assemble(const ItemDefinitionLoadInput& input, ItemD
 		return false;
 	}
 
-	if (input.xml_path.GetFullPath().IsEmpty()) {
+	if (input.xml_path.GetFullPath().IsEmpty() && input.xml_paths.empty()) {
 		error = "items.xml path is missing.";
 		return false;
 	}

@@ -29,7 +29,6 @@ public:
 	~WaypointPalettePanel() override = default;
 
 	wxString GetName() const override;
-	PaletteType GetType() const override;
 
 	// Select the first brush
 	void SelectFirstBrush() override;

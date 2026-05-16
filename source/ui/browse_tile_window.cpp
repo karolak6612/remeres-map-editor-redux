@@ -245,7 +245,7 @@ void BrowseTileWindow::OnClickDelete(wxCommandEvent& WXUNUSED(event)) {
 void BrowseTileWindow::OnClickSelectRaw(wxCommandEvent& WXUNUSED(event)) {
 	Item* item = item_list->GetSelectedItem();
 	if (item && item->getRAWBrush()) {
-		g_gui.SelectBrush(item->getRAWBrush(), TILESET_RAW);
+		g_gui.SelectBrush(item->getRAWBrush());
 	}
 
 	EndModal(1);

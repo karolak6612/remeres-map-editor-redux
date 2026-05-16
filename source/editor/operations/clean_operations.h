@@ -32,18 +32,6 @@ namespace EditorOperations {
 		}
 	};
 
-	struct RemoveCorpsesCondition {
-		RemoveCorpsesCondition() { }
-
-		bool operator()(Map& map, Item* item, long long removed, long long done) {
-			if (done % PROGRESS_UPDATE_INTERVAL_SMALL == 0) {
-				g_gui.SetLoadDone(static_cast<uint32_t>(100 * done / map.getTileCount()));
-			}
-
-			return g_materials.isInTileset(item, "Corpses") && !item->isComplex();
-		}
-	};
-
 	struct RemoveUnreachableCondition {
 		RemoveUnreachableCondition() { }
 

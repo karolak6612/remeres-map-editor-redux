@@ -21,19 +21,14 @@
 #include "app/main.h"
 
 #include "ui/dcbutton.h"
-#include "map/tileset.h"
 #include "ui/gui_ids.h"
-#include "brushes/brush_enums.h"
 #include "brushes/brush_footprint.h"
 #include "ui/controls/item_buttons.h"
 
 class GUI;
-class TilesetCategory;
 class BrushSizePanel;
 class BrushPalettePanel;
 class PaletteWindow;
-
-using PaletteType = TilesetCategoryType;
 
 class PalettePanel : public wxPanel {
 public:
@@ -50,7 +45,6 @@ public:
 
 	PaletteWindow* GetParentPalette() const;
 	virtual wxString GetName() const;
-	virtual PaletteType GetType() const;
 
 	// Add a tool panel!
 	virtual void AddToolPanel(PalettePanel* panel);

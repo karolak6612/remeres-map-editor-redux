@@ -95,31 +95,7 @@ void PalettePanel::SetToolbarIconSize(bool large_icons) {
 }
 
 wxString PalettePanel::GetName() const {
-	switch (GetType()) {
-		case TILESET_TERRAIN:
-			return "Terrain Palette";
-		case TILESET_DOODAD:
-			return "Doodad Palette";
-		case TILESET_ITEM:
-			return "Item Palette";
-		case TILESET_COLLECTION:
-			return "Collections Palette";
-		case TILESET_CREATURE:
-			return "Creature Palette";
-		case TILESET_HOUSE:
-			return "House Palette";
-		case TILESET_RAW:
-			return "RAW Palette";
-		case TILESET_WAYPOINT:
-			return "Waypoint Palette";
-		case TILESET_UNKNOWN:
-			return "Unknown";
-	}
-	return wxEmptyString;
-}
-
-PaletteType PalettePanel::GetType() const {
-	return TILESET_UNKNOWN;
+	return "Unknown";
 }
 
 Brush* PalettePanel::GetSelectedBrush() const {

@@ -6,8 +6,8 @@
 #define RME_PALETTE_MANAGER_H_
 
 #include "app/main.h"
-#include "brushes/brush_enums.h"
 #include <list>
+#include <string_view>
 
 class PaletteWindow;
 class Map;
@@ -28,7 +28,7 @@ public:
 	void RefreshPalettes(Map* m = nullptr, bool usedefault = true);
 	void RefreshOtherPalettes(PaletteWindow* p);
 	void ShowPalette();
-	void SelectPalettePage(PaletteType pt);
+	void SelectPalettePage(std::string_view name);
 	void DestroyPalettes();
 	PaletteWindow* CreatePalette();
 

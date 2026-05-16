@@ -1,22 +1,17 @@
 #include "palette/panels/brush_palette_panel.h"
 #include "ui/gui.h"
-#include "ui/add_tileset_window.h"
-#include "ui/add_item_window.h"
 #include "game/materials.h"
 #include "palette/palette_window.h"
-#include "util/image_manager.h"
 #include <spdlog/spdlog.h>
 
 // ============================================================================
 // Brush Palette Panel
 // A common class for terrain/doodad/item/raw palette
 
-BrushPalettePanel::BrushPalettePanel(wxWindow* parent, const TilesetContainer& tilesets, TilesetCategoryType category, wxWindowID id) :
+BrushPalettePanel::BrushPalettePanel(wxWindow* parent, const DynamicPaletteDefinition& palette, wxWindowID id) :
 	PalettePanel(parent, id),
-	palette_type(category),
+	palette_name(palette.name),
 	choicebook(nullptr) {
-	Bind(wxEVT_BUTTON, &BrushPalettePanel::OnClickAddItemToTileset, this, wxID_ADD);
-	Bind(wxEVT_BUTTON, &BrushPalettePanel::OnClickAddTileset, this, wxID_NEW);
 	Bind(wxEVT_CHOICEBOOK_PAGE_CHANGING, &BrushPalettePanel::OnSwitchingPage, this);
 	Bind(wxEVT_CHOICEBOOK_PAGE_CHANGED, &BrushPalettePanel::OnPageChanged, this);
 
@@ -28,27 +23,12 @@ BrushPalettePanel::BrushPalettePanel(wxWindow* parent, const TilesetContainer& t
 	ts_sizer->Add(tmp_choicebook, 1, wxEXPAND);
 	topsizer->Add(ts_sizer, 1, wxEXPAND);
 
-	if (g_settings.getBoolean(Config::SHOW_TILESET_EDITOR)) {
-		wxSizer* tmpsizer = newd wxBoxSizer(wxHORIZONTAL);
-		wxButton* buttonAddTileset = newd wxButton(this, wxID_NEW, "Add new Tileset");
-		buttonAddTileset->SetBitmap(IMAGE_MANAGER.GetBitmap(ICON_PLUS, wxSize(16, 16)));
-		buttonAddTileset->SetToolTip("Create a new custom tileset");
-		tmpsizer->Add(buttonAddTileset, wxSizerFlags(0).Center());
-
-		wxButton* buttonAddItemToTileset = newd wxButton(this, wxID_ADD, "Add new Item");
-		buttonAddItemToTileset->SetBitmap(IMAGE_MANAGER.GetBitmap(ICON_PLUS, wxSize(16, 16)));
-		buttonAddItemToTileset->SetToolTip("Add a new item to the current tileset");
-		tmpsizer->Add(buttonAddItemToTileset, wxSizerFlags(0).Center());
-
-		topsizer->Add(tmpsizer, 0, wxCENTER, 10);
-	}
-
-	for (const auto& tileset : GetSortedTilesets(tilesets)) {
-		const TilesetCategory* tcg = tileset->getCategory(category);
-		if (tcg && tcg->size() > 0) {
+	for (const auto& tileset : palette.tilesets) {
+		if (tileset.size() > 0) {
 			BrushPanel* panel = newd BrushPanel(tmp_choicebook);
-			panel->AssignTileset(tcg);
-			tmp_choicebook->AddPage(panel, wxstr(tileset->name));
+			// Dynamic palette definitions are immutable after load; BrushPanel keeps this stable tileset address.
+			panel->AssignTileset(&tileset);
+			tmp_choicebook->AddPage(panel, wxstr(tileset.name));
 		}
 	}
 
@@ -89,8 +69,8 @@ void BrushPalettePanel::LoadAllContents() {
 	PalettePanel::LoadAllContents();
 }
 
-PaletteType BrushPalettePanel::GetType() const {
-	return palette_type;
+wxString BrushPalettePanel::GetName() const {
+	return wxstr(palette_name);
 }
 
 void BrushPalettePanel::SetListType(BrushListType ltype) {
@@ -206,7 +186,7 @@ void BrushPalettePanel::OnPageChanged(wxChoicebookEvent& event) {
 
 	g_gui.ActivatePalette(GetParentPalette());
 	if (new_brush) {
-		g_gui.SelectBrush(new_brush, palette_type);
+		g_gui.SelectBrushInternal(new_brush);
 	} else {
 		g_gui.SelectBrush();
 	}
@@ -219,39 +199,3 @@ void BrushPalettePanel::OnSwitchIn() {
 	LoadCurrentContents();
 }
 
-void BrushPalettePanel::OnClickAddTileset(wxCommandEvent& WXUNUSED(event)) {
-	if (!choicebook) {
-		return;
-	}
-
-	wxDialog* w = newd AddTilesetWindow(g_gui.root, palette_type);
-	int ret = w->ShowModal();
-	w->Destroy();
-
-	if (ret != 0) {
-		g_gui.DestroyPalettes();
-		g_gui.NewPalette();
-	}
-}
-
-void BrushPalettePanel::OnClickAddItemToTileset(wxCommandEvent& WXUNUSED(event)) {
-	if (!choicebook) {
-		return;
-	}
-	int selection = choicebook->GetSelection();
-	if (selection == wxNOT_FOUND) {
-		return;
-	}
-	std::string tilesetName = choicebook->GetPageText(selection).ToStdString();
-
-	auto _it = g_materials.tilesets.find(tilesetName);
-	if (_it != g_materials.tilesets.end()) {
-		wxDialog* w = newd AddItemWindow(g_gui.root, palette_type, _it->second);
-		int ret = w->ShowModal();
-		w->Destroy();
-
-		if (ret != 0) {
-			g_gui.RebuildPalettes();
-		}
-	}
-}

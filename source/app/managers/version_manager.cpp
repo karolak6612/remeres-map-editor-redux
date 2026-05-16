@@ -11,6 +11,7 @@
 #include "util/file_system.h"
 #include "game/sprites.h"
 #include "game/materials.h"
+#include "game/material_manifest.h"
 #include "brushes/brush.h"
 #include "brushes/managers/brush_manager.h"
 #include "ui/managers/loading_manager.h"
@@ -23,6 +24,35 @@
 #include <ranges>
 
 VersionManager g_version;
+
+namespace {
+
+constexpr size_t MAX_MISSING_ITEMS_TO_SHOW = 50;
+
+void appendServerClientMissingItems(std::vector<std::string>& warnings, std::string_view title, const std::vector<MissingItemEntry>& entries) {
+	warnings.push_back(std::format("--- {} ({}) ---", title, entries.size()));
+	for (const auto& entry : entries | std::views::take(MAX_MISSING_ITEMS_TO_SHOW)) {
+		warnings.push_back(std::format("  Server ID: {}, Client ID: {}, Name: '{}'",
+			entry.server_id, entry.client_id, entry.name.empty() ? "unknown" : entry.name));
+	}
+	if (entries.size() > MAX_MISSING_ITEMS_TO_SHOW) {
+		warnings.push_back(std::format("  ...and {} more", entries.size() - MAX_MISSING_ITEMS_TO_SHOW));
+	}
+	warnings.push_back("");
+}
+
+void appendClientMissingItems(std::vector<std::string>& warnings, std::string_view title, const std::vector<MissingItemEntry>& entries) {
+	warnings.push_back(std::format("--- {} ({}) ---", title, entries.size()));
+	for (const auto& entry : entries | std::views::take(MAX_MISSING_ITEMS_TO_SHOW)) {
+		warnings.push_back(std::format("  Client ID: {}", entry.client_id));
+	}
+	if (entries.size() > MAX_MISSING_ITEMS_TO_SHOW) {
+		warnings.push_back(std::format("  ...and {} more", entries.size() - MAX_MISSING_ITEMS_TO_SHOW));
+	}
+	warnings.push_back("");
+}
+
+} // namespace
 
 VersionManager::VersionManager() :
 	loaded_version(CLIENT_VERSION_NONE) {
@@ -88,9 +118,6 @@ const ClientVersion& VersionManager::GetCurrentVersion() const {
 }
 
 bool VersionManager::LoadDataFiles(wxString& error, std::vector<std::string>& warnings) {
-	FileName data_path = getLoadedVersion()->getDataPath();
-	FileName extension_path = FileSystem::GetExtensionsDirectory();
-
 	g_gui.gfx.client_version = getLoadedVersion();
 
 	// OTFI loading removed. Metadata and sprite files are configured via clients.toml or defaults in ClientVersion.
@@ -98,17 +125,65 @@ bool VersionManager::LoadDataFiles(wxString& error, std::vector<std::string>& wa
 	g_loading.CreateLoadBar("Loading asset files");
 	g_loading.SetLoadDone(0, "Loading canonical asset bundle...");
 
-	wxFileName metadata_path = getLoadedVersion()->getMetadataPath();
-	wxFileName sprites_path = getLoadedVersion()->getSpritesPath();
-	wxString base_data_path = data_path.GetPath(wxPATH_GET_VOLUME | wxPATH_GET_SEPARATOR);
+	const wxString modular_data_path = GetModularDataPath();
+	if (!wxFileName(modular_data_path).DirExists()) {
+		error = "Missing modular client data directory: " + modular_data_path;
+		FailDataLoad();
+		return false;
+	}
 
+	const FileName materials_manifest(modular_data_path + "materials.xml");
+	MaterialManifestFiles manifest_files;
+	if (!LoadMaterialManifest(materials_manifest, manifest_files, error)) {
+		return false;
+	}
+
+	if (!LoadCanonicalAssets(modular_data_path, manifest_files, error, warnings)) {
+		return false;
+	}
+
+	if (!LoadCreatureFiles(manifest_files, error, warnings)) {
+		return false;
+	}
+
+	if (!LoadModularMaterials(materials_manifest, error, warnings)) {
+		return false;
+	}
+
+	g_loading.SetLoadDone(70, "Finishing...");
+	g_brushes.init();
+
+	g_loading.DestroyLoadBar();
+	return true;
+}
+
+wxString VersionManager::GetModularDataPath() const {
+	return FileSystem::GetDataDirectory() + wxstr(getLoadedVersion()->getDataDirectory()) + FileName::GetPathSeparator();
+}
+
+void VersionManager::FailDataLoad() {
+	last_missing_items = {};
+	last_load_has_otb = false;
+	g_loading.DestroyLoadBar();
+	UnloadVersion();
+}
+
+bool VersionManager::LoadMaterialManifest(const FileName& materials_manifest, MaterialManifestFiles& manifest_files, wxString& error) {
+	if (LoadMaterialManifestFiles(materials_manifest, manifest_files, error)) {
+		return true;
+	}
+	FailDataLoad();
+	return false;
+}
+
+bool VersionManager::LoadCanonicalAssets(const wxString& modular_data_path, const MaterialManifestFiles& manifest_files, wxString& error, std::vector<std::string>& warnings) {
 	AssetLoadRequest asset_request;
 	asset_request.mode = getLoadedVersion()->getItemDefinitionMode();
 	asset_request.client_version = getLoadedVersion();
-	asset_request.dat_path = metadata_path;
-	asset_request.spr_path = sprites_path;
-	asset_request.otb_path = wxFileName(base_data_path + "items.otb");
-	asset_request.xml_path = wxFileName(base_data_path + "items.xml");
+	asset_request.dat_path = getLoadedVersion()->getMetadataPath();
+	asset_request.spr_path = getLoadedVersion()->getSpritesPath();
+	asset_request.otb_path = wxFileName(modular_data_path + "items.otb");
+	asset_request.xml_paths.assign(manifest_files.items.begin(), manifest_files.items.end());
 
 	// Track whether this mode uses OTB
 	last_load_has_otb = (asset_request.mode != ItemDefinitionMode::DatOnly);
@@ -117,22 +192,14 @@ bool VersionManager::LoadDataFiles(wxString& error, std::vector<std::string>& wa
 	AssetBundleLoader bundle_loader;
 	if (!bundle_loader.load(asset_request, bundle, error, warnings)) {
 		error = "Couldn't load canonical asset bundle: " + error;
-		g_loading.DestroyLoadBar();
-		// Clear stale data on failure
-		last_missing_items = {};
-		last_load_has_otb = true;
-		UnloadVersion();
+		FailDataLoad();
 		return false;
 	}
 
 	g_loading.SetLoadDone(20, "Installing graphics...");
 	if (!bundle_loader.install(bundle, g_gui.gfx, g_item_definitions, error, warnings)) {
 		error = "Couldn't install canonical asset bundle: " + error;
-		g_loading.DestroyLoadBar();
-		// Clear stale data on failure
-		last_missing_items = {};
-		last_load_has_otb = true;
-		UnloadVersion();
+		FailDataLoad();
 		return false;
 	}
 
@@ -141,107 +208,58 @@ bool VersionManager::LoadDataFiles(wxString& error, std::vector<std::string>& wa
 
 	// Only add detailed missing items to warnings list if the user has enabled this option
 	if (g_settings.getBoolean(Config::SHOW_MISSING_ITEMS_WARNING)) {
-		constexpr size_t MAX_SHOW = 50;
-		size_t total_missing = last_missing_items.missing_in_dat.size() +
-		                       last_missing_items.missing_in_otb.size() +
-		                       last_missing_items.xml_no_otb.size() +
-		                       last_missing_items.otb_no_xml.size();
-		if (total_missing > 0) {
-			warnings.push_back(std::format("Missing item definitions detected ({} entries total).", total_missing));
-			warnings.push_back("Go to File -> Missing Items Report... to view details.");
-			warnings.push_back(""); // Empty line for readability
+		AppendMissingItemWarnings(warnings);
+	}
+	return true;
+}
 
-			// Determine correct label for missing_in_otb based on mode
-			const std::string missing_in_otb_label = last_load_has_otb
-				? "tibia.dat items not in items.otb"
-				: "tibia.dat items not referenced by items.xml";
+void VersionManager::AppendMissingItemWarnings(std::vector<std::string>& warnings) const {
+	const size_t total_missing = last_missing_items.missing_in_dat.size() +
+	                             last_missing_items.missing_in_otb.size() +
+	                             last_missing_items.xml_no_otb.size() +
+	                             last_missing_items.otb_no_xml.size();
+	if (total_missing == 0) {
+		return;
+	}
 
-			if (!last_missing_items.missing_in_dat.empty()) {
-				warnings.push_back(std::format("--- Items missing from tibia.dat ({}) ---", last_missing_items.missing_in_dat.size()));
-				for (const auto& entry : last_missing_items.missing_in_dat | std::views::take(MAX_SHOW)) {
-					warnings.push_back(std::format("  Server ID: {}, Client ID: {}, Name: '{}'",
-						entry.server_id, entry.client_id, entry.name.empty() ? "unknown" : entry.name));
-				}
-				if (last_missing_items.missing_in_dat.size() > MAX_SHOW) {
-					warnings.push_back(std::format("  ...and {} more", last_missing_items.missing_in_dat.size() - MAX_SHOW));
-				}
-				warnings.push_back("");
-			}
+	warnings.push_back(std::format("Missing item definitions detected ({} entries total).", total_missing));
+	warnings.push_back("Go to File -> Missing Items Report... to view details.");
+	warnings.push_back("");
 
-			if (!last_missing_items.missing_in_otb.empty()) {
-				warnings.push_back(std::format("--- {} ({}) ---", missing_in_otb_label, last_missing_items.missing_in_otb.size()));
-				for (const auto& entry : last_missing_items.missing_in_otb | std::views::take(MAX_SHOW)) {
-					warnings.push_back(std::format("  Client ID: {}", entry.client_id));
-				}
-				if (last_missing_items.missing_in_otb.size() > MAX_SHOW) {
-					warnings.push_back(std::format("  ...and {} more", last_missing_items.missing_in_otb.size() - MAX_SHOW));
-				}
-				warnings.push_back("");
-			}
+	if (!last_missing_items.missing_in_dat.empty()) {
+		appendServerClientMissingItems(warnings, "Items missing from tibia.dat", last_missing_items.missing_in_dat);
+	}
+	if (!last_missing_items.missing_in_otb.empty()) {
+		const std::string missing_in_otb_label = last_load_has_otb ? "tibia.dat items not in items.otb" : "tibia.dat items not referenced by items.xml";
+		appendClientMissingItems(warnings, missing_in_otb_label, last_missing_items.missing_in_otb);
+	}
+	if (!last_missing_items.xml_no_otb.empty()) {
+		appendServerClientMissingItems(warnings, "items.xml entries missing from items.otb", last_missing_items.xml_no_otb);
+	}
+	if (!last_missing_items.otb_no_xml.empty()) {
+		appendServerClientMissingItems(warnings, "items.otb entries missing from items.xml", last_missing_items.otb_no_xml);
+	}
+}
 
-			if (!last_missing_items.xml_no_otb.empty()) {
-				warnings.push_back(std::format("--- items.xml entries missing from items.otb ({}) ---", last_missing_items.xml_no_otb.size()));
-				for (const auto& entry : last_missing_items.xml_no_otb | std::views::take(MAX_SHOW)) {
-					warnings.push_back(std::format("  Server ID: {}, Client ID: {}, Name: '{}'",
-						entry.server_id, entry.client_id, entry.name.empty() ? "unknown" : entry.name));
-				}
-				if (last_missing_items.xml_no_otb.size() > MAX_SHOW) {
-					warnings.push_back(std::format("  ...and {} more", last_missing_items.xml_no_otb.size() - MAX_SHOW));
-				}
-				warnings.push_back("");
-			}
-
-			if (!last_missing_items.otb_no_xml.empty()) {
-				warnings.push_back(std::format("--- items.otb entries missing from items.xml ({}) ---", last_missing_items.otb_no_xml.size()));
-				for (const auto& entry : last_missing_items.otb_no_xml | std::views::take(MAX_SHOW)) {
-					warnings.push_back(std::format("  Server ID: {}, Client ID: {}, Name: '{}'",
-						entry.server_id, entry.client_id, entry.name.empty() ? "unknown" : entry.name));
-				}
-				if (last_missing_items.otb_no_xml.size() > MAX_SHOW) {
-					warnings.push_back(std::format("  ...and {} more", last_missing_items.otb_no_xml.size() - MAX_SHOW));
-				}
-				warnings.push_back("");
-			}
+bool VersionManager::LoadCreatureFiles(const MaterialManifestFiles& manifest_files, wxString& error, std::vector<std::string>& warnings) {
+	g_loading.SetLoadDone(35, "Loading creatures.xml ...");
+	for (const FileName& creatureFile : manifest_files.creatures) {
+		if (!g_creatures.loadFromXML(creatureFile, true, error, warnings)) {
+			error = "Couldn't load creatures XML file " + creatureFile.GetFullPath() + ": " + error;
+			FailDataLoad();
+			return false;
 		}
 	}
+	return true;
+}
 
-	g_loading.SetLoadDone(35, "Loading creatures.xml ...");
-	if (!g_creatures.loadFromXML(base_data_path + "creatures.xml", true, error, warnings)) {
-		warnings.push_back(std::format("Couldn't load creatures.xml: {}", error.ToStdString()));
-	}
-
-	// g_loading.SetLoadDone(45, "Loading user creatures.xml ...");
-	// {
-	// 	FileName cdb = getLoadedVersion()->getLocalDataPath();
-	// 	cdb.SetFullName("creatures.xml");
-	// 	wxString nerr;
-	// 	wxArrayString nwarn;
-	// 	if (!g_creatures.loadFromXML(cdb, false, nerr, nwarn)) {
-	// 		warnings.push_back("Couldn't load user creatures.xml: " + nerr);
-	// 		spdlog::error("Couldn't load user creatures.xml: {}", nerr.ToStdString());
-	// 	}
-	// 	for (const auto& warn : nwarn) {
-	// 		warnings.push_back(warn);
-	// 		spdlog::warn("User creature XML warning: {}", warn.ToStdString());
-	// 	}
-	// }
-
+bool VersionManager::LoadModularMaterials(const FileName& materials_manifest, wxString& error, std::vector<std::string>& warnings) {
 	g_loading.SetLoadDone(50, "Loading materials.xml ...");
-	if (!g_materials.loadMaterials(base_data_path + "materials.xml", error, warnings)) {
-		warnings.push_back("Couldn't load materials.xml: " + std::string(error.mb_str()));
+	if (!g_materials.loadMaterials(materials_manifest, error, warnings)) {
+		error = "Couldn't load materials.xml: " + error;
+		FailDataLoad();
+		return false;
 	}
-
-	g_loading.SetLoadDone(70, "Loading extensions...");
-	if (!g_materials.loadExtensions(extension_path, error, warnings)) {
-		warnings.push_back("Couldn't load extensions: " + std::string(error.mb_str()));
-		spdlog::warn("Couldn't load extensions: {}", error.ToStdString());
-	}
-
-	g_loading.SetLoadDone(70, "Finishing...");
-	g_brushes.init();
-	g_materials.createOtherTileset();
-
-	g_loading.DestroyLoadBar();
 	return true;
 }
 

@@ -34,7 +34,6 @@ public:
 	static void SwitchDoor(Editor& editor);
 	static void BrowseTile(Editor& editor, int cursor_x, int cursor_y);
 	static void OpenProperties(Editor& editor);
-	static void SelectMoveTo(Editor& editor);
 
 private:
 	PopupActionHandler() = delete;

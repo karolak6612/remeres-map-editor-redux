@@ -12,7 +12,6 @@ public:
 	ToolOptionsWindow(wxWindow* parent);
 	~ToolOptionsWindow();
 
-	void SetPaletteType(PaletteType type);
 	void SetActiveBrush(Brush* brush);
 	void UpdateBrushSize(BrushShape shape, int size);
 	void ReloadSettings();

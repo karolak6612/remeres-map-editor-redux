@@ -48,7 +48,6 @@ class SearchResultWindow;
 class MinimapWindow;
 class PaletteWindow;
 class OldPropertiesWindow;
-class TilesetWindow;
 class EditTownsDialog;
 class ItemButton;
 class HousePalette;
@@ -69,6 +68,7 @@ wxDECLARE_EVENT(EVT_UPDATE_MENUS, wxCommandEvent);
 	),
 
 #include <mutex>
+#include <string_view>
 #include "brushes/managers/brush_manager.h"
 #include "palette/managers/palette_manager.h"
 #include "editor/managers/editor_manager.h"
@@ -211,9 +211,9 @@ public:
 	void UpdateAutoborderPreview(Position pos);
 	// Selects the currently seleceted brush in the active palette
 	void SelectBrush();
-	// Updates the palette AND selects the brush, second parameter is first palette to look in
+	// Updates the palette AND selects the brush
 	// Returns true if the brush was found and selected
-	bool SelectBrush(const Brush* brush, PaletteType pt = TILESET_UNKNOWN);
+	bool SelectBrush(const Brush* brush);
 	// Selects the brush selected before the current brush
 	void SelectPreviousBrush();
 	// Only selects the brush, doesn't update the palette
@@ -338,8 +338,8 @@ public:
 	// If no palette is shown, this displays the primary palette
 	// else does nothing.
 	void ShowPalette();
-	// Select a particular page on the primary palette
-	void SelectPalettePage(PaletteType pt);
+	// Select a particular page on the primary palette by runtime palette name
+	void SelectPalettePage(std::string_view name);
 
 	// Returns primary palette
 	PaletteWindow* GetPalette();

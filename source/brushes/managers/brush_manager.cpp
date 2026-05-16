@@ -62,15 +62,6 @@ BrushManager::~BrushManager() {
 }
 
 void BrushManager::SelectBrush() {
-	if (g_gui.house_palette) {
-		Brush* houseBrush = g_gui.house_palette->GetSelectedBrush();
-		if (houseBrush) {
-			SelectBrushInternal(houseBrush);
-			g_gui.RefreshView();
-			return;
-		}
-	}
-
 	if (g_palettes.palettes.empty()) {
 		return;
 	}
@@ -79,20 +70,22 @@ void BrushManager::SelectBrush() {
 	g_gui.RefreshView();
 }
 
-bool BrushManager::SelectBrush(const Brush* whatbrush, PaletteType primary) {
+bool BrushManager::SelectBrush(const Brush* whatbrush) {
+	if (!whatbrush) {
+		return false;
+	}
+
 	if (g_palettes.palettes.empty()) {
 		if (!g_palettes.CreatePalette()) {
 			return false;
 		}
 	}
 
-	if (g_palettes.palettes.front()->OnSelectBrush(whatbrush, primary)) {
-		// Found in a palette, OnSelectBrush handled the focus/switching
-	}
+	const bool foundInPalette = g_palettes.palettes.front()->OnSelectBrush(whatbrush);
 
 	SelectBrushInternal(const_cast<Brush*>(whatbrush));
 	g_gui.root->GetAuiToolBar()->UpdateBrushButtons();
-	return true;
+	return foundInPalette;
 }
 
 void BrushManager::SelectBrushInternal(Brush* brush) {

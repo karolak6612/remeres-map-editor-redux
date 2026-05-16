@@ -1,7 +1,15 @@
 #ifndef RME_UI_MENUBAR_PALETTE_MENU_HANDLER_H
 #define RME_UI_MENUBAR_PALETTE_MENU_HANDLER_H
 
-#include <wx/wx.h>
+#include "ui/gui_ids.h"
+
+#include <wx/event.h>
+#include <wx/menu.h>
+
+#include <string>
+#include <string_view>
+#include <unordered_map>
+#include <vector>
 
 class MainFrame;
 class MainMenuBar;
@@ -12,19 +20,24 @@ public:
 	~PaletteMenuHandler();
 
 	void OnNewPalette(wxCommandEvent& event);
-
-	void OnSelectTerrainPalette(wxCommandEvent& event);
-	void OnSelectDoodadPalette(wxCommandEvent& event);
-	void OnSelectItemPalette(wxCommandEvent& event);
-	void OnSelectCollectionPalette(wxCommandEvent& event);
+	void OnShowPalette(wxCommandEvent& event);
 	void OnSelectHousePalette(wxCommandEvent& event);
-	void OnSelectCreaturePalette(wxCommandEvent& event);
 	void OnSelectWaypointPalette(wxCommandEvent& event);
-	void OnSelectRawPalette(wxCommandEvent& event);
+	void OnSelectCatalogPalette(wxCommandEvent& event);
+
+	void LoadPaletteMenu(wxMenu* menu);
+	void RefreshPaletteMenu();
 
 protected:
+	void RebuildPaletteMenu();
+	[[nodiscard]] std::vector<std::string> CurrentPaletteMenuEntries() const;
+
 	MainFrame* frame;
 	MainMenuBar* menubar;
+	wxMenu* palette_menu = nullptr;
+	bool last_loaded_state = false;
+	std::vector<std::string> last_menu_entries;
+	std::unordered_map<int, std::string> catalog_menu_ids;
 };
 
 #endif

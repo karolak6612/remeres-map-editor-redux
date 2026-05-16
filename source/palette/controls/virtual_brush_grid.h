@@ -4,7 +4,6 @@
 #include "app/main.h"
 #include "util/nanovg_canvas.h"
 #include "palette/panels/brush_panel.h"
-#include "ui/dcbutton.h" // For RenderSize
 
 /**
  * @class VirtualBrushGrid
@@ -19,10 +18,10 @@ public:
 	/**
 	 * @brief Constructs a VirtualBrushGrid.
 	 * @param parent Parent window
-	 * @param _tileset The tileset category containing brushes
-	 * @param rsz Icon render size (16x16 or 32x32)
+	 * @param _tileset The dynamic tileset containing brushes
+	 * @param iconSizePx Icon render size in pixels
 	 */
-	VirtualBrushGrid(wxWindow* parent, const TilesetCategory* _tileset, RenderSize rsz);
+	VirtualBrushGrid(wxWindow* parent, const DynamicTilesetDefinition* _tileset, int iconSizePx);
 	~VirtualBrushGrid() override;
 
 	wxWindow* GetSelfWindow() override {
@@ -69,7 +68,7 @@ protected:
 	void DrawBrushItem(NVGcontext* vg, int index, const wxRect& rect);
 
 	DisplayMode display_mode = DisplayMode::Grid;
-	RenderSize icon_size;
+	int icon_size_px;
 	int selected_index;
 	int hover_index;
 	int columns;

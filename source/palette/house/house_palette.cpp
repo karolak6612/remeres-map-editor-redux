@@ -30,7 +30,7 @@ enum {
 };
 
 HousePalette::HousePalette(wxWindow* parent) :
-	wxPanel(parent, wxID_ANY),
+	PalettePanel(parent, wxID_ANY),
 	map(nullptr) {
 
 	wxBoxSizer* main_sizer = newd wxBoxSizer(wxVERTICAL);
@@ -118,6 +118,10 @@ HousePalette::HousePalette(wxWindow* parent) :
 }
 
 HousePalette::~HousePalette() {
+}
+
+wxString HousePalette::GetName() const {
+	return "House";
 }
 
 void HousePalette::SetMap(Map* m) {
@@ -221,6 +225,22 @@ Brush* HousePalette::GetSelectedBrush() const {
 		return (g_brush_manager.house_brush->getHouseID() != 0 ? g_brush_manager.house_brush : nullptr);
 	}
 	return nullptr;
+}
+
+bool HousePalette::SelectBrush(const Brush* whatbrush) {
+	if (whatbrush == g_brush_manager.house_brush) {
+		SelectHouseBrush();
+		return true;
+	}
+	if (whatbrush == g_brush_manager.house_exit_brush) {
+		SelectExitBrush();
+		return true;
+	}
+	return false;
+}
+
+void HousePalette::OnUpdate() {
+	UpdateHouses();
 }
 
 void HousePalette::SelectHouseBrush() {

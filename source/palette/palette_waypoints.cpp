@@ -82,20 +82,15 @@ Brush* WaypointPalettePanel::GetSelectedBrush() const {
 }
 
 bool WaypointPalettePanel::SelectBrush(const Brush* whatbrush) {
-	ASSERT(whatbrush == g_brush_manager.waypoint_brush);
-	return false;
+	return whatbrush == g_brush_manager.waypoint_brush;
 }
 
 int WaypointPalettePanel::GetSelectedBrushSize() const {
 	return 0;
 }
 
-PaletteType WaypointPalettePanel::GetType() const {
-	return TILESET_WAYPOINT;
-}
-
 wxString WaypointPalettePanel::GetName() const {
-	return "Waypoint Palette";
+	return "Waypoint";
 }
 
 void WaypointPalettePanel::OnUpdate() {

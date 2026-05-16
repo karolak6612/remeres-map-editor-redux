@@ -2,19 +2,20 @@
 #define RME_PALETTE_PANELS_BRUSH_PANEL_H_
 
 #include "app/main.h"
-#include "map/tileset.h"
+#include "game/material_database.h"
 #include "brushes/brush.h"
 
 enum BrushListType {
-	BRUSHLIST_LARGE_ICONS,
-	BRUSHLIST_SMALL_ICONS,
+	BRUSHLIST_ICONS_32,
+	BRUSHLIST_ICONS_64,
+	BRUSHLIST_ICONS_128,
 	BRUSHLIST_LISTBOX,
 	BRUSHLIST_TEXT_LISTBOX,
 };
 
 class BrushBoxInterface {
 public:
-	BrushBoxInterface(const TilesetCategory* _tileset) :
+	BrushBoxInterface(const DynamicTilesetDefinition* _tileset) :
 		tileset(_tileset), loaded(false) {
 		ASSERT(tileset);
 	}
@@ -30,7 +31,7 @@ public:
 	virtual bool SelectBrush(const Brush* brush) = 0;
 
 protected:
-	const TilesetCategory* const tileset;
+	const DynamicTilesetDefinition* const tileset;
 	bool loaded;
 };
 
@@ -49,7 +50,7 @@ public:
 	void SetListType(BrushListType ltype);
 	void SetListType(wxString ltype);
 	// Assigns a tileset to this list
-	void AssignTileset(const TilesetCategory* tileset);
+	void AssignTileset(const DynamicTilesetDefinition* tileset);
 
 	// Select the first brush
 	void SelectFirstBrush();
@@ -64,7 +65,7 @@ public:
 	void OnSwitchOut();
 
 protected:
-	const TilesetCategory* tileset;
+	const DynamicTilesetDefinition* tileset;
 	wxSizer* sizer;
 	BrushBoxInterface* brushbox;
 	bool loaded;
