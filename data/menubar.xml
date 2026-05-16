@@ -208,12 +208,7 @@
 		<item name="Tile Properties" action="WIN_TILE_PROPERTIES" help="Displays the tile properties panel."/>
 		<item name="In-game Preview" action="WIN_INGAME_PREVIEW" help="Displays the in-game preview window."/>
 		<item name="New Palette" action="NEW_PALETTE" help="Creates a new palette."/>
-		<menu name="Palette">
-			<item name="Show Palettes" action="SHOW_PALETTE" help="Displays the primary palette window."/>
-			<separator/>
-			<item name="House" hotkey="H" action="SELECT_HOUSE" help="Select the House palette."/>
-			<item name="Waypoint" hotkey="W" action="SELECT_WAYPOINT" help="Select the Waypoint palette."/>
-		</menu>
+		<menu name="Palette" special="PALETTE"/>
 		<menu name="Toolbars">
 			<item name="Brushes" action="VIEW_TOOLBARS_BRUSHES" help="Show or hide the Brushes toolbar."/>
 			<item name="Position" action="VIEW_TOOLBARS_POSITION" help="Show or hide the Position toolbar."/>

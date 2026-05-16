@@ -11,6 +11,8 @@
 #include "util/nvg_utils.h"
 #include "ui/theme.h"
 
+#include <algorithm>
+
 #include <spdlog/spdlog.h>
 
 namespace {
@@ -24,10 +26,10 @@ namespace {
 	static constexpr float INTER_FACTOR = 0.2f;
 }
 
-VirtualBrushGrid::VirtualBrushGrid(wxWindow* parent, const DynamicTilesetDefinition* _tileset, RenderSize rsz) :
+VirtualBrushGrid::VirtualBrushGrid(wxWindow* parent, const DynamicTilesetDefinition* _tileset, int iconSizePx) :
 	NanoVGCanvas(parent, wxID_ANY, wxVSCROLL | wxWANTS_CHARS),
 	BrushBoxInterface(_tileset),
-	icon_size(rsz),
+	icon_size_px(std::clamp(iconSizePx, 32, 128)),
 	selected_index(-1),
 	hover_index(-1),
 	columns(1),
@@ -35,11 +37,7 @@ VirtualBrushGrid::VirtualBrushGrid(wxWindow* parent, const DynamicTilesetDefinit
 	padding(4),
 	m_animTimer(this) {
 
-	if (icon_size == RENDER_SIZE_16x16) {
-		item_size = 18;
-	} else {
-		item_size = GRID_ITEM_SIZE_BASE + 2; // + borders
-	}
+	item_size = icon_size_px + 2 * ICON_OFFSET;
 
 	Bind(wxEVT_LEFT_DOWN, &VirtualBrushGrid::OnMouseDown, this);
 	Bind(wxEVT_MOTION, &VirtualBrushGrid::OnMotion, this);

@@ -9,6 +9,7 @@
 #include "ui/gui.h"
 #include "ui/main_frame.h"
 #include "ui/main_menubar.h"
+#include "ui/menubar/palette_menu_handler.h"
 #include "ui/menubar/script_menu_handler.h"
 #include <wx/wx.h>
 #include <algorithm>
@@ -69,6 +70,10 @@ wxObject* MenuBarLoader::LoadItem(pugi::xml_node node, wxMenu* parent, MainMenuB
 		wxMenu* menu = newd wxMenu;
 		if ((attribute = node.attribute("special")) && std::string(attribute.as_string()) == "RECENT_FILES") {
 			recentFilesManager.UseMenu(menu);
+		} else if ((attribute = node.attribute("special")) && std::string(attribute.as_string()) == "PALETTE") {
+			if (mb && mb->paletteMenuHandler) {
+				mb->paletteMenuHandler->LoadPaletteMenu(menu);
+			}
 		} else if ((attribute = node.attribute("special")) && std::string(attribute.as_string()) == "SCRIPTS") {
 			for (pugi::xml_node menuNode = node.first_child(); menuNode; menuNode = menuNode.next_sibling()) {
 				LoadItem(menuNode, menu, mb, items, actions, recentFilesManager, warnings, error);

@@ -151,6 +151,7 @@ void MainMenuBar::Update() {
 	using namespace MenuBar;
 	// This updates all buttons and sets them to proper enabled/disabled state
 
+	paletteMenuHandler->RefreshPaletteMenu();
 	MenuBarActionManager::UpdateState(this);
 }
 

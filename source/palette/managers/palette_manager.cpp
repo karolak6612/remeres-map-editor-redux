@@ -71,6 +71,9 @@ void PaletteManager::RefreshOtherPalettes(PaletteWindow* p) {
 
 void PaletteManager::ShowPalette() {
 	if (palettes.empty()) {
+		CreatePalette();
+	}
+	if (palettes.empty()) {
 		return;
 	}
 

@@ -41,11 +41,13 @@ void BrushPanel::SetListType(BrushListType ltype) {
 }
 
 void BrushPanel::SetListType(wxString ltype) {
-	if (ltype == "small icons") {
-		SetListType(BRUSHLIST_SMALL_ICONS);
-	} else if (ltype == "large icons") {
-		SetListType(BRUSHLIST_LARGE_ICONS);
-	} else if (ltype == "listbox") {
+	if (ltype == "32x32 px" || ltype == "small icons" || ltype == "large icons") {
+		SetListType(BRUSHLIST_ICONS_32);
+	} else if (ltype == "64x64 px") {
+		SetListType(BRUSHLIST_ICONS_64);
+	} else if (ltype == "128x128 px") {
+		SetListType(BRUSHLIST_ICONS_128);
+	} else if (ltype == "listbox" || ltype == "List style") {
 		SetListType(BRUSHLIST_LISTBOX);
 	} else if (ltype == "textlistbox") {
 		SetListType(BRUSHLIST_TEXT_LISTBOX);
@@ -66,15 +68,18 @@ void BrushPanel::LoadContents() {
 	ASSERT(tileset != nullptr);
 
 	switch (list_type) {
-		case BRUSHLIST_LARGE_ICONS:
-			brushbox = newd VirtualBrushGrid(this, tileset, RENDER_SIZE_32x32);
+		case BRUSHLIST_ICONS_32:
+			brushbox = newd VirtualBrushGrid(this, tileset, 32);
 			break;
-		case BRUSHLIST_SMALL_ICONS:
-			brushbox = newd VirtualBrushGrid(this, tileset, RENDER_SIZE_16x16);
+		case BRUSHLIST_ICONS_64:
+			brushbox = newd VirtualBrushGrid(this, tileset, 64);
+			break;
+		case BRUSHLIST_ICONS_128:
+			brushbox = newd VirtualBrushGrid(this, tileset, 128);
 			break;
 		case BRUSHLIST_LISTBOX:
 		case BRUSHLIST_TEXT_LISTBOX: {
-			auto vbg = newd VirtualBrushGrid(this, tileset, RENDER_SIZE_32x32);
+			auto vbg = newd VirtualBrushGrid(this, tileset, 32);
 			vbg->SetDisplayMode(VirtualBrushGrid::DisplayMode::List);
 			brushbox = vbg;
 			break;

@@ -40,10 +40,10 @@ InterfacePage::InterfacePage(wxWindow* parent) : ScrollablePreferencesPage(paren
 	auto* palette_style_section = new PreferencesSectionPanel(
 		GetScrollWindow(),
 		"Palette Style",
-		"Pick the presentation style used by XML-defined dynamic palettes."
+		"Pick the icon size used by XML-defined dynamic palettes."
 	);
 	auto* palette_style_sizer = palette_style_section->GetBodySizer();
-	dynamic_palette_style_choice = AddPaletteStyleChoice(palette_style_section, palette_style_sizer, "Dynamic palette style", "Choose how XML-defined dynamic palettes are presented.", g_settings.getString(Config::PALETTE_DYNAMIC_STYLE));
+	dynamic_palette_style_choice = AddPaletteStyleChoice(palette_style_section, palette_style_sizer, "Dynamic palette icon size", "Choose the icon size used by XML-defined dynamic palettes.", g_settings.getString(Config::PALETTE_DYNAMIC_STYLE));
 	page_sizer->Add(palette_style_section, 0, wxEXPAND | wxALL, FromDIP(10));
 
 	auto* density_section = new PreferencesSectionPanel(
@@ -116,16 +116,19 @@ void InterfacePage::UpdateSpeedLabels() {
 wxChoice* InterfacePage::AddPaletteStyleChoice(wxWindow* parent, wxSizer* sizer, const wxString& short_description, const wxString& description, const std::string& setting) {
 	wxUnusedVar(sizer);
 	auto* choice = new wxChoice(parent, wxID_ANY);
-	choice->Append("Large icons");
-	choice->Append("Small icons");
-	choice->Append("Listbox with icons");
+	choice->Append("32x32 px");
+	choice->Append("64x64 px");
+	choice->Append("128x128 px");
+	choice->Append("List style");
 
-	if (setting == "large icons") {
+	if (setting == "32x32 px" || setting == "large icons" || setting == "small icons") {
 		choice->SetSelection(0);
-	} else if (setting == "small icons") {
+	} else if (setting == "64x64 px") {
 		choice->SetSelection(1);
-	} else if (setting == "listbox") {
+	} else if (setting == "128x128 px") {
 		choice->SetSelection(2);
+	} else if (setting == "listbox" || setting == "textlistbox" || setting == "List style") {
+		choice->SetSelection(3);
 	} else {
 		choice->SetSelection(0);
 	}
@@ -139,10 +142,12 @@ bool InterfacePage::SetPaletteStyleChoice(wxChoice* ctrl, int key) {
 	std::string new_val = current;
 
 	if (ctrl->GetSelection() == 0) {
-		new_val = "large icons";
+		new_val = "32x32 px";
 	} else if (ctrl->GetSelection() == 1) {
-		new_val = "small icons";
+		new_val = "64x64 px";
 	} else if (ctrl->GetSelection() == 2) {
+		new_val = "128x128 px";
+	} else if (ctrl->GetSelection() == 3) {
 		new_val = "listbox";
 	}
 
