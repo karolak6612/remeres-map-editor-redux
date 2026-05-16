@@ -94,6 +94,7 @@ bool Materials::loadMaterials(const FileName& identifier, wxString& error, std::
 
 bool Materials::unserializeMaterials(const FileName& filename, pugi::xml_node node, wxString& error, std::vector<std::string>& warnings) {
 	ManifestSectionsSeen seen;
+	std::vector<FileName> paletteFiles;
 
 	for (pugi::xml_node childNode = node.first_child(); childNode; childNode = childNode.next_sibling()) {
 		const std::string childName = as_lower_str(childNode.name());
@@ -104,7 +105,7 @@ bool Materials::unserializeMaterials(const FileName& filename, pugi::xml_node no
 		} else if (childName == "tileset") {
 			error = "Legacy <tileset> nodes are not supported by the modular material loader.";
 			return false;
-		} else if (!loadMaterialsSection(filename, childNode, childName, seen, error, warnings)) {
+		} else if (!loadMaterialsSection(filename, childNode, childName, seen, paletteFiles, error, warnings)) {
 			return false;
 		}
 	}
@@ -113,10 +114,10 @@ bool Materials::unserializeMaterials(const FileName& filename, pugi::xml_node no
 		error = "Modular materials.xml must define borders, brushes, creatures, items, tilesets, and palettes sections.";
 		return false;
 	}
-	return true;
+	return resolvePaletteReferences(paletteFiles, error, warnings);
 }
 
-bool Materials::loadMaterialsSection(const FileName& filename, pugi::xml_node section, std::string_view sectionName, ManifestSectionsSeen& seen, wxString& error, std::vector<std::string>& warnings) {
+bool Materials::loadMaterialsSection(const FileName& filename, pugi::xml_node section, std::string_view sectionName, ManifestSectionsSeen& seen, std::vector<FileName>& paletteFiles, wxString& error, std::vector<std::string>& warnings) {
 	if (sectionName == "borders") {
 		seen.borders = true;
 		return loadModuleIncludes(filename, section, "border", error, warnings);
@@ -139,7 +140,7 @@ bool Materials::loadMaterialsSection(const FileName& filename, pugi::xml_node se
 	}
 	if (sectionName == "palettes") {
 		seen.palettes = true;
-		return loadPaletteIncludes(filename, section, error, warnings);
+		return loadPaletteIncludes(filename, section, paletteFiles, error);
 	}
 	return true;
 }
@@ -213,7 +214,7 @@ bool Materials::loadModuleIncludes(const FileName& manifest, pugi::xml_node sect
 	return true;
 }
 
-bool Materials::loadPaletteIncludes(const FileName& manifest, pugi::xml_node section, wxString& error, std::vector<std::string>& warnings) {
+bool Materials::loadPaletteIncludes(const FileName& manifest, pugi::xml_node section, std::vector<FileName>& paletteFiles, wxString& error) {
 	bool loadedAny = false;
 	for (pugi::xml_node includeNode = section.child("include"); includeNode; includeNode = includeNode.next_sibling("include")) {
 		if (const auto fileAttribute = includeNode.attribute("file")) {
@@ -223,9 +224,7 @@ bool Materials::loadPaletteIncludes(const FileName& manifest, pugi::xml_node sec
 				return false;
 			}
 			loadedAny = true;
-			if (!loadPaletteFile(includeFile, error, warnings)) {
-				return false;
-			}
+			paletteFiles.push_back(includeFile);
 		} else if (const auto folderAttribute = includeNode.attribute("folder")) {
 			FileName folder = MaterialIncludeResolver::resolveRelativeFolder(manifest, folderAttribute.as_string());
 			if (!folder.DirExists()) {
@@ -234,9 +233,7 @@ bool Materials::loadPaletteIncludes(const FileName& manifest, pugi::xml_node sec
 			}
 			for (const FileName& file : MaterialIncludeResolver::collectXmlFiles(folder, includeNode.attribute("subfolders").as_bool(false))) {
 				loadedAny = true;
-				if (!loadPaletteFile(file, error, warnings)) {
-					return false;
-				}
+				paletteFiles.push_back(file);
 			}
 		}
 	}
@@ -244,6 +241,15 @@ bool Materials::loadPaletteIncludes(const FileName& manifest, pugi::xml_node sec
 	if (!loadedAny) {
 		error = "Modular palettes section has no include entries.";
 		return false;
+	}
+	return true;
+}
+
+bool Materials::resolvePaletteReferences(const std::vector<FileName>& paletteFiles, wxString& error, std::vector<std::string>& warnings) {
+	for (const FileName& paletteFile : paletteFiles) {
+		if (!loadPaletteFile(paletteFile, error, warnings)) {
+			return false;
+		}
 	}
 	return true;
 }

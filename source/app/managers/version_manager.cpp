@@ -27,7 +27,6 @@ VersionManager g_version;
 
 namespace {
 
-constexpr std::string_view MODULAR_DATA_DIR = "new_data";
 constexpr size_t MAX_MISSING_ITEMS_TO_SHOW = 50;
 
 void appendServerClientMissingItems(std::vector<std::string>& warnings, std::string_view title, const std::vector<MissingItemEntry>& entries) {
@@ -159,10 +158,12 @@ bool VersionManager::LoadDataFiles(wxString& error, std::vector<std::string>& wa
 }
 
 wxString VersionManager::GetModularDataPath() const {
-	return FileSystem::GetDataDirectory() + wxstr(MODULAR_DATA_DIR) + FileName::GetPathSeparator() + wxstr(getLoadedVersion()->getDataDirectory()) + FileName::GetPathSeparator();
+	return FileSystem::GetDataDirectory() + wxstr(getLoadedVersion()->getDataDirectory()) + FileName::GetPathSeparator();
 }
 
 void VersionManager::FailDataLoad() {
+	last_missing_items = {};
+	last_load_has_otb = false;
 	g_loading.DestroyLoadBar();
 	UnloadVersion();
 }
@@ -191,9 +192,6 @@ bool VersionManager::LoadCanonicalAssets(const wxString& modular_data_path, cons
 	AssetBundleLoader bundle_loader;
 	if (!bundle_loader.load(asset_request, bundle, error, warnings)) {
 		error = "Couldn't load canonical asset bundle: " + error;
-		// Clear stale data on failure
-		last_missing_items = {};
-		last_load_has_otb = true;
 		FailDataLoad();
 		return false;
 	}
@@ -201,9 +199,6 @@ bool VersionManager::LoadCanonicalAssets(const wxString& modular_data_path, cons
 	g_loading.SetLoadDone(20, "Installing graphics...");
 	if (!bundle_loader.install(bundle, g_gui.gfx, g_item_definitions, error, warnings)) {
 		error = "Couldn't install canonical asset bundle: " + error;
-		// Clear stale data on failure
-		last_missing_items = {};
-		last_load_has_otb = true;
 		FailDataLoad();
 		return false;
 	}
