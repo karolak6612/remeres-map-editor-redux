@@ -413,6 +413,7 @@ bool Materials::loadTilesetInclude(const FileName& manifest, pugi::xml_node incl
 			}
 		}
 	}
+	warnings.push_back(std::format("tileset_include: manifest=\"{}\" include node is missing both file and folder attributes", manifest.GetFullPath().ToStdString()));
 	return true;
 }
 
