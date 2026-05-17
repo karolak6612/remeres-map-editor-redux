@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="utf-8"?>
+<tileset name="Exterior">
+    <brush name="wooden coffin" />
+    <brush name="stone coffin (no rose)" />
+    <brush name="stone coffin (yellow rose)" />
+    <brush name="stone coffin (blue rose)" />
+    <brush name="stone coffin (red rose)" />
+    <brush name="buried stone coffin" />
+    <brush name="sarcophagus" />
+    <item fromid="1406" toid="1409" />
+			-- Campfires --
+			<item fromid="1421" toid="1428" />
+
+			-- fountains --
+			<brush name="marble fountain - on" />
+    <brush name="marble fountain - off" />
+    <item id="1378" />
+    <brush name="normal fountain - on" />
+    <brush name="normal fountain - off" />
+
+			-- flags --
+			<brush name="dragon flag" />
+    <brush name="castle flag" />
+    <brush name="tibia flag" />
+    <brush name="millstone" />
+    <brush name="millwheel" />
+    <brush name="well" />
+    <brush name="bench" />
+			-- signs --
+			<item fromid="1429" toid="1434" />
+    <item fromid="1438" toid="1439" />
+</tileset>

@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="utf-8"?>
+<tileset name="Desert">
+    <item fromid="1552" toid="1559" />
+    <item fromid="1578" toid="1581" />
+    <item fromid="1398" toid="1405" />
+		-- statues pillars etc --
+			<item id="1550" />
+    <item fromid="1560" toid="1561" />
+    <item id="1549" />
+    <item id="1551" />
+    <item id="463" />
+    <item id="1486" />
+    <item fromid="1450" toid="1451" />
+    <item id="23761" />
+    <item fromid="12848" toid="12854" />
+    <item id="12856" />
+    <item fromid="12870" toid="12871" />
+    <item fromid="12872" toid="12877" />
+    <item id="12879" />
+    <item id="12855" />
+    <item id="12878" />
+    <item id="12884" />
+    <item id="13733" />
+    <item fromid="21514" toid="21515" />
+		-- furniture --
+			<item fromid="1417" toid="1420" />
+    <item fromid="7361" toid="7362" />
+    <item fromid="7474" toid="7475" />
+    <item fromid="12946" toid="12957" />
+    <item id="13480" />
+    <item id="13731" />
+    <item id="13481" />
+    <item id="13732" />
+    <item id="13730" />
+    <item id="13482" />
+    <item id="13729" />
+    <item id="13726" />
+    <item fromid="13718" toid="13725" />
+    <item fromid="13727" toid="13728" />
+    <item fromid="13734" toid="13738" />
+		-- hangables --
+			<item fromid="1829" toid="1830" />
+    <item fromid="13696" toid="13717" />
+		-- nature --
+			<item fromid="8324" toid="8325" />
+    <item fromid="8416" toid="8417" />
+    <item fromid="13199" toid="13200" />
+    <item fromid="20926" toid="20931" />
+    <item fromid="20938" toid="20942" />
+    <item fromid="20946" />
+    <item fromid="22118" toid="22123" />
+</tileset>

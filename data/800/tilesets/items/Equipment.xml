@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<tileset name="Equipment">
+    <item id="2128" />
+    <item id="2139" />
+    <item id="2175" />
+    <item id="2195" />
+    <item id="2217" />
+    <item id="2323" />
+    <item id="2342" />
+    <item id="2343" />
+    <item id="2358" />
+    <item fromid="2457" toid="2542" />
+    <item fromid="2640" toid="2665" />
+    <item fromid="3967" toid="3975" />
+    <item id="3982" />
+    <item id="3983" />
+    <item id="5461" />
+    <item id="5462" />
+</tileset>

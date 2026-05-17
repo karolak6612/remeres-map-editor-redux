@@ -1,0 +1,117 @@
+<?xml version="1.0" encoding="utf-8"?>
+<tileset name="Writeables / Signs / Other">
+    <item fromid="1947" toid="1986" />
+    <item id="2345" />
+    <item id="2347" />
+    <item id="2597" />
+    <item id="2325" />
+    <item id="2333" />
+    <item id="2329" />
+    <item id="6387" />
+    <item id="6388" />
+    <item id="2598" />
+    <item id="2599" />
+    <item id="2175" />
+    <item id="6533" />
+    <item id="2217" />
+    <item id="4853" />
+    <item id="6113" />
+    <item id="6118" />
+    <item id="6119" />
+    <item id="8267" />
+    <item id="4854" />
+    <item id="4855" />
+    <item id="4842" />
+    <item id="5091" />
+    <item id="5706" />
+    <item id="5958" />
+    <item id="7696" />
+    <item id="6086" />
+    <item id="6124" />
+    <item fromid="7702" toid="7705" />
+    <item fromid="7720" toid="7727" />
+    <item fromid="7844" toid="7846" />
+    <item fromid="7528" toid="7535" />
+    <item id="6108" />
+    <item id="6538" />
+    <item id="8190" />
+    <item id="8702" />
+    <item id="8707" />
+    <item id="8945" />
+    <item id="9191" />
+    <item id="10006" />
+    <item id="10062" />
+    <item id="10111" />
+    <item id="10942" />
+    <item fromid="12396" toid="12398" />
+    <item id="12497" />
+    <item id="12655" />
+    <item id="13192" />
+    <item id="13263" />
+    <item id="13831" />
+    <item id="14338" />
+    <item id="14346" />
+    <item fromid="15427" toid="15429" />
+    <item fromid="15475" toid="15476" />
+    <item fromid="15573" toid="15575" />
+    <item fromid="20624" toid="20625" />
+    <item id="22384" />
+    <item id="22474" />
+    <item id="23781" />
+    <item fromid="23790" toid="23795" />
+		-- scrolls --
+			<item id="4857" />
+    <item id="6523" />
+    <item fromid="7491" toid="7492" />
+    <item id="8694" />
+    <item id="8701" />
+    <item fromid="9663" toid="9668" />
+    <item id="9680" />
+    <item id="9733" />
+    <item id="10090" />
+    <item fromid="10099" toid="10104" />
+    <item fromid="10122" toid="10123" />
+    <item id="10165" />
+    <item id="10225" />
+    <item id="10308" />
+    <item id="10613" />
+    <item id="10928" />
+    <item id="10945" />
+    <item id="11101" />
+    <item id="12382" />
+    <item id="12500" />
+    <item id="13529" />
+    <item fromid="14324" toid="14325" />
+    <item fromid="14336" toid="14337" />
+    <item id="14339" />
+    <item id="14347" />
+    <item id="14354" />
+    <item id="15576" />
+    <item id="16101" />
+    <item fromid="18517" toid="18522" />
+    <item id="21448" />
+    <item id="21462" />
+    <item id="21474" />
+    <item id="23672" />
+    <item id="23764" />
+    <item id="23784" />
+    <item id="23796" />
+    <item fromid="23836" toid="23837" />
+		-- signs --
+			<item fromid="1429" toid="1434" />
+    <item fromid="1438" toid="1441" />
+    <item fromid="5332" toid="5389" />
+    <item fromid="12213" toid="12214" />
+    <item fromid="12266" toid="12271" />
+    <item id="12274" />
+    <item fromid="13921" toid="13922" />
+    <item id="19948" />
+    <item fromid="20005" toid="20080" />
+    <item fromid="20142" toid="20147" />
+		-- other --
+			<item fromid="1810" toid="1811" />
+    <item id="1815" />
+    <item id="1818" />
+    <item fromid="7920" toid="7923" />
+    <item fromid="8898" toid="8899" />
+</tileset>

@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<tileset name="Containers">
+    <item fromid="1987" toid="1989" />
+    <item fromid="1990" toid="2004" />
+    <item fromid="2365" />
+    <item fromid="2330" toid="2331" />
+    <item fromid="2595" toid="2596" />
+</tileset>

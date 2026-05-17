@@ -1,12 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
 <materials>
-	<include file="creature_palette.xml"/>
-	<include file="borders.xml"/>
-	<include file="grounds.xml"/>
-	<include file="raw_palette.xml"/>
-	<include file="item_palette.xml"/>
-	<include file="walls.xml"/>
-	<include file="walls_extra.xml"/>
-	<include file="doodads.xml"/>
-	<include file="tilesets.xml"/>
-	<include file="collections.xml"/>
+    <borders>
+        <include folder="borders/" />
+    </borders>
+    <brushes>
+        <include folder="brushes/" />
+    </brushes>
+    <creatures>
+        <include folder="creatures/" />
+    </creatures>
+    <items>
+        <include folder="items/" />
+    </items>
+    <tilesets>
+        <include folder="tilesets/" subfolders="true" />
+    </tilesets>
+    <palettes>
+        <include file="palettes.xml" />
+    </palettes>
 </materials>

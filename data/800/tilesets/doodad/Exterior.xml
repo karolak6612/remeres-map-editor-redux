@@ -1,0 +1,66 @@
+<?xml version="1.0" encoding="utf-8"?>
+<tileset name="Exterior">
+    <item id="1387" />
+    <brush name="lever" />
+    <item id="2593" />
+    <item id="3981" />
+    <item id="1777" />
+    <item id="4208" />
+    <item id="1510" />
+    <item id="1512" />
+    <item id="2249" />
+    <item id="2555" />
+    <brush name="normal fountain - on" />
+    <brush name="normal fountain - off" />
+    <brush name="marble fountain - on" />
+    <brush name="marble fountain - off" />
+    <item id="1378" />
+    <brush name="water well" />
+    <brush name="ancient fountain" />
+    <brush name="lava fountain" />
+    <brush name="draw well" />
+    <brush name="altar" />
+    <brush name="sacrificial stone" />
+    <brush name="sacrificial stone (blood)" />
+    <brush name="water wheel (on/off)" />
+    <brush name="mill" />
+    <item id="1406" />
+    <item id="1407" />
+    <item id="1408" />
+    <item id="1409" />
+    <brush name="stone coffin (no rose)" />
+    <brush name="stone coffin (yellow rose)" />
+    <brush name="stone coffin (blue rose)" />
+    <brush name="stone coffin (red rose)" />
+    <brush name="buried stone coffin" />
+    <brush name="sarcophagus" />
+    <brush name="wooden coffin" />
+    <item fromid="1421" toid="1428" />
+    <brush name="large cauldron" />
+    <item id="3802" />
+    <item id="3803" />
+    <item id="3804" />
+    <item id="4404" />
+    <item fromid="1479" toid="1486" />
+    <brush name="bench" />
+    <item fromid="1900" toid="1905" />
+    <brush name="cobweb" />
+    <item id="2180" />
+    <brush name="dragon skeleton" />
+    <item id="2247" />
+    <item id="2248" />
+    <brush name="brown cloth wall" />
+    <brush name="gray cloth wall" />
+    <brush name="tanned tiger fur" />
+    <brush name="leaning planks" />
+    <brush name="planks" />
+    <brush name="wooden planks (on wall)" />
+    <item id="3871" />
+    <item id="3872" />
+    <item id="3873" />
+    <brush name="big footprint" />
+    <brush name="fishing net" />
+    <brush name="fishing net_1" />
+    <brush name="rope" />
+    <brush name="rails" />
+</tileset>

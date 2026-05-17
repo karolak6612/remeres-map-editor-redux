@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<tileset name="Musical Instruments">
+    <item fromid="2070" toid="2079" />
+    <item fromid="3951" toid="3953" />
+</tileset>

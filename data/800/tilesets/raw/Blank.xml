@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<tileset name="Blank">
+    <item fromid="4328" toid="4393" />
+    <item fromid="4626" toid="4631" />
+    <item id="4841" />
+    <item id="4844" />
+    <item id="5090" />
+</tileset>

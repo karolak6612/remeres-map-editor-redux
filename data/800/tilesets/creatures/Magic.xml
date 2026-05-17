@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<tileset name="Magic">
+    <creature name="behemoth" type="monster" looktype="55" />
+    <creature name="beholder" type="monster" looktype="17" />
+    <creature name="blue djinn" type="monster" looktype="80" />
+    <creature name="cyclops" type="monster" looktype="22" />
+    <creature name="demon" type="monster" looktype="35" />
+    <creature name="dragon" type="monster" looktype="34" />
+    <creature name="dragon lord" type="monster" looktype="39" />
+    <creature name="efreet" type="monster" looktype="103" />
+    <creature name="elder beholder" type="monster" looktype="108" />
+    <creature name="fire devil" type="monster" looktype="40" />
+    <creature name="fire elemental" type="monster" looktype="49" />
+    <creature name="gargoyle" type="monster" looktype="95" />
+    <creature name="gazer" type="monster" looktype="109" />
+    <creature name="green djinn" type="monster" looktype="51" />
+    <creature name="hydra" type="monster" looktype="121" />
+    <creature name="marid" type="monster" looktype="104" />
+    <creature name="serpent spawn" type="monster" looktype="220" />
+    <creature name="slime" type="monster" looktype="19" />
+    <creature name="stone golem" type="monster" looktype="67" />
+    <creature name="yeti" type="monster" looktype="110" />
+</tileset>

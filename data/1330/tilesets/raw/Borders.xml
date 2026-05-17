@@ -1,0 +1,1558 @@
+<?xml version="1.0" encoding="utf-8"?>
+<tileset name="Borders">
+    <item fromid="435" toid="436" />			-- wooden floor (normal) --
+			<item id="434" />
+    <item id="437" />
+    <item fromid="440" toid="441" />
+    <item fromid="438" toid="439" />
+    <item id="442" />
+    <item id="444" />
+    <item id="443" />
+    <item id="445" />
+    <item fromid="10406" toid="10407" />		-- wooden floor (carlin) --
+			<item id="10405" />
+    <item id="10408" />
+    <item fromid="10411" toid="10412" />
+    <item fromid="10409" toid="10410" />
+    <item id="10413" />
+    <item id="10415" />
+    <item id="10414" />
+    <item id="10416" />
+    <item fromid="18119" toid="18120" />		-- wooden floor (venore) --
+			<item id="18118" />
+    <item id="18121" />
+    <item id="18134" />
+    <item id="18133" />
+    <item fromid="18135" toid="18136" />
+    <item id="6564" />						-- brown flat roof --
+			<item id="922" />
+    <item id="921" />
+    <item id="6565" />
+    <item id="5051" />
+    <item id="5053" />
+    <item id="5045" />
+    <item id="5047" />
+    <item id="923" />
+    <item id="5050" />
+    <item id="5048" />
+    <item id="5054" />
+    <item fromid="924" toid="964" />			-- tiled roof + wooden roof --
+			<item fromid="3188" toid="3189" />		-- stone floor border --
+			<item fromid="3218" />
+    <item fromid="3221" toid="3222" />
+    <item fromid="3305" />					-- jungle grass --
+			<item fromid="3302" />
+    <item fromid="3304" />
+    <item fromid="3303" />
+    <item fromid="3309" />
+    <item fromid="3308" />
+    <item fromid="3306" toid="3307" />
+    <item fromid="3298" />
+    <item fromid="3301" />
+    <item fromid="3299" toid="3300" />
+    <item fromid="891" toid="894" />			-- mountain (thick) --
+			<item fromid="899" toid="902" />
+    <item fromid="897" />
+    <item fromid="895" />
+    <item fromid="898" />
+    <item fromid="896" />
+    <item fromid="4456" toid="4459" />		-- mountain (thin) --
+			<item fromid="4464" toid="4467" />
+    <item fromid="4462" />
+    <item fromid="4460" />
+    <item fromid="4463" />
+    <item fromid="4461" />
+    <item fromid="4514" toid="4517" />		-- rock soil --
+			<item fromid="4522" toid="4523" />
+    <item fromid="4525" />
+    <item fromid="4524" />
+    <item fromid="4521" />
+    <item fromid="4518" />
+    <item fromid="4520" />
+    <item fromid="4519" />
+    <item fromid="4542" toid="4545" />		-- grass --
+			<item fromid="4550" toid="4551" />
+    <item fromid="4553" />
+    <item fromid="4552" />
+    <item fromid="4549" />
+    <item fromid="4546" />
+    <item fromid="4548" />
+    <item fromid="4547" />
+    <item fromid="4554" toid="4557" />		-- gravel --
+			<item fromid="4562" toid="4563" />
+    <item fromid="4565" />
+    <item fromid="4564" />
+    <item fromid="4561" />
+    <item fromid="4558" />
+    <item fromid="4560" />
+    <item fromid="4559" />
+    <item fromid="4596" toid="4599" />		-- white sand --
+			<item fromid="4604" toid="4605" />
+    <item fromid="4607" />
+    <item fromid="4606" />
+    <item fromid="4603" />
+    <item fromid="4600" />
+    <item fromid="4602" />
+    <item fromid="4601" />
+    <item fromid="4646" toid="4647" />		-- shallow water --
+			<item fromid="4644" toid="4645" />
+    <item fromid="4655" />
+    <item fromid="4654" />
+    <item fromid="4652" toid="4653" />
+    <item fromid="4648" />
+    <item fromid="4651" />
+    <item fromid="4649" toid="4650" />
+    <item fromid="4656" toid="4663" />		-- shallow to sand --
+			<item fromid="4667" toid="4670" />		-- dirt --
+			<item fromid="4675" toid="4676" />
+    <item fromid="4678" />
+    <item fromid="4677" />
+    <item fromid="4674" />
+    <item fromid="4671" />
+    <item fromid="4673" />
+    <item fromid="4672" />
+    <item fromid="4679" toid="4682" />		-- swamp dirt --
+			<item fromid="4687" toid="4688" />
+    <item fromid="4690" />
+    <item fromid="4689" />
+    <item fromid="4686" />
+    <item fromid="4683" />
+    <item fromid="4685" />
+    <item fromid="4684" />
+    <item fromid="4713" toid="4716" />		-- swamp light --
+			<item fromid="4721" toid="4722" />
+    <item fromid="4724" />
+    <item fromid="4723" />
+    <item fromid="4720" />
+    <item fromid="4717" />
+    <item fromid="4719" />
+    <item fromid="4718" />
+    <item fromid="4725" toid="4728" />		-- swamp dark --
+			<item fromid="4733" toid="4734" />
+    <item fromid="4736" />
+    <item fromid="4735" />
+    <item fromid="4732" />
+    <item fromid="4729" />
+    <item fromid="4731" />
+    <item fromid="4730" />
+    <item fromid="4737" toid="4740" />		-- snow --
+			<item fromid="4745" toid="4746" />
+    <item fromid="4748" />
+    <item fromid="4747" />
+    <item fromid="4744" />
+    <item fromid="4741" />
+    <item fromid="4743" />
+    <item fromid="4742" />
+    <item fromid="4760" toid="4764" />		-- sand (spray) --
+			<item fromid="4768" toid="4769" />
+    <item fromid="4771" />
+    <item fromid="4770" />
+    <item fromid="4767" />
+    <item fromid="4764" />
+    <item fromid="4766" />
+    <item fromid="4765" />
+    <item fromid="4772" toid="4775" />		-- sand (thin) --
+			<item fromid="4780" toid="4781" />
+    <item fromid="4783" />
+    <item fromid="4782" />
+    <item fromid="4779" />
+    <item fromid="4776" />
+    <item fromid="4778" />
+    <item fromid="4777" />
+    <item fromid="4784" toid="4787" />		-- dark grass --
+			<item fromid="4792" toid="4793" />
+    <item fromid="4795" />
+    <item fromid="4794" />
+    <item fromid="4791" />
+    <item fromid="4788" />
+    <item fromid="4790" />
+    <item fromid="4789" />
+    <item fromid="4796" toid="4799" />		-- cave dirt  --
+			<item fromid="4804" toid="4805" />
+    <item fromid="4807" />
+    <item fromid="4806" />
+    <item fromid="4803" />
+    <item fromid="4800" />
+    <item fromid="4802" />
+    <item fromid="4801" />
+    <item fromid="4808" toid="4811" />		-- cave lava --
+			<item fromid="4816" toid="4817" />
+    <item fromid="4819" />
+    <item fromid="4818" />
+    <item fromid="4815" />
+    <item fromid="4812" />
+    <item fromid="4814" />
+    <item fromid="4813" />
+    <item fromid="3240" />					-- broken stone tile --
+			<item fromid="3233" />
+    <item fromid="3227" />
+    <item fromid="3234" />
+    <item fromid="3237" />
+    <item fromid="3236" />
+    <item fromid="3230" toid="3231" />
+    <item fromid="3226" />
+    <item fromid="3238" />
+    <item fromid="3228" />
+    <item fromid="3239" />
+    <item fromid="3229" />
+    <item fromid="3241" />
+    <item fromid="3232" />
+    <item fromid="3235" />
+    <item fromid="4634" />					-- sand water --
+			<item fromid="4633" />
+    <item fromid="4632" />
+    <item fromid="4635" />
+    <item fromid="4640" toid="4641" />
+    <item fromid="4643" />
+    <item fromid="4642" />
+    <item fromid="4639" />
+    <item fromid="4636" />
+    <item fromid="4638" />
+    <item fromid="4637" />
+    <item fromid="5816" toid="5819" />		-- small lava cracks --
+			<item id="5827" />
+    <item id="5826" />
+    <item fromid="5824" toid="5825" />
+    <item id="5820" />
+    <item id="5822" />
+    <item id="5821" />
+    <item id="5823" />
+    <item fromid="5828" toid="5831" />		-- rock soil lava --
+			<item fromid="5836" toid="5837" />
+    <item id="5839" />
+    <item id="5838" />
+    <item id="5833" />
+    <item id="5834" />
+    <item id="5832" />
+    <item id="5835" />
+    <item fromid="5840" toid="5843" />		-- small lava cracks (elevated) --
+			<item fromid="5849" toid="5851" />
+    <item id="5848" />
+    <item id="5847" />
+    <item id="5845" />
+    <item id="5844" />
+    <item id="5846" />
+    <item id="6138" />						-- tree wall --
+			<item fromid="6153" toid="6155" />
+    <item id="6159" />
+    <item fromid="6157" toid="6158" />
+    <item id="6156" />
+    <item id="6164" />						-- grass roof --
+			<item id="6166" />
+    <item id="6161" />
+    <item id="6167" />
+    <item id="6171" />
+    <item id="6170" />
+    <item fromid="6168" toid="6169" />
+    <item id="6160" />
+    <item id="6165" />
+    <item fromid="6162" toid="6163" />
+    <item fromid="6622" toid="6626" />		-- snow prints --
+			<item fromid="6629" toid="6630" />		-- snow water --
+			<item fromid="6627" toid="6628" />
+    <item fromid="6637" toid="6638" />
+    <item fromid="6635" toid="6636" />
+    <item id="6634" />
+    <item id="6631" />
+    <item id="6633" />
+    <item id="6632" />
+    <item fromid="6641" toid="6642" />		-- stone water --
+			<item fromid="6639" toid="6640" />
+    <item id="6650" />
+    <item id="6649" />
+    <item fromid="6647" toid="6648" />
+    <item id="6643" />
+    <item id="6646" />
+    <item id="6644" />
+    <item id="6645" />
+    <item fromid="6651" toid="6674" />		-- transition stone snow water --
+			<item fromid="6687" toid="6694" />
+    <item id="6675" />						-- ice water --
+			<item fromid="4738" toid="4739" />
+    <item id="6676" />
+    <item fromid="6678" toid="6679" />
+    <item id="4748" />
+    <item id="6677" />
+    <item id="4744" />
+    <item id="6682" />
+    <item fromid="6680" toid="6681" />
+    <item fromid="6695" toid="6698" />		-- ice --
+			<item fromid="6703" toid="6704" />
+    <item id="6706" />
+    <item id="6705" />
+    <item id="6702" />
+    <item id="6699" />
+    <item id="6701" />
+    <item id="6700" />
+    <item id="6870" />						-- ice (elevated) --
+			<item id="6873" />
+    <item id="6872" />
+    <item id="6871" />
+    <item fromid="6879" toid="6881" />
+    <item id="6878" />
+    <item id="6877" />
+    <item id="6875" />
+    <item id="6874" />
+    <item id="6876" />
+    <item id="6926" />						-- rough ice (elevated) --
+			<item id="6929" />
+    <item id="6928" />
+    <item id="6927" />
+    <item fromid="6935" toid="6937" />
+    <item id="6934" />
+    <item id="6933" />
+    <item id="6931" />
+    <item id="6930" />
+    <item id="6932" />
+    <item id="6939" />						-- snow (elevated) --
+			<item id="6942" />
+    <item id="6941" />
+    <item id="6940" />
+    <item fromid="6949" toid="6950" />
+    <item fromid="6947" toid="6948" />
+    <item id="6943" />
+    <item id="6946" />
+    <item id="6945" />
+    <item id="6944" />
+    <item fromid="7067" toid="7070" />		-- mud rock --
+			<item fromid="7075" toid="7076" />
+    <item fromid="7078" />
+    <item fromid="7077" />
+    <item fromid="7074" />
+    <item fromid="7071" />
+    <item fromid="7073" />
+    <item fromid="7072" />
+    <item fromid="7079" toid="7082" />		-- mud rock (thick) --
+			<item fromid="7087" toid="7088" />
+    <item fromid="7090" />
+    <item fromid="7089" />
+    <item fromid="7086" />
+    <item fromid="7083" />
+    <item fromid="7085" />
+    <item fromid="7084" />
+    <item fromid="7107" />					-- rough ice --
+			<item fromid="7110" toid="7112" />
+    <item fromid="7117" toid="7118" />
+    <item fromid="7120" />
+    <item fromid="7119" />
+    <item fromid="7116" />
+    <item fromid="7113" />
+    <item fromid="7115" />
+    <item fromid="7114" />
+    <item fromid="5771" toid="5774" />		-- metal fittings --
+			<item fromid="5632" />					-- dirt cave wall --
+			<item fromid="5637" toid="5638" />
+    <item fromid="5631" />
+    <item fromid="5647" />
+    <item fromid="5651" />
+    <item fromid="5649" toid="5650" />
+    <item fromid="5633" />
+    <item fromid="5635" />
+    <item fromid="5634" />
+    <item fromid="5636" />
+    <item fromid="5683" toid="5686" />		-- overlap dirt to stone cave wall --
+			<item fromid="5640" toid="5642" />		-- stone cave wall --
+			<item fromid="5639" />
+    <item fromid="5648" />
+    <item fromid="5652" toid="5654" />
+    <item fromid="5643" />
+    <item fromid="5645" />
+    <item fromid="5644" />
+    <item fromid="5646" />
+    <item fromid="6823" toid="6825" />		-- frozen cave wall --
+			<item fromid="6822" />
+    <item fromid="6830" toid="6833" />
+    <item fromid="6826" />
+    <item fromid="6828" />
+    <item fromid="6827" />
+    <item fromid="6829" />
+    <item fromid="6834" toid="6837" />		-- transition frozen cave wall --
+			<item fromid="7102" toid="7105" />
+    <item fromid="1072" toid="1075" />		-- sandstone wall --
+			<item fromid="1080" toid="1083" />
+    <item fromid="1078" />
+    <item fromid="1076" />
+    <item fromid="1079" />
+    <item fromid="1077" />
+    <item fromid="6814" />					-- fur roof --
+			<item fromid="6816" />
+    <item fromid="6811" />
+    <item fromid="6817" />
+    <item fromid="6821" />
+    <item fromid="6820" />
+    <item fromid="6818" toid="6819" />
+    <item fromid="6810" />
+    <item fromid="6815" />
+    <item fromid="6812" toid="6813" />
+    <item fromid="7192" />					-- raft (water) --
+			<item fromid="7188" />
+    <item fromid="7191" />
+    <item fromid="7194" />
+    <item fromid="7199" />
+    <item fromid="7197" />
+    <item fromid="7196" />
+    <item fromid="7198" />
+    <item fromid="7187" />
+    <item fromid="7195" />
+    <item fromid="7193" />
+    <item fromid="7190" />
+    <item fromid="7205" />					-- raft (no water) --
+			<item fromid="7202" />
+    <item fromid="7204" />
+    <item fromid="7207" />
+    <item fromid="7212" />
+    <item fromid="7210" />
+    <item fromid="7209" />
+    <item fromid="7211" />
+    <item fromid="7201" />
+    <item fromid="7208" />
+    <item fromid="7206" />
+    <item fromid="7203" />
+    <item fromid="7641" toid="7644" />		-- rock soil (thick) --
+			<item fromid="7649" toid="7650" />
+    <item fromid="7652" />
+    <item fromid="7651" />
+    <item fromid="7648" />
+    <item fromid="7645" />
+    <item fromid="7647" />
+    <item fromid="7646" />
+    <item fromid="7653" />					-- grass (thick) --
+			<item fromid="7710" />
+    <item fromid="7709" />
+    <item fromid="7656" />
+    <item fromid="7661" toid="7662" />
+    <item fromid="7664" />
+    <item fromid="7663" />
+    <item fromid="7660" />
+    <item fromid="7657" />
+    <item fromid="7659" />
+    <item fromid="7658" />
+    <item fromid="7654" />					-- cave dirt (thick) --
+			<item fromid="7834" />
+    <item fromid="7833" />
+    <item fromid="7666" />
+    <item fromid="7671" toid="7672" />
+    <item fromid="7837" />
+    <item fromid="7836" />
+    <item fromid="7835" />
+    <item fromid="7667" />
+    <item fromid="7669" />
+    <item fromid="7668" />
+    <item fromid="477" toid="478" />			-- ramp --
+			<item fromid="487" toid="488" />
+    <item fromid="356" toid="367" />			-- dirt cave wall + ground --
+			<item fromid="371" toid="382" />			-- stone cave wall + ground --
+			<item fromid="8053" />					-- earth --
+			<item fromid="8056" />
+    <item fromid="8055" />
+    <item fromid="8054" />
+    <item fromid="8117" toid="8118" />
+    <item fromid="8120" />
+    <item fromid="8119" />
+    <item fromid="8366" toid="8367" />
+    <item fromid="8057" />
+    <item fromid="8369" />
+    <item fromid="9792" toid="9799" />
+    <item fromid="8021" />					-- rifty earth --
+			<item fromid="8024" />
+    <item fromid="8023" />
+    <item fromid="8022" />
+    <item fromid="8365" />
+    <item fromid="8030" />
+    <item fromid="8032" />
+    <item fromid="8031" />
+    <item fromid="8028" />
+    <item fromid="8025" />
+    <item fromid="8027" />
+    <item fromid="8026" />
+    <item fromid="7943" toid="7954" />		-- sand sea --
+			<item fromid="3353" />					-- dried grass roof --
+			<item fromid="3355" />
+    <item fromid="3350" />
+    <item fromid="3356" />
+    <item fromid="3360" />
+    <item fromid="3359" />
+    <item fromid="3357" toid="3358" />
+    <item fromid="3349" />
+    <item fromid="3354" />
+    <item fromid="3351" toid="3352" />
+    <item fromid="3145" toid="3146" />		-- liberty bay wooden floor --
+			<item fromid="3144" />
+    <item fromid="3147" />
+    <item fromid="3148" toid="3149" />
+    <item fromid="3151" />
+    <item fromid="3150" />
+    <item fromid="3140" />
+    <item fromid="3143" />
+    <item fromid="3141" />
+    <item fromid="3142" />
+    <item fromid="3225" />					-- special of above --
+			<item fromid="3243" toid="3244" />
+    <item fromid="3242" />
+    <item fromid="3245" />
+    <item fromid="8349" />					-- dried grass --
+			<item fromid="8360" />
+    <item fromid="8359" />
+    <item fromid="8350" />
+    <item fromid="8355" toid="8356" />
+    <item fromid="8358" />
+    <item fromid="8357" />
+    <item fromid="8354" />
+    <item fromid="8351" />
+    <item fromid="8353" />
+    <item fromid="8352" />
+    <item fromid="8435" />					-- cobbled pavement --
+			<item fromid="8437" />
+    <item fromid="8438" />
+    <item fromid="8436" />
+    <item fromid="8441" toid="8442" />
+    <item fromid="8440" />
+    <item fromid="8439" />
+    <item fromid="8444" />
+    <item fromid="8445" />
+    <item fromid="8443" />
+    <item fromid="8446" />
+    <item fromid="8447" />					-- ugly cobbled pavement --
+			<item fromid="8449" />
+    <item fromid="8450" />
+    <item fromid="8448" />
+    <item fromid="8454" />
+    <item fromid="8453" />
+    <item fromid="8452" />
+    <item fromid="8451" />
+    <item fromid="8458" />
+    <item fromid="8456" />
+    <item fromid="8455" />
+    <item fromid="8457" />
+    <item fromid="8335" />					--- thick sand --
+			<item fromid="8338" />
+    <item fromid="8336" toid="8337" />
+    <item fromid="8343" toid="8344" />
+    <item fromid="8346" />
+    <item fromid="8345" />
+    <item fromid="8342" />
+    <item fromid="8339" />
+    <item fromid="8341" />
+    <item fromid="8340" />
+    <item fromid="9233" toid="9234" />		-- dark wooden floor (block path) --
+			<item fromid="9569" toid="9570" />		-- dark wooden floor (no block) --
+			<item fromid="9541" />					-- flat red roof (vertical) --
+			<item fromid="9543" />
+    <item fromid="9538" />
+    <item fromid="9544" />
+    <item fromid="9548" />
+    <item fromid="9547" />
+    <item fromid="9545" toid="9546" />
+    <item fromid="9537" />
+    <item fromid="9542" />
+    <item fromid="9539" />
+    <item fromid="9540" />
+    <item fromid="9553" />					-- flat red roof (horizontal) --
+			<item fromid="9555" />
+    <item fromid="9550" />
+    <item fromid="9556" />
+    <item fromid="9560" />
+    <item fromid="9559" />
+    <item fromid="9557" toid="9558" />
+    <item fromid="9549" />
+    <item fromid="9554" />
+    <item fromid="9551" />
+    <item fromid="9552" />
+    <item fromid="10418" toid="10419" />		-- yellow pavement --
+			<item fromid="10417" />
+    <item fromid="10420" />
+    <item fromid="10423" toid="10424" />
+    <item fromid="10421" toid="10422" />
+    <item fromid="10425" />
+    <item fromid="10427" />
+    <item fromid="10426" />
+    <item fromid="10428" />
+    <item fromid="11465" toid="11466" />		-- dark pavement --
+			<item fromid="11464" />
+    <item fromid="11467" />
+    <item fromid="11470" toid="11471" />
+    <item fromid="11468" toid="11469" />
+    <item fromid="11472" />
+    <item fromid="11474" />
+    <item fromid="11473" />
+    <item fromid="11475" />
+    <item fromid="11031" />					-- rice water --
+			<item fromid="11034" />
+    <item fromid="11032" />
+    <item fromid="11033" />
+    <item fromid="11041" toid="11042" />
+    <item fromid="11040" />
+    <item fromid="11039" />
+    <item fromid="11035" />
+    <item fromid="11038" />
+    <item fromid="11036" toid="11037" />
+    <item fromid="11451" />					-- tainted soil --
+			<item fromid="11454" />
+    <item fromid="11452" />
+    <item fromid="11453" />
+    <item fromid="11461" toid="11462" />
+    <item fromid="11460" />
+    <item fromid="11459" />
+    <item fromid="11455" />
+    <item fromid="11458" />
+    <item fromid="11456" toid="11457" />
+    <item fromid="10456" />					-- dark dirt mud --
+			<item fromid="10459" />
+    <item fromid="10457" toid="10458" />
+    <item fromid="10465" />
+    <item fromid="10464" />
+    <item fromid="10466" toid="10467" />
+    <item fromid="10460" />
+    <item fromid="10462" />
+    <item fromid="10461" />
+    <item fromid="10463" />
+    <item fromid="10625" />					-- light dirt mud --
+			<item fromid="10628" />
+    <item fromid="10626" toid="10627" />
+    <item fromid="10634" />
+    <item fromid="10633" />
+    <item fromid="10635" toid="10636" />
+    <item fromid="10629" />
+    <item fromid="10631" />
+    <item fromid="10630" />
+    <item fromid="10632" />
+    <item fromid="10638" toid="10641" />		-- pink sand --
+			<item fromid="10646" toid="10647" />
+    <item fromid="10649" />
+    <item fromid="10648" />
+    <item fromid="10645" />
+    <item fromid="10642" />
+    <item fromid="10644" />
+    <item fromid="10643" />
+    <item fromid="11016" toid="11019" />		-- mud sand --
+			<item fromid="11024" toid="11025" />
+    <item id="11027" />
+    <item id="11026" />
+    <item id="11023" />
+    <item id="11020" />
+    <item id="11022" />
+    <item id="11021" />
+    <item fromid="11079" toid="11080" />		-- sand waterlike border --
+			<item id="11153" />
+    <item id="11078" />
+    <item fromid="11082" toid="11084" />
+    <item id="11081" />
+    <item id="11088" />
+    <item id="11086" />
+    <item id="11085" />
+    <item id="11087" />
+    <item id="11165" />						-- dark dirt --
+			<item id="11167" />
+    <item id="11166" />
+    <item id="11168" />
+    <item fromid="11175" toid="11176" />
+    <item id="11173" />
+    <item id="11174" />
+    <item id="11169" />
+    <item id="11172" />
+    <item fromid="11170" toid="11171" />
+    <item id="11177" />						-- light dirt --
+			<item id="11179" />
+    <item id="11178" />
+    <item id="11180" />
+    <item fromid="11187" toid="11188" />
+    <item fromid="11185" toid="11186" />
+    <item id="11181" />
+    <item id="11184" />
+    <item fromid="11182" toid="11183" />
+    <item fromid="10858" toid="10859" />		-- serpent ground --
+			<item id="10857" />
+    <item id="10860" />
+    <item fromid="10863" toid="10864" />
+    <item fromid="10861" toid="10862" />
+    <item id="10865" />
+    <item id="10867" />
+    <item id="10866" />
+    <item id="10868" />
+    <item id="10889" />						-- scale roof --
+			<item id="10891" />
+    <item id="10886" />
+    <item id="10892" />
+    <item id="10896" />
+    <item id="10895" />
+    <item fromid="10893" toid="10894" />
+    <item id="10885" />
+    <item id="10890" />
+    <item id="10887" />
+    <item id="10888" />
+    <item id="11492" />						-- mysterious ground (thin) --
+			<item id="11495" />
+    <item id="11494" />
+    <item id="11493" />
+    <item fromid="11500" toid="11503" />
+    <item fromid="11497" toid="11498" />
+    <item id="11496" />
+    <item id="11499" />
+    <item fromid="11478" toid="11481" />		-- mysterious ground (thick) --
+			<item fromid="11486" toid="11487" />
+    <item id="11489" />
+    <item id="11488" />
+    <item id="11485" />
+    <item id="11482" />
+    <item id="11484" />
+    <item id="11483" />
+    <item fromid="11510" toid="11513" />		-- darkest mud (thin) --
+			<item fromid="11518" toid="11519" />
+    <item id="11521" />
+    <item id="11520" />
+    <item id="11517" />
+    <item id="11514" />
+    <item id="11516" />
+    <item id="11515" />
+    <item fromid="11522" toid="11525" />		-- darkest mud (thick) --
+			<item fromid="11530" toid="11531" />
+    <item id="11533" />
+    <item id="11532" />
+    <item id="11529" />
+    <item id="11526" />
+    <item id="11528" />
+    <item id="11527" />
+    <item fromid="11729" toid="11732" />		-- purple mud (thin) --
+			<item fromid="11737" toid="11738" />
+    <item id="11740" />
+    <item id="11739" />
+    <item id="11736" />
+    <item id="11733" />
+    <item id="11735" />
+    <item id="11734" />
+    <item fromid="11741" toid="11744" />		-- purple mud (thick) --
+			<item fromid="11749" toid="11750" />
+    <item id="11752" />
+    <item id="11751" />
+    <item id="11748" />
+    <item id="11745" />
+    <item id="11747" />
+    <item id="11746" />
+    <item id="11549" />						-- acid --
+			<item id="11552" />
+    <item fromid="11551" toid="11552" />
+    <item fromid="11557" toid="11560" />
+    <item fromid="11554" toid="11555" />
+    <item id="11553" />
+    <item id="11556" />
+    <item id="11775" />						-- muddy floor --
+			<item id="11778" />
+    <item id="11777" />
+    <item id="11776" />
+    <item fromid="11789" toid="11792" />
+    <item id="11787" />
+    <item id="11785" />
+    <item id="11788" />
+    <item id="11786" />
+    <item fromid="11972" toid="11993" />		-- jade ornaments --
+			<item fromid="12126" toid="12127" />		-- orange zao roof --
+			<item id="12125" />
+    <item id="12128" />
+    <item fromid="12131" toid="12132" />
+    <item fromid="12129" toid="12130" />
+    <item id="12133" />
+    <item id="12135" />
+    <item id="12134" />
+    <item id="12136" />
+    <item fromid="12177" toid="12178" />		-- brown zao roof --
+			<item id="12137" />
+    <item id="12179" />
+    <item fromid="12182" toid="12183" />
+    <item fromid="12180" toid="12181" />
+    <item id="12184" />
+    <item id="12186" />
+    <item id="12185" />
+    <item id="12187" />
+    <item fromid="12243" toid="12244" />		-- red spikes --
+			<item id="12242" />
+    <item id="12245" />
+    <item fromid="12248" toid="12249" />
+    <item fromid="12246" toid="12247" />
+    <item id="12250" />
+    <item id="12252" />
+    <item id="12251" />
+    <item id="12253" />
+    <item fromid="12255" toid="12256" />		-- dark spikes --
+			<item id="12254" />
+    <item id="12257" />
+    <item fromid="12260" toid="12261" />
+    <item fromid="12258" toid="12259" />
+    <item id="12262" />
+    <item id="12264" />
+    <item id="12263" />
+    <item id="12265" />
+    <item fromid="12362" toid="12363" />		-- broken blue marble floor --
+			<item id="12361" />
+    <item id="12364" />
+    <item fromid="12367" toid="12368" />
+    <item fromid="12365" toid="12366" />
+    <item id="12369" />
+    <item id="12371" />
+    <item id="12370" />
+    <item id="12372" />
+    <item fromid="14941" toid="14942" />		-- broken deepling marble floor --
+			<item id="14940" />
+    <item id="14943" />
+    <item fromid="14946" toid="14947" />
+    <item fromid="14944" toid="14945" />
+    <item id="14948" />
+    <item id="14950" />
+    <item id="14949" />
+    <item id="14951" />
+    <item fromid="14952" toid="14967" />		-- symbol line on floor --
+			<item fromid="12707" toid="12708" />		-- lush grass 1 --
+			<item id="12706" />
+    <item id="12709" />
+    <item fromid="12712" toid="12713" />
+    <item fromid="12710" toid="12711" />
+    <item id="12714" />
+    <item id="12716" />
+    <item id="12715" />
+    <item id="12717" />
+    <item fromid="12728" toid="12729" />		-- lush grass 2 --
+			<item id="12727" />
+    <item id="12730" />
+    <item fromid="12733" toid="12734" />
+    <item fromid="12731" toid="12732" />
+    <item id="12735" />
+    <item id="12737" />
+    <item id="12736" />
+    <item id="12738" />
+    <item fromid="12740" toid="12741" />		-- timber floor --
+			<item id="12739" />
+    <item id="12742" />
+    <item fromid="12745" toid="12746" />
+    <item fromid="12743" toid="12744" />
+    <item id="12747" />
+    <item id="12749" />
+    <item id="12748" />
+    <item fromid="12750" toid="12751" />
+    <item id="12753" />
+    <item id="12752" />
+    <item id="12754" />
+    <item id="13201" />						-- dark sand --
+			<item id="13212" />
+    <item id="13211" />
+    <item id="13202" />
+    <item fromid="13207" toid="13208" />
+    <item id="13210" />
+    <item id="13209" />
+    <item id="13206" />
+    <item id="13203" />
+    <item id="13205" />
+    <item id="13204" />
+    <item fromid="15192" toid="15193" />		-- green leaves --
+			<item id="15191" />
+    <item id="15194" />
+    <item fromid="15197" toid="15198" />
+    <item fromid="15195" toid="15196" />
+    <item id="15199" />
+    <item id="15201" />
+    <item id="15200" />
+    <item id="15202" />
+    <item fromid="12758" toid="12759" />		-- yellow leaves --
+			<item id="12757" />
+    <item id="12760" />
+    <item fromid="12763" toid="12764" />
+    <item fromid="12761" toid="12762" />
+    <item id="12765" />
+    <item id="12767" />
+    <item id="12766" />
+    <item id="12768" />
+    <item id="13609" />						-- slime fungus --
+			<item id="13608" />
+    <item id="13607" />
+    <item id="13610" />
+    <item id="13612" />
+    <item id="13611" />
+    <item fromid="13613" toid="13614" />
+    <item id="13615" />
+    <item id="13617" />
+    <item id="13616" />
+    <item id="13618" />
+    <item fromid="13621" toid="13622" />		-- rocky floor --
+			<item id="13620" />
+    <item id="13623" />
+    <item fromid="13626" toid="13627" />
+    <item fromid="13624" toid="13625" />
+    <item id="13628" />
+    <item id="13630" />
+    <item id="13629" />
+    <item id="13631" />
+    <item id="13742" />						-- dirty water --
+			<item id="13743" />
+    <item fromid="13740" toid="13741" />
+    <item id="13751" />
+    <item id="13750" />
+    <item fromid="13748" toid="13749" />
+    <item id="13744" />
+    <item id="13747" />
+    <item fromid="13745" toid="13746" />
+    <item id="14537" />						-- hive structure --
+			<item id="14540" />
+    <item id="14539" />
+    <item id="14538" />
+    <item fromid="14545" toid="14548" />
+    <item id="14543" />
+    <item id="14541" />
+    <item id="14544" />
+    <item id="14542" />
+    <item fromid="14549" toid="14552" />		-- hive (thick) --
+			<item fromid="14555" toid="14556" />
+    <item id="14553" />						-- red hive structure --
+			<item id="14558" />
+    <item id="14557" />
+    <item id="14554" />
+    <item fromid="14563" toid="14566" />
+    <item id="14561" />
+    <item id="14559" />
+    <item id="14562" />
+    <item id="14560" />
+    <item fromid="14567" toid="14572" />		-- red hive (thick) --
+			<item id="14716" />						-- dark hive structure --
+			<item id="14719" />
+    <item id="14718" />
+    <item id="14717" />
+    <item fromid="14724" toid="14727" />
+    <item id="14722" />
+    <item id="14720" />
+    <item id="14723" />
+    <item id="14721" />
+    <item fromid="14728" toid="14733" />		-- dark hive (thick) --
+			<item id="14738" />						-- hive spot --
+			<item id="14736" />
+    <item id="14734" />
+    <item id="14737" />
+    <item id="14735" />
+    <item id="14739" />
+    <item id="14744" />						-- red hive spot --
+			<item id="14742" />
+    <item id="14740" />
+    <item id="14743" />
+    <item id="14741" />
+    <item id="14745" />
+    <item id="14746" />						-- dark hive spot --
+			<item id="14748" />
+    <item id="14747" />
+    <item id="14749" />
+    <item fromid="14573" toid="14580" />		-- something hive --
+			<item fromid="14899" toid="14902" />
+    <item id="15367" />						-- colourful honeycomb --
+			<item id="15370" />
+    <item id="15361" />
+    <item id="15364" />
+    <item id="15366" />
+    <item id="15369" />
+    <item id="15371" />
+    <item id="15363" />
+    <item id="15360" />
+    <item id="15365" />
+    <item id="15362" />
+    <item id="15368" />
+    <item id="15379" />						-- bland honeycomb --
+			<item id="15382" />
+    <item id="15373" />
+    <item id="15376" />
+    <item id="15378" />
+    <item id="15381" />
+    <item id="15383" />
+    <item id="15375" />
+    <item id="15372" />
+    <item id="15377" />
+    <item id="15374" />
+    <item id="15380" />
+    <item id="14984" />						-- hoard of gold --
+			<item id="14986" />
+    <item id="14980" />
+    <item id="14982" />
+    <item id="15026" />
+    <item id="15025" />
+    <item id="15024" />
+    <item id="15027" />
+    <item id="14979" />
+    <item id="14983" />
+    <item id="14981" />
+    <item id="14985" />
+    <item fromid="14987" toid="14990" />		-- deepling spawn --
+			<item id="14996" />
+    <item id="14998" />
+    <item id="14991" />
+    <item id="14994" />
+    <item fromid="15001" toid="15002" />
+    <item fromid="14999" toid="15000" />
+    <item id="14992" />
+    <item id="14995" />
+    <item id="14993" />
+    <item id="14997" />
+    <item fromid="15013" toid="15014" />		-- blue sea floor --
+			<item id="15012" />
+    <item id="15015" />
+    <item fromid="15018" toid="15019" />
+    <item fromid="15016" toid="15017" />
+    <item id="15020" />
+    <item id="15022" />
+    <item id="15021" />
+    <item id="15023" />
+    <item fromid="15239" toid="15240" />		-- brown sea floor --
+			<item id="15238" />
+    <item id="15241" />
+    <item fromid="15244" toid="15245" />
+    <item fromid="15242" toid="15243" />
+    <item id="15246" />
+    <item id="15248" />
+    <item id="15247" />
+    <item id="15249" />
+    <item fromid="15164" toid="15165" />		-- unknowndeepling --
+			<item id="15163" />
+    <item id="15166" />
+    <item fromid="15169" toid="15170" />
+    <item fromid="15167" toid="15168" />
+    <item id="15171" />
+    <item id="15173" />
+    <item id="15172" />
+    <item id="15174" />
+    <item fromid="15503" toid="15506" />		-- lava --
+			<item fromid="15513" toid="15514" />
+    <item fromid="15511" toid="15512" />
+    <item id="15507" />
+    <item id="15509" />
+    <item id="15508" />
+    <item id="15510" />
+    <item fromid="15516" toid="15535" />
+    <item fromid="15553" toid="15554" />
+    <item fromid="17445" toid="17446" />		-- crystal floor --
+			<item id="17444" />
+    <item id="17447" />
+    <item fromid="17450" toid="17451" />
+    <item fromid="17448" toid="17449" />
+    <item id="17452" />
+    <item id="17454" />
+    <item id="17453" />
+    <item id="17455" />
+    <item fromid="17457" toid="17458" />		-- crystal floor (void) --
+			<item id="17456" />
+    <item id="17459" />
+    <item fromid="17462" toid="17463" />
+    <item fromid="17460" toid="17461" />
+    <item id="17464" />
+    <item id="17466" />
+    <item id="17465" />
+    <item id="17467" />
+    <item fromid="17630" toid="17631" />		-- basalt floor --
+			<item id="17629" />
+    <item id="17632" />
+    <item fromid="17635" toid="17636" />
+    <item fromid="17633" toid="17634" />
+    <item id="17637" />
+    <item id="17639" />
+    <item id="17638" />
+    <item id="17640" />
+    <item fromid="17654" toid="17655" />		-- mold floor --
+			<item id="17653" />
+    <item id="17656" />
+    <item fromid="17659" toid="17660" />
+    <item fromid="17657" toid="17658" />
+    <item id="17661" />
+    <item id="17663" />
+    <item id="17662" />
+    <item id="17664" />
+    <item fromid="17674" toid="17675" />		-- mossy floor --
+			<item id="17673" />
+    <item id="17676" />
+    <item fromid="17679" toid="17680" />
+    <item fromid="17677" toid="17678" />
+    <item id="17681" />
+    <item id="17683" />
+    <item id="17682" />
+    <item id="17684" />
+    <item fromid="18142" toid="18143" />		-- mossy floor (thick) --
+			<item id="18141" />
+    <item id="18144" />
+    <item fromid="18147" toid="18148" />
+    <item fromid="18145" toid="18146" />
+    <item id="18149" />
+    <item id="18151" />
+    <item id="18150" />
+    <item id="18152" />
+    <item fromid="18106" toid="18107" />		-- mushroom sponge --
+			<item id="18105" />
+    <item id="18108" />
+    <item fromid="18111" toid="18112" />
+    <item fromid="18109" toid="18110" />
+    <item id="18113" />
+    <item id="18115" />
+    <item id="18114" />
+    <item id="18116" />
+    <item id="18172" />						-- salt floor --
+			<item id="18174" />
+    <item id="18173" />
+    <item id="18175" />
+    <item fromid="18182" toid="18183" />
+    <item fromid="18180" toid="18181" />
+    <item id="18176" />
+    <item id="18178" />
+    <item id="18177" />
+    <item id="18179" />
+    <item id="18184" />						-- cookie floor --
+			<item id="18186" />
+    <item id="18185" />
+    <item id="18187" />
+    <item fromid="18194" toid="18195" />
+    <item fromid="18192" toid="18193" />
+    <item id="18188" />
+    <item id="18190" />
+    <item id="18189" />
+    <item id="18191" />
+    <item id="18345" />						-- dark ice stone floor --
+			<item id="18347" />
+    <item id="18346" />
+    <item id="18348" />
+    <item fromid="18355" toid="18356" />
+    <item fromid="18353" toid="18354" />
+    <item id="18349" />
+    <item id="18351" />
+    <item id="18350" />
+    <item id="18352" />
+    <item id="18362" />						-- scattered crystals --
+			<item id="18364" />
+    <item id="18363" />
+    <item id="18365" />
+    <item fromid="18372" toid="18373" />
+    <item fromid="18370" toid="18371" />
+    <item id="18366" />
+    <item id="18368" />
+    <item id="18367" />
+    <item id="18369" />
+    <item id="18568" />						-- muddy floor --
+			<item id="18571" />
+    <item id="18570" />
+    <item id="18569" />
+    <item fromid="18576" toid="18579" />
+    <item id="18574" />
+    <item id="18572" />
+    <item id="18575" />
+    <item id="18573" />
+    <item fromid="18594" toid="18595" />		-- venore swamp --
+			<item id="18593" />
+    <item id="18596" />
+    <item fromid="18599" toid="18600" />
+    <item fromid="18597" toid="18598" />
+    <item id="18601" />
+    <item id="18603" />
+    <item id="18602" />
+    <item id="18604" />
+    <item fromid="18770" toid="18777" />		-- grimy wooden plank with those thingies --
+			<item id="18908" />						-- grimy wooden plank (horizontal) --
+			<item id="18902" />
+    <item id="18904" />
+    <item id="18906" />
+    <item id="18903" />
+    <item id="18907" />
+    <item id="18905" />
+    <item id="18909" />
+    <item id="18916" />						-- grimy wooden plank (vertical) --
+			<item id="18910" />
+    <item id="18912" />
+    <item id="18914" />
+    <item id="18911" />
+    <item id="18915" />
+    <item id="18913" />
+    <item id="18917" />
+    <item id="18877" />						-- pink wooden planks --
+			<item id="18880" />
+    <item id="18859" />
+    <item id="18876" />
+    <item id="18860" />
+    <item id="18878" />
+    <item id="18875" />
+    <item id="18879" />
+    <item fromid="19750" toid="19751" />		-- cobblestone fittings --
+			<item id="19749" />
+    <item id="19752" />
+    <item fromid="19755" toid="19756" />
+    <item fromid="19753" toid="19754" />
+    <item id="19757" />
+    <item id="19759" />
+    <item id="19758" />
+    <item id="19760" />
+    <item fromid="22281" toid="22282" />		-- yellow cobblestone fittings --
+			<item id="22280" />
+    <item id="22283" />
+    <item fromid="22286" toid="22287" />
+    <item fromid="22284" toid="22285" />
+    <item id="22288" />
+    <item id="22290" />
+    <item id="22289" />
+    <item id="22291" />
+    <item fromid="22293" toid="22294" />		-- yellow cobblestone fittings (broken) --
+			<item id="22292" />
+    <item id="22295" />
+    <item fromid="22298" toid="22299" />
+    <item fromid="22296" toid="22297" />
+    <item id="22300" />
+    <item id="22302" />
+    <item id="22301" />
+    <item id="22303" />
+    <item id="19676" />						-- ornate carpet --
+			<item id="19680" />
+    <item id="19677" />
+    <item id="19679" />
+    <item id="19678" />
+    <item id="19681" />
+    <item id="19683" />
+    <item id="19682" />
+    <item id="19684" />
+    <item fromid="19813" toid="19814" />		-- light brick fittings --
+			<item id="19812" />
+    <item id="19815" />
+    <item fromid="19818" toid="19819" />
+    <item fromid="19816" toid="19817" />
+    <item id="19820" />
+    <item id="19822" />
+    <item id="19821" />
+    <item id="19823" />
+    <item fromid="23087" toid="23088" />		-- dark brick fittings --
+			<item id="23086" />
+    <item id="23089" />
+    <item fromid="23092" toid="23093" />
+    <item fromid="23090" toid="23091" />
+    <item id="23094" />
+    <item id="23096" />
+    <item id="23095" />
+    <item id="23097" />
+    <item fromid="19829" toid="19830" />		-- terracotta --
+			<item id="19828" />
+    <item id="19831" />
+    <item fromid="19834" toid="19835" />
+    <item fromid="19832" toid="19833" />
+    <item id="19836" />
+    <item id="19838" />
+    <item id="19837" />
+    <item id="19839" />
+    <item fromid="19762" toid="19763" />		-- venore cobblestone --
+			<item id="19761" />
+    <item id="19764" />
+    <item fromid="19767" toid="19768" />
+    <item fromid="19765" toid="19766" />
+    <item id="19769" />
+    <item id="19771" />
+    <item id="19770" />
+    <item id="19772" />
+    <item fromid="19774" toid="19775" />		-- venore plaster --
+			<item id="19773" />
+    <item id="19776" />
+    <item fromid="19779" toid="19780" />
+    <item fromid="19777" toid="19778" />
+    <item id="19781" />
+    <item id="19783" />
+    <item id="19782" />
+    <item id="19784" />
+    <item id="21113" />						-- forest floor --
+			<item id="21124" />
+    <item id="21123" />
+    <item id="21114" />
+    <item fromid="21119" toid="21120" />
+    <item id="21122" />
+    <item id="21121" />
+    <item id="21118" />
+    <item id="21115" />
+    <item id="21117" />
+    <item id="21116" />
+    <item id="20787" />						-- branch floor --
+			<item id="21131" />
+    <item id="20797" />
+    <item id="20788" />
+    <item fromid="20793" toid="20794" />
+    <item id="20796" />
+    <item id="20795" />
+    <item id="20792" />
+    <item id="20789" />
+    <item id="20791" />
+    <item id="20790" />
+    <item id="20842" />						-- tree leaves --
+			<item id="20844" />
+    <item id="20839" />
+    <item id="20845" />
+    <item id="20849" />
+    <item id="20848" />
+    <item fromid="20846" toid="20847" />
+    <item id="20838" />
+    <item id="20843" />
+    <item fromid="20840" toid="20841" />
+    <item id="20887" />						-- teal leaves --
+			<item id="20889" />
+    <item id="20884" />
+    <item id="20890" />
+    <item id="20894" />
+    <item id="20893" />
+    <item fromid="20891" toid="20892" />
+    <item id="20883" />
+    <item id="20888" />
+    <item fromid="20885" toid="20886" />
+    <item fromid="21160" toid="21161" />		-- small brook --
+			<item id="21159" />
+    <item id="21162" />
+    <item fromid="21163" toid="21164" />
+    <item id="21166" />
+    <item id="21165" />
+    <item id="21169" />
+    <item id="21168" />
+    <item id="21170" />
+    <item id="21167" />
+    <item id="21593" />						-- fog --
+			<item id="21595" />
+    <item id="21594" />
+    <item id="21596" />
+    <item fromid="21599" toid="21600" />
+    <item fromid="21597" toid="21598" />
+    <item id="21601" />
+    <item id="21603" />
+    <item id="21602" />
+    <item id="21604" />
+    <item id="21613" />						-- muddy sand (thick) --
+			<item id="21616" />
+    <item fromid="21614" toid="21615" />
+    <item id="21622" />
+    <item id="21621" />
+    <item fromid="21623" toid="21624" />
+    <item id="21617" />
+    <item id="21619" />
+    <item id="21618" />
+    <item id="21620" />
+    <item id="21625" />						-- brown sand (thick) --
+			<item id="21628" />
+    <item fromid="21626" toid="21627" />
+    <item id="21634" />
+    <item id="21633" />
+    <item fromid="21635" toid="21636" />
+    <item id="21629" />
+    <item id="21631" />
+    <item id="21630" />
+    <item id="21632" />
+    <item fromid="22350" toid="22358" />		-- uhh --
+			<item id="21912" />						-- unknown2 --
+			<item id="21915" />
+    <item fromid="21913" toid="21914" />
+    <item id="21921" />
+    <item id="21920" />
+    <item fromid="21922" toid="21923" />
+    <item id="21916" />
+    <item id="21918" />
+    <item id="21917" />
+    <item id="21919" />
+    <item id="21950" />						-- crystal dirt --
+			<item id="21953" />
+    <item fromid="21951" toid="21952" />
+    <item id="21959" />
+    <item id="21958" />
+    <item fromid="21960" toid="21961" />
+    <item id="21954" />
+    <item id="21956" />
+    <item id="21955" />
+    <item id="21957" />
+    <item id="22183" />						-- roshamuul pavement --
+			<item id="22186" />
+    <item fromid="22184" toid="22185" />
+    <item id="22192" />
+    <item id="22191" />
+    <item fromid="22193" toid="22194" />
+    <item id="22187" />
+    <item id="22189" />
+    <item id="22188" />
+    <item id="22190" />
+    <item id="22195" />						-- unknown4 --
+			<item id="22198" />
+    <item fromid="22196" toid="22197" />
+    <item id="22204" />
+    <item id="22203" />
+    <item fromid="22205" toid="22206" />
+    <item id="22199" />
+    <item id="22201" />
+    <item id="22200" />
+    <item id="22202" />
+    <item id="22207" />						-- unknown1 --
+			<item id="22210" />
+    <item fromid="22208" toid="22209" />
+    <item id="22216" />
+    <item id="22215" />
+    <item fromid="22217" toid="22218" />
+    <item id="22211" />
+    <item id="22213" />
+    <item id="22212" />
+    <item id="22214" />
+    <item fromid="22752" toid="22753" />		-- oramond pavement --
+			<item id="22751" />
+    <item id="22754" />
+    <item fromid="22757" toid="22758" />
+    <item fromid="22755" toid="22756" />
+    <item id="22759" />
+    <item id="22761" />
+    <item id="22760" />
+    <item id="22762" />
+    <item fromid="22918" toid="22919" />		-- oramond other pavement broken --
+			<item id="22917" />
+    <item id="22920" />
+    <item fromid="22923" toid="22924" />
+    <item fromid="22921" toid="22922" />
+    <item id="22925" />
+    <item id="22927" />
+    <item id="22926" />
+    <item id="22928" />
+    <item fromid="22930" toid="22931" />		-- oramond other pavement --
+			<item id="22929" />
+    <item id="22932" />
+    <item fromid="22935" toid="22936" />
+    <item fromid="22933" toid="22934" />
+    <item id="22937" />
+    <item id="22939" />
+    <item id="22938" />
+    <item id="22940" />
+    <item fromid="23132" toid="23133" />		-- oramond other pavement alternate --
+			<item id="23131" />
+    <item id="23134" />
+    <item fromid="23137" toid="23138" />
+    <item fromid="23135" toid="23136" />
+    <item id="23139" />
+    <item id="23141" />
+    <item id="23140" />
+    <item id="23142" />
+    <item fromid="23127" toid="23130" />		-- bridge border --
+			<item id="23334" />						-- unknown5 --
+			<item id="23331" />
+    <item id="23333" />
+    <item id="23332" />
+    <item id="23336" />
+    <item id="23335" />
+    <item id="23338" />
+    <item id="23337" />
+    <item id="23339" />
+    <item id="23341" />
+    <item id="23340" />
+    <item id="23342" />
+    <item fromid="23634" toid="23635" />		-- other bridge borders --
+			<item id="23955" />						-- serpent seacrest ground --
+			<item id="23957" />
+    <item id="23956" />
+    <item id="23958" />
+    <item id="23962" />
+    <item id="23961" />
+    <item fromid="23959" toid="23960" />
+    <item id="23963" />
+    <item id="23965" />
+    <item id="23964" />
+    <item id="23966" />
+    <item id="24150" />						-- unknown6 --
+			<item id="24147" />
+    <item id="24149" />
+    <item id="24148" />
+    <item id="24152" />
+    <item id="24151" />
+    <item id="24154" />
+    <item id="24153" />
+    <item id="24155" />
+    <item id="24158" />
+    <item id="24157" />
+    <item id="24159" />
+    <item id="24294" />						-- green hoard of gold --
+			<item id="24296" />
+    <item id="24290" />
+    <item id="24292" />
+    <item id="24299" />
+    <item id="24298" />
+    <item id="24297" />
+    <item id="24300" />
+    <item id="24289" />
+    <item id="24293" />
+    <item id="24291" />
+    <item id="24295" />
+    <item id="25018" />						-- krailos grass (thin) --
+			<item id="25029" />
+    <item id="25028" />
+    <item id="25019" />
+    <item fromid="25024" toid="25025" />
+    <item id="25027" />
+    <item id="25026" />
+    <item id="25023" />
+    <item id="25020" />
+    <item id="25022" />
+    <item id="25021" />
+    <item id="25030" />						-- krailos grass (thick) --
+			<item id="25041" />
+    <item id="25040" />
+    <item id="25031" />
+    <item fromid="25036" toid="25037" />
+    <item id="25039" />
+    <item id="25038" />
+    <item id="25035" />
+    <item id="25032" />
+    <item id="25034" />
+    <item id="25033" />
+    <item id="25042" />						-- krailos dirt (thin) --
+			<item id="25053" />
+    <item id="25052" />
+    <item id="25043" />
+    <item fromid="25048" toid="25049" />
+    <item id="25051" />
+    <item id="25050" />
+    <item id="25047" />
+    <item id="25044" />
+    <item id="25046" />
+    <item id="25045" />
+    <item id="25054" />						-- krailos dirt (thick) --
+			<item id="25065" />
+    <item id="25064" />
+    <item id="25055" />
+    <item fromid="25060" toid="25061" />
+    <item id="25063" />
+    <item id="25062" />
+    <item id="25059" />
+    <item id="25056" />
+    <item id="25058" />
+    <item id="25057" />
+    <item fromid="25078" toid="25081" />		-- krailos orange --
+			<item fromid="25086" toid="25087" />
+    <item id="25089" />
+    <item id="25088" />
+    <item id="25085" />
+    <item id="25082" />
+    <item id="25084" />
+    <item id="25083" />
+    <item fromid="25090" toid="25093" />		-- krailos purple --
+			<item fromid="25098" toid="25099" />
+    <item id="25101" />
+    <item id="25100" />
+    <item id="25097" />
+    <item id="25094" />
+    <item id="25096" />
+    <item id="25095" />
+    <item fromid="25102" toid="25105" />		-- krailos yellow --
+			<item fromid="25110" toid="25111" />
+    <item id="25113" />
+    <item id="25112" />
+    <item id="25109" />
+    <item id="25106" />
+    <item id="25108" />
+    <item id="25107" />
+    <item id="25716" />						-- dark scaled ground --
+			<item id="25719" />
+    <item id="25713" />
+    <item id="25722" />
+    <item id="25746" />
+    <item id="25743" />
+    <item id="25737" />
+    <item id="25740" />
+    <item id="25725" />
+    <item id="25734" />
+    <item id="25728" />
+    <item id="25731" />
+    <item fromid="25756" toid="25757" />		--  unknown3 --
+			<item id="25755" />
+    <item id="25758" />
+    <item id="25766" />
+    <item id="25765" />
+    <item fromid="25763" toid="25764" />
+    <item id="25759" />
+    <item id="25762" />
+    <item id="25760" />
+    <item id="25761" />
+</tileset>

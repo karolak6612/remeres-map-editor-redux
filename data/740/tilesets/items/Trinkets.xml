@@ -1,0 +1,68 @@
+<?xml version="1.0" encoding="utf-8"?>
+<tileset name="Trinkets">
+    <item id="2036" /> -- Watch (Also ID 6091, 6092, but those are useless?) --
+			-- Trinkets --
+			<item fromid="2176" toid="2178" />
+    <item id="2344" />
+    <item id="2345" />
+    <item id="2346" />
+    <item fromid="2353" toid="23" />
+    <item id="2600" />
+    <item id="2193" />
+    <item id="2194" />
+    <item id="2218" />
+    <item id="2356" />
+    <item id="2359" />
+    <item id="2137" />
+    <item id="2600" />
+			-- Instruments --
+			<item id="2364" />
+    <item id="2368" />
+    <item id="2369" />
+    <item id="2370" />
+    <item id="2371" />
+    <item id="2372" />
+    <item id="2373" />
+    <item id="2374" />
+    <item id="2375" />
+			-- Lights --
+			<item id="2041" toid="2049" />
+    <item id="2051" />
+    <item id="2050" />
+    <item id="2053" />
+    <item id="2052" />
+    <item id="2055" />
+    <item id="2054" />
+    <item id="2056" />
+    <item id="2062" />
+    <item id="2062" />
+    <item id="2063" />
+    <item fromid="2366" toid="2375" />
+    <item fromid="2597" toid="2598" />
+    <item id="2599" />
+    <item id="2175" />
+    <item fromid="2193" toid="2194" />
+    <item fromid="2217" toid="2218" />
+    <item id="2356" />
+    <item id="2359" />
+    <item id="2137" />
+    <item fromid="2032" toid="2033" />
+			-- Fluid containers --
+			<item fromid="2005" toid="2015" />
+    <item id="2023" />
+    <item id="2031" />
+    <item id="2033" />
+    <item id="2035" />
+
+			-- Food related --
+			<item id="2033" />
+			-- Keys --
+			<item fromid="2086" toid="2092" />
+			-- Game pieces --
+			<item id="2625" />
+    <item fromid="2626" toid="2631" />
+    <item id="2624" />
+    <item fromid="2632" toid="2637" />
+    <item id="2638" />
+    <item id="2639" />
+</tileset>

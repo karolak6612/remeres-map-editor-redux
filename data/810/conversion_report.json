@@ -1,0 +1,1736 @@
+{
+  "version": "810",
+  "issues": [
+    {
+      "path": "materials.xml",
+      "messages": [
+        "removed NUL bytes"
+      ]
+    }
+  ],
+  "validation": {
+    "legacy_counts": {
+      "borders": 61,
+      "brushes": 424,
+      "metaitems": 10,
+      "creatures": 291,
+      "items": 6604,
+      "item_coverage": 6604,
+      "tilesets_by_wrapper": {
+        "raw": 16,
+        "terrain": 6,
+        "doodad": 11,
+        "items_and_raw": 13,
+        "items": 1,
+        "doodad_and_raw": 1
+      }
+    },
+    "normalized_counts": {
+      "borders": 61,
+      "brushes": 424,
+      "metaitems": 10,
+      "creatures": 291,
+      "items": 6604,
+      "item_coverage": 6604,
+      "tilesets_by_wrapper": {
+        "raw": 17,
+        "terrain": 6,
+        "doodad": 11,
+        "items_and_raw": 13,
+        "items": 1,
+        "doodad_and_raw": 1,
+        "creatures": 1
+      },
+      "palettes": {
+        "Terrain": 6,
+        "Doodad": 12,
+        "Collection": 0,
+        "Item": 14,
+        "Creature": 1,
+        "Raw": 31
+      },
+      "assigned_raw_items": 6713,
+      "assigned_creatures": 0
+    },
+    "messages": [
+      "created fallback creature tilesets because the legacy data had no explicit creature palette"
+    ],
+    "unresolved": {
+      "tileset_brush_references": [],
+      "tileset_creature_references": [],
+      "tileset_item_references": [
+        {
+          "tileset": "Grounds",
+          "missing_ids": [
+            280
+          ]
+        },
+        {
+          "tileset": "Grounds",
+          "missing_ids": [
+            194
+          ]
+        },
+        {
+          "tileset": "Grounds",
+          "missing_ids": [
+            8133
+          ]
+        },
+        {
+          "tileset": "Grounds",
+          "missing_ids": [
+            8134
+          ]
+        },
+        {
+          "tileset": "Grounds",
+          "missing_ids": [
+            8048,
+            8049,
+            8050,
+            8051,
+            8052
+          ]
+        },
+        {
+          "tileset": "Grounds",
+          "missing_ids": [
+            7972,
+            7973,
+            7974,
+            7975,
+            7976
+          ]
+        },
+        {
+          "tileset": "Grounds",
+          "missing_ids": [
+            4354
+          ]
+        },
+        {
+          "tileset": "Nature",
+          "missing_ids": [
+            7536,
+            7537,
+            7538,
+            7539,
+            7540,
+            7541,
+            7542,
+            7543,
+            7544,
+            7545,
+            7546,
+            7547,
+            7548,
+            7549,
+            7550
+          ]
+        },
+        {
+          "tileset": "Nature",
+          "missing_ids": [
+            7551
+          ]
+        },
+        {
+          "tileset": "Nature",
+          "missing_ids": [
+            7552
+          ]
+        },
+        {
+          "tileset": "Nature",
+          "missing_ids": [
+            7553
+          ]
+        },
+        {
+          "tileset": "Nature",
+          "missing_ids": [
+            7554,
+            7555,
+            7556,
+            7557
+          ]
+        },
+        {
+          "tileset": "Nature",
+          "missing_ids": [
+            7566
+          ]
+        },
+        {
+          "tileset": "Nature",
+          "missing_ids": [
+            7585,
+            7586
+          ]
+        },
+        {
+          "tileset": "Stairs",
+          "missing_ids": [
+            7924,
+            7925
+          ]
+        },
+        {
+          "tileset": "Interior",
+          "missing_ids": [
+            7841,
+            7842,
+            7843
+          ]
+        },
+        {
+          "tileset": "Interior",
+          "missing_ids": [
+            7655
+          ]
+        },
+        {
+          "tileset": "Interior",
+          "missing_ids": [
+            7665
+          ]
+        },
+        {
+          "tileset": "Interior",
+          "missing_ids": [
+            7670
+          ]
+        },
+        {
+          "tileset": "Interior",
+          "missing_ids": [
+            7674,
+            7675,
+            7676,
+            7677,
+            7678,
+            7679,
+            7680,
+            7681,
+            7682,
+            7683,
+            7684,
+            7685,
+            7686,
+            7687,
+            7688,
+            7689,
+            7690,
+            7691,
+            7692,
+            7693
+          ]
+        },
+        {
+          "tileset": "Statues",
+          "missing_ids": [
+            7823,
+            7824,
+            7825,
+            7826
+          ]
+        },
+        {
+          "tileset": "Exterior",
+          "missing_ids": [
+            7919
+          ]
+        },
+        {
+          "tileset": "Exterior",
+          "missing_ids": [
+            7911,
+            7912,
+            7913,
+            7914,
+            7915,
+            7916,
+            7917,
+            7918,
+            7919
+          ]
+        },
+        {
+          "tileset": "Exterior",
+          "missing_ids": [
+            7605,
+            7606,
+            7607,
+            7608,
+            7609,
+            7610,
+            7611,
+            7612,
+            7613,
+            7614,
+            7615,
+            7616
+          ]
+        },
+        {
+          "tileset": "Equipment",
+          "missing_ids": [
+            7885
+          ]
+        },
+        {
+          "tileset": "Equipment",
+          "missing_ids": [
+            7903
+          ]
+        },
+        {
+          "tileset": "Equipment",
+          "missing_ids": [
+            7901
+          ]
+        },
+        {
+          "tileset": "Equipment",
+          "missing_ids": [
+            7902
+          ]
+        },
+        {
+          "tileset": "Equipment",
+          "missing_ids": [
+            7900
+          ]
+        },
+        {
+          "tileset": "Equipment",
+          "missing_ids": [
+            7939
+          ]
+        },
+        {
+          "tileset": "Equipment",
+          "missing_ids": [
+            7957
+          ]
+        },
+        {
+          "tileset": "Equipment",
+          "missing_ids": [
+            7884
+          ]
+        },
+        {
+          "tileset": "Equipment",
+          "missing_ids": [
+            7897
+          ]
+        },
+        {
+          "tileset": "Equipment",
+          "missing_ids": [
+            7898
+          ]
+        },
+        {
+          "tileset": "Equipment",
+          "missing_ids": [
+            7899
+          ]
+        },
+        {
+          "tileset": "Equipment",
+          "missing_ids": [
+            7885
+          ]
+        },
+        {
+          "tileset": "Equipment",
+          "missing_ids": [
+            7894
+          ]
+        },
+        {
+          "tileset": "Equipment",
+          "missing_ids": [
+            7895
+          ]
+        },
+        {
+          "tileset": "Equipment",
+          "missing_ids": [
+            7896
+          ]
+        },
+        {
+          "tileset": "Equipment",
+          "missing_ids": [
+            7730
+          ]
+        },
+        {
+          "tileset": "Equipment",
+          "missing_ids": [
+            7886
+          ]
+        },
+        {
+          "tileset": "Equipment",
+          "missing_ids": [
+            7891
+          ]
+        },
+        {
+          "tileset": "Equipment",
+          "missing_ids": [
+            7892
+          ]
+        },
+        {
+          "tileset": "Equipment",
+          "missing_ids": [
+            7893
+          ]
+        },
+        {
+          "tileset": "Ornaments",
+          "missing_ids": [
+            7887,
+            7888,
+            7889,
+            7890
+          ]
+        },
+        {
+          "tileset": "Tools",
+          "missing_ids": [
+            7731
+          ]
+        },
+        {
+          "tileset": "Weapons",
+          "missing_ids": [
+            7959
+          ]
+        },
+        {
+          "tileset": "Weapons",
+          "missing_ids": [
+            8209
+          ]
+        },
+        {
+          "tileset": "Weapons",
+          "missing_ids": [
+            7958
+          ]
+        },
+        {
+          "tileset": "Weapons",
+          "missing_ids": [
+            7854,
+            7855,
+            7856,
+            7857,
+            7858
+          ]
+        },
+        {
+          "tileset": "Weapons",
+          "missing_ids": [
+            7869,
+            7870,
+            7871,
+            7872,
+            7873
+          ]
+        },
+        {
+          "tileset": "Weapons",
+          "missing_ids": [
+            7744,
+            7745,
+            7746,
+            7747,
+            7748
+          ]
+        },
+        {
+          "tileset": "Weapons",
+          "missing_ids": [
+            7763,
+            7764,
+            7765,
+            7766,
+            7767
+          ]
+        },
+        {
+          "tileset": "Weapons",
+          "missing_ids": [
+            7864,
+            7865,
+            7866,
+            7867,
+            7868
+          ]
+        },
+        {
+          "tileset": "Weapons",
+          "missing_ids": [
+            7879,
+            7880,
+            7881,
+            7882,
+            7883
+          ]
+        },
+        {
+          "tileset": "Weapons",
+          "missing_ids": [
+            7754,
+            7755,
+            7756,
+            7757,
+            7758
+          ]
+        },
+        {
+          "tileset": "Weapons",
+          "missing_ids": [
+            7773,
+            7774,
+            7775,
+            7776,
+            7777
+          ]
+        },
+        {
+          "tileset": "Weapons",
+          "missing_ids": [
+            7859,
+            7860,
+            7861,
+            7862,
+            7863
+          ]
+        },
+        {
+          "tileset": "Weapons",
+          "missing_ids": [
+            7874,
+            7875,
+            7876,
+            7877,
+            7878
+          ]
+        },
+        {
+          "tileset": "Weapons",
+          "missing_ids": [
+            7749,
+            7750,
+            7751,
+            7752,
+            7753
+          ]
+        },
+        {
+          "tileset": "Weapons",
+          "missing_ids": [
+            7768,
+            7769,
+            7770,
+            7771,
+            7772
+          ]
+        },
+        {
+          "tileset": "Weapons",
+          "missing_ids": [
+            7850
+          ]
+        },
+        {
+          "tileset": "Weapons",
+          "missing_ids": [
+            7838,
+            7839,
+            7840
+          ]
+        },
+        {
+          "tileset": "Weapons (Magic)",
+          "missing_ids": [
+            7958
+          ]
+        },
+        {
+          "tileset": "Weapons (Magic)",
+          "missing_ids": [
+            7854,
+            7855,
+            7856,
+            7857,
+            7858
+          ]
+        },
+        {
+          "tileset": "Weapons (Magic)",
+          "missing_ids": [
+            7869,
+            7870,
+            7871,
+            7872,
+            7873
+          ]
+        },
+        {
+          "tileset": "Weapons (Magic)",
+          "missing_ids": [
+            7744,
+            7745,
+            7746,
+            7747,
+            7748
+          ]
+        },
+        {
+          "tileset": "Weapons (Magic)",
+          "missing_ids": [
+            7763,
+            7764,
+            7765,
+            7766,
+            7767
+          ]
+        },
+        {
+          "tileset": "Weapons (Magic)",
+          "missing_ids": [
+            7864,
+            7865,
+            7866,
+            7867,
+            7868
+          ]
+        },
+        {
+          "tileset": "Weapons (Magic)",
+          "missing_ids": [
+            7879,
+            7880,
+            7881,
+            7882,
+            7883
+          ]
+        },
+        {
+          "tileset": "Weapons (Magic)",
+          "missing_ids": [
+            7754,
+            7755,
+            7756,
+            7757,
+            7758
+          ]
+        },
+        {
+          "tileset": "Weapons (Magic)",
+          "missing_ids": [
+            7773,
+            7774,
+            7775,
+            7776,
+            7777
+          ]
+        },
+        {
+          "tileset": "Weapons (Magic)",
+          "missing_ids": [
+            7859,
+            7860,
+            7861,
+            7862,
+            7863
+          ]
+        },
+        {
+          "tileset": "Weapons (Magic)",
+          "missing_ids": [
+            7874,
+            7875,
+            7876,
+            7877,
+            7878
+          ]
+        },
+        {
+          "tileset": "Weapons (Magic)",
+          "missing_ids": [
+            7749,
+            7750,
+            7751,
+            7752,
+            7753
+          ]
+        },
+        {
+          "tileset": "Weapons (Magic)",
+          "missing_ids": [
+            7768,
+            7769,
+            7770,
+            7771,
+            7772
+          ]
+        },
+        {
+          "tileset": "Weapons (Magic)",
+          "missing_ids": [
+            7850
+          ]
+        },
+        {
+          "tileset": "Weapons (Magic)",
+          "missing_ids": [
+            7838,
+            7839,
+            7840
+          ]
+        },
+        {
+          "tileset": "Trinkets",
+          "missing_ids": [
+            7934,
+            7935,
+            7936,
+            7937
+          ]
+        },
+        {
+          "tileset": "Trinkets",
+          "missing_ids": [
+            8261
+          ]
+        },
+        {
+          "tileset": "Trinkets",
+          "missing_ids": [
+            8188,
+            8189
+          ]
+        },
+        {
+          "tileset": "Fluid Containers",
+          "missing_ids": [
+            7591
+          ]
+        },
+        {
+          "tileset": "Containers",
+          "missing_ids": [
+            7737,
+            7738,
+            7739
+          ]
+        },
+        {
+          "tileset": "Containers",
+          "missing_ids": [
+            7904,
+            7905,
+            7906,
+            7907
+          ]
+        },
+        {
+          "tileset": "Containers",
+          "missing_ids": [
+            7955
+          ]
+        },
+        {
+          "tileset": "Containers",
+          "missing_ids": [
+            7960,
+            7961,
+            7962
+          ]
+        },
+        {
+          "tileset": "Containers",
+          "missing_ids": [
+            7700
+          ]
+        },
+        {
+          "tileset": "Writeables",
+          "missing_ids": [
+            8267
+          ]
+        },
+        {
+          "tileset": "Writeables",
+          "missing_ids": [
+            7696
+          ]
+        },
+        {
+          "tileset": "Writeables",
+          "missing_ids": [
+            7702,
+            7703,
+            7704,
+            7705
+          ]
+        },
+        {
+          "tileset": "Writeables",
+          "missing_ids": [
+            7720,
+            7721,
+            7722,
+            7723,
+            7724,
+            7725,
+            7726,
+            7727
+          ]
+        },
+        {
+          "tileset": "Writeables",
+          "missing_ids": [
+            7844,
+            7845,
+            7846
+          ]
+        },
+        {
+          "tileset": "Writeables",
+          "missing_ids": [
+            7528,
+            7529,
+            7530,
+            7531,
+            7532,
+            7533,
+            7534,
+            7535
+          ]
+        },
+        {
+          "tileset": "Food",
+          "missing_ids": [
+            7909,
+            7910
+          ]
+        },
+        {
+          "tileset": "Food",
+          "missing_ids": [
+            8208
+          ]
+        },
+        {
+          "tileset": "Food",
+          "missing_ids": [
+            8194
+          ]
+        },
+        {
+          "tileset": "Food",
+          "missing_ids": [
+            7966
+          ]
+        },
+        {
+          "tileset": "Corpses",
+          "missing_ids": [
+            7740,
+            7741,
+            7742,
+            7743
+          ]
+        },
+        {
+          "tileset": "Corpses",
+          "missing_ids": [
+            7621
+          ]
+        },
+        {
+          "tileset": "Corpses",
+          "missing_ids": [
+            7623
+          ]
+        },
+        {
+          "tileset": "Corpses",
+          "missing_ids": [
+            7626
+          ]
+        },
+        {
+          "tileset": "Corpses",
+          "missing_ids": [
+            7622
+          ]
+        },
+        {
+          "tileset": "Corpses",
+          "missing_ids": [
+            7624
+          ]
+        },
+        {
+          "tileset": "Corpses",
+          "missing_ids": [
+            7625
+          ]
+        },
+        {
+          "tileset": "Corpses",
+          "missing_ids": [
+            7627
+          ]
+        },
+        {
+          "tileset": "Corpses",
+          "missing_ids": [
+            7969,
+            7970,
+            7971
+          ]
+        },
+        {
+          "tileset": "Corpses",
+          "missing_ids": [
+            7628,
+            7629,
+            7630,
+            7631
+          ]
+        },
+        {
+          "tileset": "Corpses",
+          "missing_ids": [
+            7637,
+            7638,
+            7639,
+            7640
+          ]
+        },
+        {
+          "tileset": "Corpses",
+          "missing_ids": [
+            7926,
+            7927,
+            7928,
+            7929,
+            7930,
+            7931
+          ]
+        },
+        {
+          "tileset": "Corpses",
+          "missing_ids": [
+            7908
+          ]
+        },
+        {
+          "tileset": "Corpses",
+          "missing_ids": [
+            7847,
+            7848,
+            7849
+          ]
+        },
+        {
+          "tileset": "Corpses",
+          "missing_ids": [
+            8269
+          ]
+        },
+        {
+          "tileset": "Corpses",
+          "missing_ids": [
+            8271,
+            8272,
+            8273,
+            8274
+          ]
+        },
+        {
+          "tileset": "Stairs / Ramps / Ladders",
+          "missing_ids": [
+            7924,
+            7925
+          ]
+        },
+        {
+          "tileset": "Addon and Quest Items",
+          "missing_ids": [
+            8204
+          ]
+        },
+        {
+          "tileset": "Addon and Quest Items",
+          "missing_ids": [
+            8262,
+            8263,
+            8264,
+            8265,
+            8266
+          ]
+        },
+        {
+          "tileset": "Architecture",
+          "missing_ids": [
+            7592,
+            7593,
+            7594,
+            7595,
+            7596,
+            7597,
+            7598,
+            7599,
+            7600,
+            7601,
+            7602,
+            7603,
+            7604
+          ]
+        },
+        {
+          "tileset": "Architecture",
+          "missing_ids": [
+            7617
+          ]
+        },
+        {
+          "tileset": "Architecture",
+          "missing_ids": [
+            7619
+          ]
+        },
+        {
+          "tileset": "Walls",
+          "missing_ids": [
+            7851,
+            7852,
+            7853
+          ]
+        },
+        {
+          "tileset": "Borders",
+          "missing_ids": [
+            4328,
+            4329,
+            4330,
+            4331,
+            4332,
+            4333,
+            4334,
+            4335,
+            4336,
+            4337,
+            4338,
+            4339,
+            4340,
+            4341,
+            4342,
+            4343,
+            4344,
+            4345,
+            4346,
+            4347
+          ]
+        },
+        {
+          "tileset": "Borders",
+          "missing_ids": [
+            4630,
+            4631
+          ]
+        },
+        {
+          "tileset": "Borders",
+          "missing_ids": [
+            4841
+          ]
+        },
+        {
+          "tileset": "Borders",
+          "missing_ids": [
+            4844
+          ]
+        },
+        {
+          "tileset": "Borders",
+          "missing_ids": [
+            5090
+          ]
+        },
+        {
+          "tileset": "Borders",
+          "missing_ids": [
+            5730
+          ]
+        },
+        {
+          "tileset": "Borders",
+          "missing_ids": [
+            5742
+          ]
+        },
+        {
+          "tileset": "Borders",
+          "missing_ids": [
+            5775
+          ]
+        },
+        {
+          "tileset": "Borders",
+          "missing_ids": [
+            5776
+          ]
+        },
+        {
+          "tileset": "Borders",
+          "missing_ids": [
+            5864
+          ]
+        },
+        {
+          "tileset": "Borders",
+          "missing_ids": [
+            5923
+          ]
+        },
+        {
+          "tileset": "Borders",
+          "missing_ids": [
+            5955
+          ]
+        },
+        {
+          "tileset": "Borders",
+          "missing_ids": [
+            6288
+          ]
+        },
+        {
+          "tileset": "Borders",
+          "missing_ids": [
+            7287
+          ]
+        },
+        {
+          "tileset": "Borders",
+          "missing_ids": [
+            7182
+          ]
+        },
+        {
+          "tileset": "Borders",
+          "missing_ids": [
+            6352
+          ]
+        },
+        {
+          "tileset": "Borders",
+          "missing_ids": [
+            6554
+          ]
+        },
+        {
+          "tileset": "Borders",
+          "missing_ids": [
+            6555
+          ]
+        },
+        {
+          "tileset": "Borders",
+          "missing_ids": [
+            6559
+          ]
+        },
+        {
+          "tileset": "Borders",
+          "missing_ids": [
+            6868
+          ]
+        },
+        {
+          "tileset": "Borders",
+          "missing_ids": [
+            6938
+          ]
+        },
+        {
+          "tileset": "Borders",
+          "missing_ids": [
+            7179
+          ]
+        },
+        {
+          "tileset": "Borders",
+          "missing_ids": [
+            7180
+          ]
+        },
+        {
+          "tileset": "Borders",
+          "missing_ids": [
+            7181
+          ]
+        },
+        {
+          "tileset": "Borders",
+          "missing_ids": [
+            7641,
+            7642,
+            7643,
+            7644,
+            7645,
+            7646,
+            7647,
+            7648,
+            7649,
+            7650,
+            7651,
+            7652
+          ]
+        },
+        {
+          "tileset": "Borders",
+          "missing_ids": [
+            7653
+          ]
+        },
+        {
+          "tileset": "Borders",
+          "missing_ids": [
+            7709,
+            7710
+          ]
+        },
+        {
+          "tileset": "Borders",
+          "missing_ids": [
+            7656,
+            7657,
+            7658,
+            7659,
+            7660,
+            7661,
+            7662,
+            7663,
+            7664
+          ]
+        },
+        {
+          "tileset": "Borders",
+          "missing_ids": [
+            7654
+          ]
+        },
+        {
+          "tileset": "Borders",
+          "missing_ids": [
+            7833,
+            7834
+          ]
+        },
+        {
+          "tileset": "Borders",
+          "missing_ids": [
+            7666,
+            7667,
+            7668,
+            7669
+          ]
+        },
+        {
+          "tileset": "Borders",
+          "missing_ids": [
+            7835
+          ]
+        },
+        {
+          "tileset": "Borders",
+          "missing_ids": [
+            7671,
+            7672
+          ]
+        },
+        {
+          "tileset": "Borders",
+          "missing_ids": [
+            7836,
+            7837
+          ]
+        },
+        {
+          "tileset": "Borders",
+          "missing_ids": [
+            8053,
+            8054,
+            8055,
+            8056,
+            8057
+          ]
+        },
+        {
+          "tileset": "Borders",
+          "missing_ids": [
+            8117,
+            8118,
+            8119,
+            8120
+          ]
+        },
+        {
+          "tileset": "Borders",
+          "missing_ids": [
+            8021,
+            8022,
+            8023,
+            8024,
+            8025,
+            8026,
+            8027,
+            8028,
+            8029,
+            8030,
+            8031,
+            8032
+          ]
+        },
+        {
+          "tileset": "Borders",
+          "missing_ids": [
+            7943,
+            7944,
+            7945,
+            7946,
+            7947,
+            7948,
+            7949,
+            7950,
+            7952,
+            7953,
+            7954
+          ]
+        },
+        {
+          "tileset": "Blank",
+          "missing_ids": [
+            4328,
+            4329,
+            4330,
+            4331,
+            4332,
+            4333,
+            4334,
+            4335,
+            4336,
+            4337,
+            4338,
+            4339,
+            4340,
+            4341,
+            4342,
+            4343,
+            4344,
+            4345,
+            4346,
+            4347
+          ]
+        },
+        {
+          "tileset": "Blank",
+          "missing_ids": [
+            4626,
+            4627,
+            4628,
+            4629,
+            4630,
+            4631
+          ]
+        },
+        {
+          "tileset": "Blank",
+          "missing_ids": [
+            4841
+          ]
+        },
+        {
+          "tileset": "Blank",
+          "missing_ids": [
+            4844
+          ]
+        },
+        {
+          "tileset": "Blank",
+          "missing_ids": [
+            5090
+          ]
+        },
+        {
+          "tileset": "Blank",
+          "missing_ids": [
+            5742
+          ]
+        },
+        {
+          "tileset": "Blank",
+          "missing_ids": [
+            5730
+          ]
+        },
+        {
+          "tileset": "Blank",
+          "missing_ids": [
+            5775,
+            5776
+          ]
+        },
+        {
+          "tileset": "Blank",
+          "missing_ids": [
+            5864
+          ]
+        },
+        {
+          "tileset": "Blank",
+          "missing_ids": [
+            5923
+          ]
+        },
+        {
+          "tileset": "Blank",
+          "missing_ids": [
+            5959
+          ]
+        },
+        {
+          "tileset": "Blank",
+          "missing_ids": [
+            5955
+          ]
+        },
+        {
+          "tileset": "Blank",
+          "missing_ids": [
+            6554,
+            6555
+          ]
+        },
+        {
+          "tileset": "Blank",
+          "missing_ids": [
+            7287,
+            7288
+          ]
+        },
+        {
+          "tileset": "Blank",
+          "missing_ids": [
+            7972,
+            7973,
+            7974,
+            7975,
+            7976,
+            7977,
+            7978,
+            7979,
+            7980,
+            7981,
+            7982,
+            7983,
+            7984,
+            7985,
+            7986,
+            7987,
+            7988,
+            7989,
+            7990,
+            7991
+          ]
+        },
+        {
+          "tileset": "Blank",
+          "missing_ids": [
+            8060,
+            8061
+          ]
+        },
+        {
+          "tileset": "Blank",
+          "missing_ids": [
+            8063,
+            8064,
+            8065,
+            8066,
+            8067,
+            8068,
+            8069,
+            8070,
+            8071
+          ]
+        },
+        {
+          "tileset": "Blank",
+          "missing_ids": [
+            8073,
+            8074
+          ]
+        },
+        {
+          "tileset": "Blank",
+          "missing_ids": [
+            8079,
+            8080,
+            8081,
+            8082,
+            8083,
+            8084,
+            8085,
+            8086,
+            8087,
+            8088,
+            8089,
+            8090,
+            8091,
+            8092,
+            8093,
+            8094,
+            8095,
+            8096,
+            8097,
+            8098
+          ]
+        },
+        {
+          "tileset": "Blank",
+          "missing_ids": [
+            8113,
+            8114,
+            8115,
+            8116,
+            8117,
+            8118,
+            8119,
+            8120,
+            8121,
+            8122,
+            8123,
+            8124,
+            8125,
+            8126,
+            8127,
+            8128,
+            8129,
+            8130,
+            8131,
+            8132
+          ]
+        },
+        {
+          "tileset": "Blank",
+          "missing_ids": [
+            8171,
+            8172,
+            8173
+          ]
+        },
+        {
+          "tileset": "Blank",
+          "missing_ids": [
+            8177,
+            8178,
+            8179,
+            8180,
+            8181
+          ]
+        },
+        {
+          "tileset": "Blank",
+          "missing_ids": [
+            8183,
+            8184,
+            8185
+          ]
+        },
+        {
+          "tileset": "Blank",
+          "missing_ids": [
+            8191,
+            8192,
+            8193
+          ]
+        },
+        {
+          "tileset": "Blank",
+          "missing_ids": [
+            8195,
+            8196,
+            8197,
+            8198,
+            8199,
+            8200
+          ]
+        },
+        {
+          "tileset": "Blank",
+          "missing_ids": [
+            8206,
+            8207
+          ]
+        },
+        {
+          "tileset": "Blank",
+          "missing_ids": [
+            8121,
+            8122,
+            8123,
+            8124,
+            8125,
+            8126,
+            8127,
+            8128,
+            8129,
+            8130,
+            8131,
+            8132
+          ]
+        }
+      ],
+      "brush_border_references": [],
+      "brush_name_references": []
+    }
+  },
+  "generated_files": [
+    "borders/borders.xml",
+    "brushes/brushes.xml",
+    "creatures/creatures.xml",
+    "items.otb",
+    "items/items.xml",
+    "materials.xml",
+    "palettes.xml",
+    "tilesets/creatures/Others.xml",
+    "tilesets/doodad/Beds.xml",
+    "tilesets/doodad/Exterior.xml",
+    "tilesets/doodad/Hangables.xml",
+    "tilesets/doodad/Interior.xml",
+    "tilesets/doodad/Magic Fields.xml",
+    "tilesets/doodad/Nature.xml",
+    "tilesets/doodad/Signs.xml",
+    "tilesets/doodad/Snow.xml",
+    "tilesets/doodad/Splash.xml",
+    "tilesets/doodad/Statues.xml",
+    "tilesets/doodad/Trash.xml",
+    "tilesets/doodad_and_raw/Corpses.xml",
+    "tilesets/items/Weapons (Magic).xml",
+    "tilesets/items_and_raw/Addon and Quest Items.xml",
+    "tilesets/items_and_raw/Containers.xml",
+    "tilesets/items_and_raw/Equipment.xml",
+    "tilesets/items_and_raw/Fluid Containers.xml",
+    "tilesets/items_and_raw/Food.xml",
+    "tilesets/items_and_raw/Jewelry.xml",
+    "tilesets/items_and_raw/Ornaments.xml",
+    "tilesets/items_and_raw/Runes.xml",
+    "tilesets/items_and_raw/Shields.xml",
+    "tilesets/items_and_raw/Tools.xml",
+    "tilesets/items_and_raw/Trinkets.xml",
+    "tilesets/items_and_raw/Weapons.xml",
+    "tilesets/items_and_raw/Writeables.xml",
+    "tilesets/raw/Architecture.xml",
+    "tilesets/raw/Blank.xml",
+    "tilesets/raw/Boats.xml",
+    "tilesets/raw/Borders.xml",
+    "tilesets/raw/Exterior.xml",
+    "tilesets/raw/Grounds.xml",
+    "tilesets/raw/Hangables.xml",
+    "tilesets/raw/Interior.xml",
+    "tilesets/raw/Magic Fields.xml",
+    "tilesets/raw/Nature.xml",
+    "tilesets/raw/Others.xml",
+    "tilesets/raw/Sea.xml",
+    "tilesets/raw/Splash.xml",
+    "tilesets/raw/Stairs Ramps Ladders.xml",
+    "tilesets/raw/Trinkets.xml",
+    "tilesets/raw/Walls.xml",
+    "tilesets/raw/Weapons.xml",
+    "tilesets/terrain/Cave.xml",
+    "tilesets/terrain/Nature.xml",
+    "tilesets/terrain/Roofs.xml",
+    "tilesets/terrain/Snow.xml",
+    "tilesets/terrain/Stairs.xml",
+    "tilesets/terrain/Town.xml"
+  ],
+  "smoke_test": {
+    "parsed_files": [
+      "borders/borders.xml",
+      "brushes/brushes.xml",
+      "creatures/creatures.xml",
+      "items/items.xml",
+      "materials.xml",
+      "palettes.xml",
+      "tilesets/creatures/Others.xml",
+      "tilesets/doodad/Beds.xml",
+      "tilesets/doodad/Exterior.xml",
+      "tilesets/doodad/Hangables.xml",
+      "tilesets/doodad/Interior.xml",
+      "tilesets/doodad/Magic Fields.xml",
+      "tilesets/doodad/Nature.xml",
+      "tilesets/doodad/Signs.xml",
+      "tilesets/doodad/Snow.xml",
+      "tilesets/doodad/Splash.xml",
+      "tilesets/doodad/Statues.xml",
+      "tilesets/doodad/Trash.xml",
+      "tilesets/doodad_and_raw/Corpses.xml",
+      "tilesets/items/Weapons (Magic).xml",
+      "tilesets/items_and_raw/Addon and Quest Items.xml",
+      "tilesets/items_and_raw/Containers.xml",
+      "tilesets/items_and_raw/Equipment.xml",
+      "tilesets/items_and_raw/Fluid Containers.xml",
+      "tilesets/items_and_raw/Food.xml",
+      "tilesets/items_and_raw/Jewelry.xml",
+      "tilesets/items_and_raw/Ornaments.xml",
+      "tilesets/items_and_raw/Runes.xml",
+      "tilesets/items_and_raw/Shields.xml",
+      "tilesets/items_and_raw/Tools.xml",
+      "tilesets/items_and_raw/Trinkets.xml",
+      "tilesets/items_and_raw/Weapons.xml",
+      "tilesets/items_and_raw/Writeables.xml",
+      "tilesets/raw/Architecture.xml",
+      "tilesets/raw/Blank.xml",
+      "tilesets/raw/Boats.xml",
+      "tilesets/raw/Borders.xml",
+      "tilesets/raw/Exterior.xml",
+      "tilesets/raw/Grounds.xml",
+      "tilesets/raw/Hangables.xml",
+      "tilesets/raw/Interior.xml",
+      "tilesets/raw/Magic Fields.xml",
+      "tilesets/raw/Nature.xml",
+      "tilesets/raw/Others.xml",
+      "tilesets/raw/Sea.xml",
+      "tilesets/raw/Splash.xml",
+      "tilesets/raw/Stairs Ramps Ladders.xml",
+      "tilesets/raw/Trinkets.xml",
+      "tilesets/raw/Walls.xml",
+      "tilesets/raw/Weapons.xml",
+      "tilesets/terrain/Cave.xml",
+      "tilesets/terrain/Nature.xml",
+      "tilesets/terrain/Roofs.xml",
+      "tilesets/terrain/Snow.xml",
+      "tilesets/terrain/Stairs.xml",
+      "tilesets/terrain/Town.xml"
+    ],
+    "failures": []
+  }
+}

@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<tileset name="Nature">
+    <item fromid="386" toid="391" />
+    <item id="486" />
+    <item fromid="1285" toid="1359" />
+    <item fromid="1909" toid="1944" />
+    <item fromid="2697" toid="2786" />
+    <item id="2797" />
+    <item fromid="3312" toid="3323" />
+    <item fromid="3325" toid="3347" />
+    <item fromid="3569" toid="3574" />
+    <item fromid="3603" toid="3677" />
+    <item fromid="3984" toid="4250" />
+    <item fromid="4580" toid="4594" />
+    <item fromid="4876" toid="4882" />
+</tileset>

@@ -1,0 +1,63 @@
+<?xml version="1.0" encoding="utf-8"?>
+<tileset name="Others">
+    <item fromid="1" toid="7" />
+    <item fromid="10" toid="11" />
+    <item fromid="13" toid="15" />
+    <item id="19" />
+    <item id="21" />
+    <item fromid="26" toid="28" />
+    <item id="35" />
+    <item id="43" />
+    <item fromid="5463" toid="5477" />
+    <item fromid="5480" toid="5514" />
+    <item id="5521" />
+    <item id="5539" />
+    <item fromid="5543" toid="5553" />
+    <item fromid="5555" toid="5564" />
+    <item fromid="5596" toid="5624" />
+    <item fromid="5631" toid="5658" />
+    <item fromid="5660" toid="5665" />
+    <item fromid="5669" toid="5686" />
+    <item fromid="5691" toid="5726" />
+    <item fromid="5730" toid="5731" />
+    <item fromid="5738" toid="5744" />
+    <item id="5747" />
+    <item fromid="5750" toid="5761" />
+    <item fromid="5763" toid="5764" />
+    <item fromid="5768" toid="5930" />
+    <item fromid="5937" toid="5954" />
+    <item fromid="5956" toid="5959" />
+    <item fromid="6085" toid="6132" />
+    <item fromid="6160" toid="6172" />
+    <item id="6174" />
+    <item fromid="6180" toid="6191" />
+    <item fromid="6210" toid="6231" />
+    <item id="6267" />
+    <item fromid="6271" toid="6274" />
+    <item fromid="6277" toid="6280" />
+    <item fromid="6285" toid="6301" />
+    <item fromid="6352" toid="6353" />
+    <item fromid="6356" toid="6363" />
+    <item fromid="6368" toid="6394" />
+    <item fromid="6423" toid="6435" />
+    <item fromid="6474" toid="6515" />
+    <item fromid="6517" toid="6519" />
+    <item fromid="6523" toid="6559" />
+    <item fromid="6561" toid="6772" />
+    <item fromid="6804" toid="6838" />
+    <item fromid="6868" toid="6881" />
+    <item fromid="6886" toid="6888" />
+    <item id="6890" />
+    <item fromid="6909" toid="6993" />
+    <item fromid="6995" toid="7024" />
+    <item id="7053" />
+    <item fromid="7058" toid="7090" />
+    <item fromid="7095" toid="7142" />
+    <item fromid="7145" toid="7255" />
+    <item id="7259" />
+    <item fromid="7261" toid="7281" />
+    <item fromid="7286" toid="7315" />
+    <item fromid="7342" toid="7343" />
+    <item id="7348" />
+    <item fromid="7350" toid="7475" />
+</tileset>

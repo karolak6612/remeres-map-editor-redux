@@ -1,0 +1,95 @@
+<?xml version="1.0" encoding="utf-8"?>
+<tileset name="Architecture">
+    <item fromid="1516" toid="1523" />
+    <item fromid="1533" toid="1542" />
+    <item fromid="7095" toid="7101" />
+    <item id="5521" />
+    <item fromid="5315" toid="5331" />
+    <item id="5504" />
+    <item fromid="10691" toid="10699" />
+    <item fromid="10828" toid="10829" />
+    <item fromid="19512" toid="19514" />
+    <item fromid="20209" toid="20215" />
+    <item fromid="19932" toid="19937" />
+    <item fromid="20243" toid="20246" />
+    <item fromid="24915" toid="24926" />
+		-- fences --
+			<item fromid="1543" toid="1547" />
+    <item fromid="5732" toid="5737" />
+    <item fromid="9485" toid="9486" />
+    <item fromid="22573" toid="22578" />
+    <item fromid="22600" toid="22603" />
+		-- pillars --
+			<item id="1514" />
+    <item id="1515" />
+    <item id="3766" />
+    <item id="3767" />
+    <item fromid="8538" toid="8540" />
+    <item fromid="3792" toid="3793" />
+    <item fromid="9084" toid="9091" />
+    <item fromid="9304" toid="9305" />
+    <item id="9434" />
+    <item fromid="9779" />
+    <item fromid="9784" toid="9791" />
+    <item fromid="10052" toid="10059" />
+    <item fromid="10345" toid="10346" />
+    <item id="11910" />
+    <item fromid="11931" toid="11932" />
+    <item fromid="11963" toid="11964" />
+    <item id="12003" />
+    <item id="12009" />
+    <item id="12013" />
+    <item id="14604" />
+    <item id="14620" />
+    <item fromid="18005" toid="18008" />
+    <item fromid="18132" />
+    <item id="18852" />
+    <item fromid="19616" toid="19618" />
+    <item id="19620" />
+    <item id="19800" />
+    <item id="21580" />
+    <item fromid="22308" toid="22315" />
+    <item id="23942" />
+		-- structural --
+			<item fromid="9471" toid="9484" />
+    <item fromid="8241" toid="8248" />
+    <item fromid="9939" toid="9940" />
+    <item fromid="9943" toid="9947" />
+    <item fromid="9950" toid="9952" />
+    <item id="10343" />
+    <item fromid="10347" toid="10348" />
+    <item id="10344" />
+    <item fromid="10433" toid="10434" />
+    <item fromid="10436" toid="10440" />
+    <item fromid="10450" toid="10453" />
+    <item fromid="10700" toid="10708" />
+    <item id="10721" />
+    <item fromid="10715" toid="10718" />
+    <item fromid="10726" toid="10727" />
+    <item fromid="10918" toid="10925" />
+    <item id="10927" />
+    <item fromid="10929" toid="10931" />
+    <item fromid="10989" toid="10998" />
+    <item fromid="11058" toid="11061" />
+    <item fromid="12336" toid="12347" />
+    <item fromid="12824" toid="12827" />
+    <item fromid="18122" toid="18125" />
+    <item fromid="18130" toid="18131" />
+		-- poles and struts --
+			<item fromid="6886" toid="6888" />
+    <item fromid="6981" toid="6983" />
+    <item fromid="6986" />
+    <item fromid="7592" toid="7604" />
+    <item fromid="7617" />
+    <item fromid="7619" />
+    <item fromid="12812" toid="12815" />
+    <item id="18863" />
+    <item id="18881" />
+    <item fromid="19590" toid="19594" />
+		-- random --
+			<item fromid="6961" toid="6965" />
+    <item fromid="6993" toid="6998" />
+    <item fromid="14602" toid="14603" />
+    <item fromid="24974" toid="25003" />
+    <item fromid="25154" toid="25157" />
+</tileset>

@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<tileset name="Banners">
+    <item fromid="1819" toid="1824" />
+    <item fromid="9495" toid="9502" />
+    <item fromid="10378" toid="10397" />
+    <item fromid="10963" toid="10966" />
+    <item fromid="11917" toid="11920" />
+    <item fromid="12215" toid="12220" />
+    <item fromid="12802" toid="12805" />
+    <item fromid="13692" toid="13695" />
+    <item fromid="5617" toid="5618" />
+    <item fromid="6793" toid="6794" />
+    <item fromid="8617" toid="8624" />
+    <item id="9442" />
+    <item id="10209" />
+    <item fromid="10952" toid="10959" />
+    <item fromid="11007" toid="11013" />
+    <item fromid="11289" toid="11298" />
+    <item fromid="12170" toid="12175" />
+</tileset>

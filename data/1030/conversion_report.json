@@ -1,0 +1,343 @@
+{
+  "version": "1030",
+  "issues": [
+    {
+      "path": "materials.xml",
+      "messages": [
+        "removed NUL bytes"
+      ]
+    },
+    {
+      "path": "items.xml",
+      "messages": [
+        "decoded with cp1252 fallback"
+      ]
+    }
+  ],
+  "validation": {
+    "legacy_counts": {
+      "borders": 70,
+      "brushes": 464,
+      "metaitems": 10,
+      "creatures": 341,
+      "items": 7909,
+      "item_coverage": 16248,
+      "tilesets_by_wrapper": {
+        "raw": 18,
+        "terrain": 6,
+        "doodad": 12,
+        "items_and_raw": 13,
+        "items": 2,
+        "doodad_and_raw": 1
+      }
+    },
+    "normalized_counts": {
+      "borders": 70,
+      "brushes": 464,
+      "metaitems": 10,
+      "creatures": 341,
+      "items": 7909,
+      "item_coverage": 16248,
+      "tilesets_by_wrapper": {
+        "raw": 19,
+        "terrain": 6,
+        "doodad": 12,
+        "items_and_raw": 13,
+        "items": 2,
+        "doodad_and_raw": 1,
+        "creatures": 1
+      },
+      "palettes": {
+        "Terrain": 6,
+        "Doodad": 13,
+        "Collection": 0,
+        "Item": 15,
+        "Creature": 1,
+        "Raw": 33
+      },
+      "assigned_raw_items": 8030,
+      "assigned_creatures": 0
+    },
+    "messages": [
+      "created fallback creature tilesets because the legacy data had no explicit creature palette"
+    ],
+    "unresolved": {
+      "tileset_brush_references": [],
+      "tileset_creature_references": [],
+      "tileset_item_references": [
+        {
+          "tileset": "Nature",
+          "missing_ids": [
+            8794,
+            8795,
+            8796
+          ]
+        },
+        {
+          "tileset": "Hangables",
+          "missing_ids": [
+            9656,
+            9657
+          ]
+        },
+        {
+          "tileset": "Interior",
+          "missing_ids": [
+            9443,
+            9444
+          ]
+        },
+        {
+          "tileset": "Writeables",
+          "missing_ids": [
+            7720,
+            7721
+          ]
+        },
+        {
+          "tileset": "Corpses",
+          "missing_ids": [
+            2812
+          ]
+        },
+        {
+          "tileset": "Corpses",
+          "missing_ids": [
+            9656,
+            9657
+          ]
+        },
+        {
+          "tileset": "Corpses",
+          "missing_ids": [
+            9780,
+            9781,
+            9782,
+            9783
+          ]
+        },
+        {
+          "tileset": "Walls",
+          "missing_ids": [
+            5009
+          ]
+        },
+        {
+          "tileset": "Borders",
+          "missing_ids": [
+            4374,
+            4422,
+            4423,
+            4424,
+            4425,
+            4426,
+            4427,
+            4428,
+            4429,
+            4430,
+            4431,
+            4432,
+            4433,
+            4434,
+            4435,
+            4436,
+            4437,
+            4438,
+            4439,
+            4440
+          ]
+        },
+        {
+          "tileset": "Borders",
+          "missing_ids": [
+            4630,
+            4631
+          ]
+        },
+        {
+          "tileset": "Borders",
+          "missing_ids": [
+            4841
+          ]
+        },
+        {
+          "tileset": "Borders",
+          "missing_ids": [
+            4844
+          ]
+        },
+        {
+          "tileset": "Borders",
+          "missing_ids": [
+            5955
+          ]
+        },
+        {
+          "tileset": "Blank",
+          "missing_ids": [
+            4374
+          ]
+        },
+        {
+          "tileset": "Blank",
+          "missing_ids": [
+            4626,
+            4627,
+            4628,
+            4629,
+            4630,
+            4631
+          ]
+        },
+        {
+          "tileset": "Blank",
+          "missing_ids": [
+            4841
+          ]
+        },
+        {
+          "tileset": "Blank",
+          "missing_ids": [
+            4844
+          ]
+        },
+        {
+          "tileset": "Blank",
+          "missing_ids": [
+            5955
+          ]
+        }
+      ],
+      "brush_border_references": [],
+      "brush_name_references": []
+    }
+  },
+  "generated_files": [
+    "borders/borders.xml",
+    "brushes/brushes.xml",
+    "creatures/creatures.xml",
+    "items.otb",
+    "items/items.xml",
+    "materials.xml",
+    "palettes.xml",
+    "tilesets/creatures/Others.xml",
+    "tilesets/doodad/Architecture.xml",
+    "tilesets/doodad/Beds.xml",
+    "tilesets/doodad/Exterior.xml",
+    "tilesets/doodad/Hangables.xml",
+    "tilesets/doodad/Interior.xml",
+    "tilesets/doodad/Magic Fields.xml",
+    "tilesets/doodad/Nature.xml",
+    "tilesets/doodad/Signs.xml",
+    "tilesets/doodad/Snow.xml",
+    "tilesets/doodad/Splash.xml",
+    "tilesets/doodad/Statues.xml",
+    "tilesets/doodad/Trash.xml",
+    "tilesets/doodad_and_raw/Corpses.xml",
+    "tilesets/items/Tools.xml",
+    "tilesets/items/Weapons (Magic).xml",
+    "tilesets/items_and_raw/Addon and Quest Items.xml",
+    "tilesets/items_and_raw/Containers.xml",
+    "tilesets/items_and_raw/Equipment.xml",
+    "tilesets/items_and_raw/Fluid Containers.xml",
+    "tilesets/items_and_raw/Food.xml",
+    "tilesets/items_and_raw/Jewelry.xml",
+    "tilesets/items_and_raw/Ornaments.xml",
+    "tilesets/items_and_raw/Runes.xml",
+    "tilesets/items_and_raw/Shields.xml",
+    "tilesets/items_and_raw/Tools.xml",
+    "tilesets/items_and_raw/Trinkets.xml",
+    "tilesets/items_and_raw/Weapons.xml",
+    "tilesets/items_and_raw/Writeables.xml",
+    "tilesets/raw/Architecture.xml",
+    "tilesets/raw/Blank.xml",
+    "tilesets/raw/Boats.xml",
+    "tilesets/raw/Borders.xml",
+    "tilesets/raw/Exterior.xml",
+    "tilesets/raw/Grounds.xml",
+    "tilesets/raw/Hangables.xml",
+    "tilesets/raw/Interior.xml",
+    "tilesets/raw/Magic Fields.xml",
+    "tilesets/raw/Nature.xml",
+    "tilesets/raw/Others.xml",
+    "tilesets/raw/Roofs.xml",
+    "tilesets/raw/Sea.xml",
+    "tilesets/raw/Splash.xml",
+    "tilesets/raw/Stairs Ramps Ladders.xml",
+    "tilesets/raw/Tools.xml",
+    "tilesets/raw/Trinkets.xml",
+    "tilesets/raw/Walls.xml",
+    "tilesets/raw/Weapons.xml",
+    "tilesets/terrain/Cave.xml",
+    "tilesets/terrain/Nature.xml",
+    "tilesets/terrain/Roofs.xml",
+    "tilesets/terrain/Snow.xml",
+    "tilesets/terrain/Stairs.xml",
+    "tilesets/terrain/Town.xml"
+  ],
+  "smoke_test": {
+    "parsed_files": [
+      "borders/borders.xml",
+      "brushes/brushes.xml",
+      "creatures/creatures.xml",
+      "items/items.xml",
+      "materials.xml",
+      "palettes.xml",
+      "tilesets/creatures/Others.xml",
+      "tilesets/doodad/Architecture.xml",
+      "tilesets/doodad/Beds.xml",
+      "tilesets/doodad/Exterior.xml",
+      "tilesets/doodad/Hangables.xml",
+      "tilesets/doodad/Interior.xml",
+      "tilesets/doodad/Magic Fields.xml",
+      "tilesets/doodad/Nature.xml",
+      "tilesets/doodad/Signs.xml",
+      "tilesets/doodad/Snow.xml",
+      "tilesets/doodad/Splash.xml",
+      "tilesets/doodad/Statues.xml",
+      "tilesets/doodad/Trash.xml",
+      "tilesets/doodad_and_raw/Corpses.xml",
+      "tilesets/items/Tools.xml",
+      "tilesets/items/Weapons (Magic).xml",
+      "tilesets/items_and_raw/Addon and Quest Items.xml",
+      "tilesets/items_and_raw/Containers.xml",
+      "tilesets/items_and_raw/Equipment.xml",
+      "tilesets/items_and_raw/Fluid Containers.xml",
+      "tilesets/items_and_raw/Food.xml",
+      "tilesets/items_and_raw/Jewelry.xml",
+      "tilesets/items_and_raw/Ornaments.xml",
+      "tilesets/items_and_raw/Runes.xml",
+      "tilesets/items_and_raw/Shields.xml",
+      "tilesets/items_and_raw/Tools.xml",
+      "tilesets/items_and_raw/Trinkets.xml",
+      "tilesets/items_and_raw/Weapons.xml",
+      "tilesets/items_and_raw/Writeables.xml",
+      "tilesets/raw/Architecture.xml",
+      "tilesets/raw/Blank.xml",
+      "tilesets/raw/Boats.xml",
+      "tilesets/raw/Borders.xml",
+      "tilesets/raw/Exterior.xml",
+      "tilesets/raw/Grounds.xml",
+      "tilesets/raw/Hangables.xml",
+      "tilesets/raw/Interior.xml",
+      "tilesets/raw/Magic Fields.xml",
+      "tilesets/raw/Nature.xml",
+      "tilesets/raw/Others.xml",
+      "tilesets/raw/Roofs.xml",
+      "tilesets/raw/Sea.xml",
+      "tilesets/raw/Splash.xml",
+      "tilesets/raw/Stairs Ramps Ladders.xml",
+      "tilesets/raw/Tools.xml",
+      "tilesets/raw/Trinkets.xml",
+      "tilesets/raw/Walls.xml",
+      "tilesets/raw/Weapons.xml",
+      "tilesets/terrain/Cave.xml",
+      "tilesets/terrain/Nature.xml",
+      "tilesets/terrain/Roofs.xml",
+      "tilesets/terrain/Snow.xml",
+      "tilesets/terrain/Stairs.xml",
+      "tilesets/terrain/Town.xml"
+    ],
+    "failures": []
+  }
+}

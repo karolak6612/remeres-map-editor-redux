@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<tileset name="Crystals">
+    <item fromid="8526" toid="8533" />
+    <item fromid="17565" toid="17599" />
+    <item fromid="17641" toid="17646" />
+    <item fromid="17848" toid="17849" />
+    <item id="17867" />
+    <item id="17999" />
+    <item id="18458" />
+    <item fromid="21637" toid="21647" />
+</tileset>

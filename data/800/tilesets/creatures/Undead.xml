@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<tileset name="Undead">
+    <creature name="banshee" type="monster" looktype="78" />
+    <creature name="crypt shambler" type="monster" looktype="100" />
+    <creature name="bonebeast" type="monster" looktype="101" />
+    <creature name="demon skeleton" type="monster" looktype="37" />
+    <creature name="ghost" type="monster" looktype="48" />
+    <creature name="ghoul" type="monster" looktype="18" />
+    <creature name="lich" type="monster" looktype="99" lookhead="95" lookbody="116" looklegs="119" lookfeet="115" />
+    <creature name="mummy" type="monster" looktype="65" />
+    <creature name="skeleton" type="monster" looktype="33" />
+    <creature name="vampire" type="monster" looktype="68" />
+</tileset>

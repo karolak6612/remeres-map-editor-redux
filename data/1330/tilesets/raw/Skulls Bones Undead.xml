@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="utf-8"?>
+<tileset name="Skulls / Bones / Undead">
+    <item id="2226" />
+    <item fromid="2229" toid="2231" />
+    <item fromid="2247" toid="2248" />
+    <item id="3744" />
+    <item fromid="5812" toid="5813" />
+    <item fromid="5016" toid="5021" />
+    <item fromid="6524" toid="6525" />
+    <item fromid="6972" toid="6973" />
+    <item fromid="9521" toid="9522" />
+    <item fromid="6889" toid="6890" />
+    <item fromid="6970" toid="6977" />
+    <item fromid="7058" toid="7059" />
+    <item fromid="8009" toid="8010" />
+    <item fromid="8386" toid="8387" />
+    <item fromid="8588" toid="8589" />
+    <item fromid="8627" toid="8630" />
+    <item id="9448" />
+    <item id="10094" />
+    <item id="11122" />
+    <item id="11253" />
+    <item fromid="11351" toid="11354" />
+    <item id="11832" />
+    <item fromid="22513" toid="22514" />
+    <item id="11051" />
+    <item id="11076" />
+    <item fromid="12144" toid="12148" />
+    <item id="12152" />
+    <item fromid="18263" toid="18268" />
+    <item fromid="18270" toid="18281" />
+    <item fromid="18285" toid="18295" />
+    <item fromid="18297" toid="18302" />
+    <item fromid="21220" toid="21222" />
+    <item id="21398" />
+    <item fromid="21405" toid="21408" />
+    <item fromid="21414" toid="21415" />
+    <item id="21476" />
+    <item id="22599" />
+    <item id="24139" />
+    <item id="13181" />
+    <item id="13185" />
+    <item id="13187" />
+    <item id="13188" />
+</tileset>
