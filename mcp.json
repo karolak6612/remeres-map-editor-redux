@@ -1,0 +1,9 @@
+{
+  "mcpServers": {
+    "rme-editor": {
+      "command": "node",
+      "args": ["<PATH_TO_RME_REPO>/mcp_bridge.js"],
+      "description": "Remere's Map Editor MCP Server (Stdio-to-HTTP bridge)"
+    }
+  }
+}

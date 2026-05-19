@@ -13,6 +13,7 @@
     },
     "libarchive",
     "boost-asio",
+    "boost-beast",
     "boost-thread",
     "nanovg",
     "spdlog",

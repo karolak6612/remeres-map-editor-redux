@@ -371,7 +371,13 @@ void Application::Unload() {
 	g_gui.root = nullptr;
 }
 
+#include "mcp/mcp_server.h"
+
 int Application::OnExit() {
+	// Stop MCP server and clear handlers before Lua shuts down
+	g_mcpServer.stop();
+	g_mcpServer.setHandler(nullptr);
+
 	// Shutdown Lua scripting system
 	g_luaScripts.shutdown();
 
