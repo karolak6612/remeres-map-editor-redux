@@ -1,23 +1,23 @@
-# AGENTS.md - Synkra AIOX (Codex CLI)
+# AGENTS.md - Synkra AIOX / NoctMapEditor
 
-Este arquivo define as instrucoes do projeto para o Codex CLI.
+Este arquivo define as instrucoes do projeto para Codex CLI, Claude Code e agentes AIOX.
 
 <!-- AIOX-MANAGED-START: core -->
 ## Core Rules
 
-1. Siga a Constitution em `.aiox-core/constitution.md`
-2. Priorize `CLI First -> Observability Second -> UI Third`
-3. Trabalhe por stories em `docs/stories/`
-4. Nao invente requisitos fora dos artefatos existentes
+1. Siga a Constitution em `.aiox-core/constitution.md` quando existir.
+2. Priorize `CLI First -> Observability Second -> UI Third`.
+3. Trabalhe por stories em `docs/stories/` quando o fluxo AIOX estiver ativo.
+4. Nao invente requisitos fora dos artefatos existentes.
 <!-- AIOX-MANAGED-END: core -->
 
 <!-- AIOX-MANAGED-START: quality -->
 ## Quality Gates
 
-- Rode `npm run lint`
-- Rode `npm run typecheck`
-- Rode `npm test`
-- Atualize checklist e file list da story antes de concluir
+- Rode `npm run lint` quando existir.
+- Rode `npm run typecheck` quando existir.
+- Rode `npm test` quando existir.
+- Atualize checklist e file list da story antes de concluir.
 <!-- AIOX-MANAGED-END: quality -->
 
 <!-- AIOX-MANAGED-START: codebase -->
@@ -28,6 +28,7 @@ Este arquivo define as instrucoes do projeto para o Codex CLI.
 - Shared packages: `packages/`
 - Tests: `tests/`
 - Docs: `docs/`
+- AI rewrite docs: `docs/ai/`
 <!-- AIOX-MANAGED-END: codebase -->
 
 <!-- AIOX-MANAGED-START: commands -->
@@ -64,6 +65,109 @@ Interprete os atalhos abaixo carregando o arquivo correspondente em `.aiox-core/
 - `@aiox-master`, `/aiox-master`, `/aiox-master.md` -> `.aiox-core/development/agents/aiox-master.md`
 <!-- AIOX-MANAGED-END: shortcuts -->
 
+---
+
+## NoctMapEditor Rust Rewrite Mission
+
+NoctMapEditor is being planned as a Rust-owned backend rewrite of Remere's Map Editor / Redux with a future TypeScript/React/Tauri shell.
+
+Do not perform broad rewrites. Every implementation must be routed through a narrow SPEC/HARNESS slice with verifiable evidence.
+
+## Required Reading
+
+At the start of every rewrite session, read:
+
+```text
+README.md
+docs/ai/AI_DOCS_INDEX.md
+docs/ai/NOCTMAPEDITOR_RUST_REWRITE_MASTERPLAN.md
+docs/ai/RUST_BACKEND_REWRITE_ADR.md
+docs/ai/REDUX_CANARY_AUTHORITY_MATRIX.md
+docs/ai/TS_REACT_TAURI_FRONTEND_STRATEGY.md
+docs/ai/GSD_AIOX_REWRITE_TASK_FACTORY.md
+```
+
+If GSD files exist, also read active state, milestone context, slice plan, SPEC, and HARNESS before touching code.
+
+## Rewrite Workflow
+
+Use this order for product behavior:
+
+1. Confirm branch/worktree cleanliness.
+2. Read docs and active slice state.
+3. Use Superpowers workflow selection.
+4. Use a clean branch/worktree.
+5. Write or update SPEC/HARNESS.
+6. Add RED test.
+7. Implement smallest change.
+8. Run focused verification.
+9. Run broader relevant checks.
+10. Write SUMMARY evidence.
+11. Run `caveman-review` before PR.
+
+## Source Authority
+
+Primary sources:
+
+- `karolak6612/remeres-map-editor-redux`
+- `opentibiabr/remeres-map-editor`
+- `opentibiabr/canary`
+- OpenTibiaBR docs
+
+Every parity slice must cite exact source paths or state that research is incomplete.
+
+## Tool Policy
+
+Use:
+
+- AIOX/God Mode for routing.
+- Superpowers for workflow discipline.
+- Context7 for library/API docs.
+- Tavily for public Redux/RME/Canary research.
+- RTK for high-volume command output.
+- Caveman for review and compact closeout.
+
+## Safety Rules
+
+Never:
+
+- implement from README prose alone;
+- start a broad rewrite without SPEC/HARNESS;
+- move durable map state into React;
+- silently drop unknown OTBM data;
+- fake Canary asset support;
+- stub a behavior and claim completion;
+- update state/roadmap before evidence exists;
+- mix unrelated backend/frontend milestones in one PR.
+
+## Preferred Branch Names
+
+Documentation:
+
+```text
+docs/rust-backend-ts-react-rewrite-roadmap
+```
+
+Implementation:
+
+```text
+gsd/M###/S##-short-topic
+```
+
+## Verification Examples
+
+Use whatever is relevant to the slice:
+
+```bash
+rtk git status --short --branch
+rtk git diff --check
+rtk cargo test --workspace
+rtk cargo clippy --workspace --all-targets --all-features -- -D warnings
+rtk npm test
+rtk npm run build
+```
+
+If the command does not exist yet because the workspace is not bootstrapped, record that honestly in the SUMMARY and do not claim it passed.
 
 ---
 
@@ -72,25 +176,24 @@ Interprete os atalhos abaixo carregando o arquivo correspondente em `.aiox-core/
 | Skill | Path | Description |
 |-------|------|-------------|
 | `aios-god-mode` | `.codex/skills/aios-god-mode/SKILL.md` | Synkra AIOS God Mode — loads aiox-god-mode skill |
-| `aiox-analyst` | `.codex/skills/aiox-analyst/SKILL.md` | Business Analyst (Atlas). Use for market research, competitive analysis, user research, brainstorming session facilitation, structured ideation workshops, feasibility studies, i... |
-| `aiox-architect` | `.codex/skills/aiox-architect/SKILL.md` | Architect (Aria). Use for system architecture (fullstack, backend, frontend, infrastructure), technology stack selection (technical evaluation), API design (REST/GraphQL/tRPC/We... |
-| `aiox-data-engineer` | `.codex/skills/aiox-data-engineer/SKILL.md` | Database Architect & Operations Engineer (Dara). Use for database design, schema architecture, Supabase configuration, RLS policies, migrations, query optimization, data modelin... |
-| `aiox-dev` | `.codex/skills/aiox-dev/SKILL.md` | Full Stack Developer (Dex). Use for code implementation, debugging, refactoring, and development best practices |
-| `aiox-devops` | `.codex/skills/aiox-devops/SKILL.md` | GitHub Repository Manager & DevOps Specialist (Gage). Use for repository operations, version management, CI/CD, quality gates, and GitHub push operations. ONLY agent authorized... |
-| `aiox-god-mode` | `.codex/skills/aiox-god-mode/SKILL.md` | The Supreme AIOX Operator — creates, configures, and orchestrates everything in Synkra AIOX. Creates agents, tasks, workflows, squads, templates, checklists, rules, and data files. Operates all 11 agents, 207+ tasks, 15 workflows. Enforces Constitutional governance, story lifecycle, and delegation matrix. Activates when users mention AIOX, agents, stories, epics, workflows, sprints, quality gates, creating components, or any development orchestration task. |
-| `aiox-master` | `.codex/skills/aiox-master/SKILL.md` | AIOX Master Orchestrator & Framework Developer (Orion). Use when you need comprehensive expertise across all domains, framework component creation/modification, workflow orchest... |
-| `aiox-pm` | `.codex/skills/aiox-pm/SKILL.md` | Product Manager (Morgan). Use for PRD creation (greenfield and brownfield), epic creation and management, product strategy and vision, feature prioritization (MoSCoW, RICE), roa... |
-| `aiox-po` | `.codex/skills/aiox-po/SKILL.md` | Product Owner (Pax). Use for backlog management, story refinement, acceptance criteria, sprint planning, and prioritization decisions |
-| `aiox-qa` | `.codex/skills/aiox-qa/SKILL.md` | Test Architect & Quality Advisor (Quinn). Use for comprehensive test architecture review, quality gate decisions, and code improvement. Provides thorough analysis including requ... |
-| `aiox-sm` | `.codex/skills/aiox-sm/SKILL.md` | Scrum Master (River). Use for user story creation from PRD, story validation and completeness checking, acceptance criteria definition, story refinement, sprint planning, backlo... |
-| `aiox-squad-creator` | `.codex/skills/aiox-squad-creator/SKILL.md` | Squad Creator (Craft). Use to create, validate, publish and manage squads |
-| `aiox-ux-design-expert` | `.codex/skills/aiox-ux-design-expert/SKILL.md` | UX/UI Designer & Design System Architect (Uma). Complete design workflow - user research, wireframes, design systems, token extraction, component building, and quality assurance |
-| `architect-first` | `.codex/skills/architect-first/SKILL.md` | Guide for implementing the Architect-First development philosophy - perfect architecture, pragmatic execution, quality guaranteed by tests. Use this skill when starting new features, refactoring systems, or when architectural decisions are needed. Enforces non-negotiables like complete design/documentation before code, zero coupling, and validation by multiple perspectives before structural decisions. |
-| `checklist-runner` | `.codex/skills/checklist-runner/SKILL.md` | | |
-| `coderabbit-review` | `.codex/skills/coderabbit-review/SKILL.md` | | |
-| `mcp-builder` | `.codex/skills/mcp-builder/SKILL.md` | Guide for creating high-quality MCP (Model Context Protocol) servers that enable LLMs to interact with external services through well-designed tools. Use when building MCP servers to integrate external APIs or services, whether in Python (FastMCP) or Node/TypeScript (MCP SDK). |
-| `skill-creator` | `.codex/skills/skill-creator/SKILL.md` | Guide for creating effective skills. This skill should be used when users want to create a new skill (or update an existing skill) that extends Claude's capabilities with specialized knowledge, workflows, or tool integrations. |
-| `synapse` | `.codex/skills/synapse/SKILL.md` | This skill should be used when users want to understand the SYNAPSE context engine, manage domains, configure context rules, or troubleshoot rule injection. Use when asked about SYNAPSE architecture, domain management, star-commands, context brackets, or the 8-layer processing pipeline. |
-| `tech-search` | `.codex/skills/tech-search/SKILL.md` | | |
+| `aiox-analyst` | `.codex/skills/aiox-analyst/SKILL.md` | Business Analyst (Atlas). Use for market research, competitive analysis, user research, brainstorming session facilitation, structured ideation workshops, feasibility studies. |
+| `aiox-architect` | `.codex/skills/aiox-architect/SKILL.md` | Architect (Aria). Use for system architecture, backend/frontend/infrastructure, API design, and rewrite architecture. |
+| `aiox-dev` | `.codex/skills/aiox-dev/SKILL.md` | Full Stack Developer (Dex). Use for code implementation, debugging, refactoring, and development best practices. |
+| `aiox-devops` | `.codex/skills/aiox-devops/SKILL.md` | GitHub Repository Manager & DevOps Specialist (Gage). Use for repository operations, version management, CI/CD, quality gates, and GitHub push operations. |
+| `aiox-god-mode` | `.codex/skills/aiox-god-mode/SKILL.md` | Supreme AIOX Operator. Use for orchestration, agents, tasks, workflows, squads, templates, checklists, rules, and data files. |
+| `aiox-master` | `.codex/skills/aiox-master/SKILL.md` | AIOX Master Orchestrator & Framework Developer (Orion). |
+| `aiox-pm` | `.codex/skills/aiox-pm/SKILL.md` | Product Manager (Morgan). Use for PRDs, epics, roadmap, prioritization. |
+| `aiox-po` | `.codex/skills/aiox-po/SKILL.md` | Product Owner (Pax). Use for backlog and acceptance criteria. |
+| `aiox-qa` | `.codex/skills/aiox-qa/SKILL.md` | Test Architect & Quality Advisor (Quinn). |
+| `aiox-sm` | `.codex/skills/aiox-sm/SKILL.md` | Scrum Master (River). Use for user story creation and validation. |
+| `aiox-squad-creator` | `.codex/skills/aiox-squad-creator/SKILL.md` | Squad Creator (Craft). |
+| `aiox-ux-design-expert` | `.codex/skills/aiox-ux-design-expert/SKILL.md` | UX/UI Designer & Design System Architect (Uma). |
+| `architect-first` | `.codex/skills/architect-first/SKILL.md` | Architect-first development philosophy. |
+| `checklist-runner` | `.codex/skills/checklist-runner/SKILL.md` | Checklist execution. |
+| `coderabbit-review` | `.codex/skills/coderabbit-review/SKILL.md` | CodeRabbit review support. |
+| `mcp-builder` | `.codex/skills/mcp-builder/SKILL.md` | MCP server creation. |
+| `skill-creator` | `.codex/skills/skill-creator/SKILL.md` | Skill creation/update. |
+| `synapse` | `.codex/skills/synapse/SKILL.md` | SYNAPSE context engine. |
+| `tech-search` | `.codex/skills/tech-search/SKILL.md` | Technical research. |
 
-To use a skill, read the SKILL.md file at the path indicated above.
+To use a skill, read the `SKILL.md` file at the path indicated above.
