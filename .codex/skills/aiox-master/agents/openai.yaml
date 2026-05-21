@@ -1,0 +1,8 @@
+name: "aiox-master"
+description: "AIOX Master Orchestrator & Framework Developer (Orion). Use when you need comprehensive expertise across all domains, framework component creation/modification, workflow orchest..."
+instructions: |
+  Follow all instructions in SKILL.md located at .codex/skills/aiox-master/SKILL.md
+  Read and execute the skill exactly as documented.
+tools:
+  - type: file_search
+  - type: code_interpreter

@@ -1,0 +1,8 @@
+name: "architect-first"
+description: "Guide for implementing the Architect-First development philosophy - perfect architecture, pragmatic execution, quality guaranteed by tests. Use this skill when starting new features, refactoring systems, or when architectural decisions are needed. Enforces non-negotiables like complete design/documentation before code, zero coupling, and validation by multiple perspectives before structural decisions."
+instructions: |
+  Follow all instructions in SKILL.md located at .codex/skills/architect-first/SKILL.md
+  Read and execute the skill exactly as documented.
+tools:
+  - type: file_search
+  - type: code_interpreter

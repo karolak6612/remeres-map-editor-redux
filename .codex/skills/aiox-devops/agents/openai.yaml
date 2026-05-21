@@ -1,0 +1,8 @@
+name: "aiox-devops"
+description: "GitHub Repository Manager & DevOps Specialist (Gage). Use for repository operations, version management, CI/CD, quality gates, and GitHub push operations. ONLY agent authorized..."
+instructions: |
+  Follow all instructions in SKILL.md located at .codex/skills/aiox-devops/SKILL.md
+  Read and execute the skill exactly as documented.
+tools:
+  - type: file_search
+  - type: code_interpreter

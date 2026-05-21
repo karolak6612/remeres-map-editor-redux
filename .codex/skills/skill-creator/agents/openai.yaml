@@ -1,0 +1,8 @@
+name: "skill-creator"
+description: "Guide for creating effective skills. This skill should be used when users want to create a new skill (or update an existing skill) that extends Claude's capabilities with specialized knowledge, workflows, or tool integrations."
+instructions: |
+  Follow all instructions in SKILL.md located at .codex/skills/skill-creator/SKILL.md
+  Read and execute the skill exactly as documented.
+tools:
+  - type: file_search
+  - type: code_interpreter

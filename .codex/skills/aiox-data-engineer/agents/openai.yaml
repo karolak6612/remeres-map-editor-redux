@@ -1,0 +1,8 @@
+name: "aiox-data-engineer"
+description: "Database Architect & Operations Engineer (Dara). Use for database design, schema architecture, Supabase configuration, RLS policies, migrations, query optimization, data modelin..."
+instructions: |
+  Follow all instructions in SKILL.md located at .codex/skills/aiox-data-engineer/SKILL.md
+  Read and execute the skill exactly as documented.
+tools:
+  - type: file_search
+  - type: code_interpreter

@@ -1,0 +1,14 @@
+[mcp_servers.nano-banana-pro]
+command = "npx"
+args = ["-y", "@rafarafarafa/nano-banana-pro-mcp"]
+[mcp_servers.nano-banana-pro.env]
+GEMINI_API_KEY = "${GEMINI_API_KEY}"
+
+[mcp_servers.context7]
+command = "npx"
+args = ["-y", "@upstash/context7-mcp@latest"]
+
+[mcp_servers.21st-dev]
+command = "npx"
+args = ["-y", "@21st-dev/magic@latest"]
+

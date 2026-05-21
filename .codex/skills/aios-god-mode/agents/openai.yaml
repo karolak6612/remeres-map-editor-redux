@@ -1,0 +1,8 @@
+name: "aios-god-mode"
+description: "Synkra AIOS God Mode — loads aiox-god-mode skill"
+instructions: |
+  Follow all instructions in SKILL.md located at .codex/skills/aios-god-mode/SKILL.md
+  Read and execute the skill exactly as documented.
+tools:
+  - type: file_search
+  - type: code_interpreter

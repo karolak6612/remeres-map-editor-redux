@@ -1,0 +1,8 @@
+name: "coderabbit-review"
+description: "|"
+instructions: |
+  Follow all instructions in SKILL.md located at .codex/skills/coderabbit-review/SKILL.md
+  Read and execute the skill exactly as documented.
+tools:
+  - type: file_search
+  - type: code_interpreter

@@ -1,122 +1,29 @@
-# ============================================================
-#  Build outputs
-# ============================================================
-/build*/
-build.log
-build_script.log
-build_output*.txt
 
-# ============================================================
-#  CMake
-# ============================================================
-CMakeCache.txt
-CMakeFiles/
-cmake_install.cmake
-CMakeLists.txt.user*
-CMakeUserPresets.json
-Makefile
 
-# ============================================================
-#  vcproj (generated VS solution)
-# ============================================================
-vcproj/*
-!vcproj/generate_vcproj.bat
+# Environment & Secrets (AIOX)
+.env
+.env.local
+.env.*.local
+*.key
+*.pem
 
-# ============================================================
-#  vcpkg
-# ============================================================
-/vcpkg_installed/
+# Dependencies (AIOX)
+node_modules/
+node_modules
 
-# ============================================================
-#  Visual Studio / MSBuild
-# ============================================================
-*.obj
-*.pdb
-*.ilk
-*.user
-*.aps
-*.opensdf
-*.sdf
-*.suo
-*.db
-*.opendb
-.vs/
+# Build & Logs (AIOX)
+dist/
+build/
+*.log
+logs/
 
-# ============================================================
-#  Binaries
-# ============================================================
-*.exe
-*.dll
-
-# ============================================================
-#  Xcode / macOS
-# ============================================================
-xcuserdata/
+# IDE & OS (AIOX)
 .DS_Store
-
-# ============================================================
-#  JetBrains (CLion, Rider)
-# ============================================================
+Thumbs.db
 .idea/
-cmake-build-*/
-
-# ============================================================
-#  VS Code
-# ============================================================
-.vscode/
-
-# ============================================================
-#  Editor temp files
-# ============================================================
-*.bak
 *.swp
-*~
 
-# ============================================================
-#  AI / agent config
-# ============================================================
-.gemini/
-.qwen/
-.agent/
-/.agent/rules
-.codex/local.toml
-.codex/*.local.toml
-gha-creds-*.json
-
-# ============================================================
-#  Local History (VS Code extension)
-# ============================================================
-/.history/
-
-# ============================================================
-#  Project-specific ignores
-# ============================================================
-# RME runtime config & user data
-rme
-rme.cfg
-data/user/
-
-# Tibia asset files (not shipped in repo)
-*.spr
-*.dat
-*.MAP
-
-# External / experimental directories
-/ext/nanovg/example/
-/ImguiMapEditor/
-/legacy/
-/MapViewerClient/
-/Assets Editor/
-/mappingtool/
-/test_iterator_mock/
-/test_selection_mock/
-/test_variant_logic/
-/.agents/rules
-compile_commands.json
-/.cache
-/data/1098_test
-/data/1098dat
-/data/1098
-/data/canary
-/data — kopia
-/assets
+# AIOX Local (AIOX)
+.aiox-core/local/
+.claude/settings.local.json
+.aiox/install-log.txt

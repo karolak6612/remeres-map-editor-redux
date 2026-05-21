@@ -1,0 +1,8 @@
+name: "aiox-pm"
+description: "Product Manager (Morgan). Use for PRD creation (greenfield and brownfield), epic creation and management, product strategy and vision, feature prioritization (MoSCoW, RICE), roa..."
+instructions: |
+  Follow all instructions in SKILL.md located at .codex/skills/aiox-pm/SKILL.md
+  Read and execute the skill exactly as documented.
+tools:
+  - type: file_search
+  - type: code_interpreter

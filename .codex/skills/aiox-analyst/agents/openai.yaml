@@ -1,0 +1,8 @@
+name: "aiox-analyst"
+description: "Business Analyst (Atlas). Use for market research, competitive analysis, user research, brainstorming session facilitation, structured ideation workshops, feasibility studies, i..."
+instructions: |
+  Follow all instructions in SKILL.md located at .codex/skills/aiox-analyst/SKILL.md
+  Read and execute the skill exactly as documented.
+tools:
+  - type: file_search
+  - type: code_interpreter

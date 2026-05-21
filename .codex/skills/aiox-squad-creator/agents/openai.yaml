@@ -1,0 +1,8 @@
+name: "aiox-squad-creator"
+description: "Squad Creator (Craft). Use to create, validate, publish and manage squads"
+instructions: |
+  Follow all instructions in SKILL.md located at .codex/skills/aiox-squad-creator/SKILL.md
+  Read and execute the skill exactly as documented.
+tools:
+  - type: file_search
+  - type: code_interpreter

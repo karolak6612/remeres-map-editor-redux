@@ -1,0 +1,8 @@
+name: "aiox-god-mode"
+description: "The Supreme AIOX Operator — creates, configures, and orchestrates everything in Synkra AIOX. Creates agents, tasks, workflows, squads, templates, checklists, rules, and data files. Operates all 11 agents, 207+ tasks, 15 workflows. Enforces Constitutional governance, story lifecycle, and delegation matrix. Activates when users mention AIOX, agents, stories, epics, workflows, sprints, quality gates, creating components, or any development orchestration task."
+instructions: |
+  Follow all instructions in SKILL.md located at .codex/skills/aiox-god-mode/SKILL.md
+  Read and execute the skill exactly as documented.
+tools:
+  - type: file_search
+  - type: code_interpreter
