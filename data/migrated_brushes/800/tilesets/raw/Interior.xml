@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<tileset name="Interior">
+    <item fromid="1602" toid="1613" />
+    <item id="1617" />
+    <item id="1618" />
+    <item fromid="1620" toid="1649" />
+    <item fromid="1654" toid="1657" />
+    <item fromid="1694" toid="1713" />
+    <item fromid="1718" toid="1723" />
+    <item fromid="1754" toid="1769" />
+    <item id="1771" />
+    <item id="1772" />
+    <item id="1773" />
+    <item fromid="1776" toid="1793" />
+    <item fromid="3822" toid="3831" />
+    <item fromid="3836" toid="3843" />
+    <item fromid="3852" toid="3860" />
+</tileset>

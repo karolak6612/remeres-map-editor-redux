@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<tileset name="Bugs and Spiders">
+    <creature name="ancient scarab" type="monster" looktype="79" />
+    <creature name="bug" type="monster" looktype="45" />
+    <creature name="butterfly blue" type="monster" looktype="227" />
+    <creature name="butterfly purple" type="monster" looktype="213" />
+    <creature name="butterfly yellow" type="monster" looktype="10" />
+    <creature name="butterfly red" type="monster" looktype="228" />
+    <creature name="butterfly" type="monster" looktype="10" />
+    <creature name="centipede" type="monster" looktype="124" />
+    <creature name="giant spider" type="monster" looktype="38" />
+    <creature name="larva" type="monster" looktype="82" />
+    <creature name="poison spider" type="monster" looktype="36" />
+    <creature name="scarab" type="monster" looktype="83" />
+    <creature name="scorpion" type="monster" looktype="43" />
+    <creature name="spider" type="monster" looktype="30" />
+    <creature name="tarantula" type="monster" looktype="219" />
+    <creature name="wasp" type="monster" looktype="44" />
+</tileset>

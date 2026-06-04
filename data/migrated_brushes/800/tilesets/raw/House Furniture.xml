@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="utf-8"?>
+<tileset name="House Furniture">
+    <item id="1442" />
+    <item id="1446" />
+    <item id="1447" />
+    <item fromid="1460" toid="1465" />
+    <item fromid="1476" toid="1478" />
+    <item id="1614" />
+    <item id="1615" />
+    <item id="1616" />
+    <item id="1619" />
+    <item fromid="1650" toid="1653" />
+    <item fromid="1658" toid="1661" />
+    <item fromid="1666" toid="1677" />
+    <item fromid="1714" toid="1717" />
+    <item fromid="1724" toid="1741" />
+    <item fromid="1747" toid="1753" />
+    <item id="1770" />
+    <item id="1774" />
+    <item id="1775" />
+    <item id="2034" />
+    <item id="2064" />
+    <item id="2065" />
+    <item id="2094" />
+    <item id="2095" />
+    <item id="2098" />
+    <item id="2101" />
+    <item id="2105" />
+    <item id="2106" />
+    <item fromid="2116" toid="2119" />
+    <item fromid="2581" toid="2584" />
+    <item fromid="2601" toid="2605" />
+    <item fromid="3805" toid="3821" />
+    <item fromid="3832" toid="3835" />
+    <item id="5046" />
+    <item id="5055" />
+    <item id="5056" />
+</tileset>

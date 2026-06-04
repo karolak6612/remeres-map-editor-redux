@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<tileset name="Traps">
+    <creature name="deathslicer" type="monster" looktype="102" />
+    <creature name="flamethrower" type="monster" />
+    <creature name="magicthrower" type="monster" lookitem="1560" />
+    <creature name="plaguethrower" type="monster" />
+    <creature name="shredderthrower" type="monster" />
+    <creature name="demongoblin" type="monster" looktype="201" />
+</tileset>

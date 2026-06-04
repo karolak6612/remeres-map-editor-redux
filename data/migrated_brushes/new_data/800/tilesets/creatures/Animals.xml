@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="utf-8"?>
+<tileset name="Animals">
+    <creature name="badger" type="monster" looktype="105" />
+    <creature name="bat" type="monster" looktype="122" />
+    <creature name="bear" type="monster" looktype="16" />
+    <creature name="black sheep" type="monster" looktype="13" />
+    <creature name="carniphila" type="monster" looktype="120" />
+    <creature name="cave rat" type="monster" looktype="56" />
+    <creature name="chicken" type="monster" looktype="111" />
+    <creature name="cobra" type="monster" looktype="81" />
+    <creature name="crab" type="monster" looktype="112" />
+    <creature name="crocodile" type="monster" looktype="119" />
+    <creature name="deer" type="monster" looktype="31" />
+    <creature name="dog" type="monster" looktype="32" />
+    <creature name="elephant" type="monster" looktype="211" />
+    <creature name="flamingo" type="monster" looktype="212" />
+    <creature name="hyaena" type="monster" looktype="94" />
+    <creature name="kongra" type="monster" looktype="116" />
+    <creature name="lion" type="monster" looktype="41" />
+    <creature name="merlkin" type="monster" looktype="117" />
+    <creature name="panda" type="monster" looktype="123" />
+    <creature name="parrot" type="monster" looktype="217" />
+    <creature name="pig" type="monster" looktype="60" />
+    <creature name="polar bear" type="monster" looktype="42" />
+    <creature name="rabbit" type="monster" looktype="74" />
+    <creature name="rat" type="monster" looktype="21" />
+    <creature name="rotworm" type="monster" looktype="26" />
+    <creature name="sheep" type="monster" looktype="14" />
+    <creature name="sibang" type="monster" looktype="118" />
+    <creature name="skunk" type="monster" looktype="106" />
+    <creature name="snake" type="monster" looktype="28" />
+    <creature name="spit nettle" type="monster" looktype="221" />
+    <creature name="terror bird" type="monster" looktype="218" />
+    <creature name="tiger" type="monster" looktype="125" />
+    <creature name="war wolf" type="monster" looktype="3" />
+    <creature name="winter wolf" type="monster" looktype="52" />
+    <creature name="wolf" type="monster" looktype="27" />
+</tileset>

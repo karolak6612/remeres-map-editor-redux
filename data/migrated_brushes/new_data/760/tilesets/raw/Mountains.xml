@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<tileset name="Mountains">
+    <item fromid="873" toid="878" />
+    <item fromid="903" toid="919" />
+    <item fromid="1071" toid="1083" />
+    <item fromid="4468" toid="4513" />
+    <item fromid="4826" toid="4827" />
+</tileset>

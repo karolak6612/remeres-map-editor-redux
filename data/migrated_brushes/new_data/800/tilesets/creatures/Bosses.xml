@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<tileset name="Bosses">
+    <creature name="Tiquandas Revenge" type="monster" looktype="120" />
+    <creature name="Demodras" type="monster" looktype="204" />
+    <creature name="Dharalion" type="monster" looktype="203" />
+    <creature name="Fernfang" type="monster" looktype="206" />
+    <creature name="General Murius" type="monster" looktype="202" />
+    <creature name="Grorlam" type="monster" looktype="205" />
+    <creature name="Necropharus" type="monster" looktype="209" />
+    <creature name="The Evil Eye" type="monster" looktype="210" />
+    <creature name="The Horned Fox" type="monster" looktype="202" />
+    <creature name="The Old Widow" type="monster" looktype="208" />
+    <creature name="Ashmunrah" type="monster" looktype="87" />
+    <creature name="Dipthrah" type="monster" looktype="87" />
+    <creature name="Mahrdis" type="monster" looktype="90" />
+    <creature name="Morguthis" type="monster" looktype="90" />
+    <creature name="Omruc" type="monster" looktype="90" />
+    <creature name="Rahemos" type="monster" looktype="87" />
+    <creature name="Thalas" type="monster" looktype="90" />
+    <creature name="Vashresamun" type="monster" looktype="90" />
+    <creature name="Orshabaal" type="monster" looktype="201" />
+</tileset>

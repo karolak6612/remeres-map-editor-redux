@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="utf-8"?>
+<tileset name="Wall Decorations">
+    <item id="1809" />
+    <item id="1812" />
+    <item id="1813" />
+    <item id="1814" />
+    <item id="1816" />
+    <item id="1817" />
+    <item fromid="1825" toid="1844" />
+    <item id="1846" />
+    <item id="1847" />
+    <item id="1849" />
+    <item id="1850" />
+    <item id="1855" />
+    <item id="1856" />
+    <item id="1858" />
+    <item id="1859" />
+    <item id="1861" />
+    <item id="1862" />
+    <item id="1864" />
+    <item id="1865" />
+    <item id="1867" />
+    <item id="1868" />
+    <item id="1870" />
+    <item id="1871" />
+    <item fromid="1873" toid="1876" />
+    <item id="1878" />
+    <item id="1879" />
+    <item fromid="1882" toid="1899" />
+    <item fromid="2037" toid="2040" />
+    <item fromid="2058" toid="2061" />
+    <item fromid="2066" toid="2069" />
+    <item fromid="3861" toid="3866" />
+    <item fromid="3874" toid="3881" />
+    <item fromid="3898" toid="3899" />
+    <item fromid="3943" toid="3950" />
+    <item fromid="5016" toid="5021" />
+    <item fromid="5057" toid="5060" />
+</tileset>

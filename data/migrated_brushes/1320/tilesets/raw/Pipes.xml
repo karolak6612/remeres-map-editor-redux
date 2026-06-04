@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<tileset name="Pipes">
+    <item fromid="9343" toid="9352" />
+    <item fromid="22876" toid="22879" />
+    <item fromid="22889" toid="22903" />
+    <item fromid="23041" toid="23082" />
+    <item fromid="23143" toid="23159" />
+    <item fromid="23261" toid="23265" />
+    <item fromid="23379" toid="23404" />
+    <item fromid="23407" toid="23420" />
+    <item id="23519" />
+    <item id="23522" />
+    <item id="23556" />
+    <item fromid="23579" toid="23582" />
+    <item id="24161" />
+</tileset>

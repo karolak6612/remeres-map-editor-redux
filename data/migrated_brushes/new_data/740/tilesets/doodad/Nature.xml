@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="utf-8"?>
+<tileset name="Nature">
+    <brush name="mossy wall" />
+    <brush name="green fungi" />
+    <brush name="green trees" />
+    <brush name="dead trees" />
+    <brush name="trees" />
+    <brush name="bushes" />
+    <brush name="blueberry bushes" />
+    <brush name="dead bushes" />
+    <brush name="swamp plants" />
+    <brush name="flowers" />
+    <brush name="royal flowers" />
+    <brush name="sunflowers" />
+    <brush name="lilypads" />
+    <brush name="roses" />
+    <brush name="tall jungle grass" />
+    <item id="2785" />
+    <brush name="gray rocks" />
+    <brush name="brown rocks" />
+    <brush name="big stone 1" />
+    <brush name="big stone 2" />
+    <brush name="big stone 3" />
+    <brush name="tall stone" />
+    <brush name="tall stone fallen" />
+    <item fromid="1353" toid="1355" />
+    <brush name="staglamites" />
+    <item fromid="388" toid="389" />
+    <brush name="gray rubble" />
+    <brush name="brown rubble" />
+    <brush name="rough gray rubble" />
+    <brush name="rough brown rubble" />
+    <brush name="dead trees" />
+    <brush name="rush wood" />
+    <brush name="snowy trees" />
+</tileset>

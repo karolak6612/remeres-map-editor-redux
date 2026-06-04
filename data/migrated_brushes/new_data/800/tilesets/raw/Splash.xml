@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<tileset name="Splash">
+    <item fromid="2016" toid="2021" />
+    <item fromid="2025" toid="2030" />
+</tileset>

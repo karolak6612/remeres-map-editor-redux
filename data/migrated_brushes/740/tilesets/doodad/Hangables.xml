@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+<tileset name="Hangables">
+    <brush name="blackboard" />
+    <brush name="writeable blackboard" />
+    <brush name="royal tapestry" />
+    <item id="1877" />
+    <item id="1881" />
+    <item id="1845" />
+    <item id="1848" />
+    <item id="1851" />
+    <item id="1852" />
+    <item id="1853" />
+    <item id="1854" />
+    <item id="1857" />
+    <item id="1860" />
+    <item id="1863" />
+    <item id="1866" />
+    <item id="1869" />
+    <item id="1872" />
+    <item id="1880" />
+</tileset>

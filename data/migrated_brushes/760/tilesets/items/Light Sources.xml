@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<tileset name="Light Sources">
+    <item fromid="2041" toid="2057" />
+    <item id="2162" />
+    <item id="2163" />
+    <item id="2361" />
+</tileset>

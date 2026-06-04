@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="utf-8"?>
+<tileset name="Shields">
+    <item fromid="2509" toid="2542" />
+    <item fromid="3973" toid="3975" />
+    <item fromid="6131" />
+    <item fromid="6391" />
+    <item fromid="6433" />
+    <item fromid="7460" />
+    <item fromid="8905" toid="8909" />
+    <item fromid="9814" toid="9816" />
+    <item id="10318" />
+    <item id="12644" />
+    <item id="15411" />
+    <item id="15413" />
+    <item id="15453" />
+    <item id="15491" />
+    <item fromid="16103" toid="16104" />
+    <item fromid="16109" toid="16110" />
+    <item id="18410" />
+    <item id="20090" />
+    <item id="21697" />
+    <item id="21707" />
+    <item id="21697" />
+    <item id="23546" />
+    <item id="23772" />
+    <item id="25382" />
+    <item id="25414" />
+</tileset>

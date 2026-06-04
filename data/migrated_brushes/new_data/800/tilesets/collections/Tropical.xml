@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="utf-8"?>
+<tileset name="Tropical">
+    <brush name="sea" />
+    <brush name="walkable sea" />
+    <brush name="sand" />
+    <brush name="jungle grass" />
+    <brush name="large mossy rocks" />
+    <brush name="small mossy rocks" />
+    <item id="1353" />
+    <brush name="cathedral brick shards" />
+    <brush name="flowery wall" />
+    <brush name="mossy wall" />
+    <brush name="mossy wall_1" />
+    <item id="3985" />
+    <brush name="thorn bush" />
+    <brush name="thorn bush_1" />
+    <brush name="palm trees" />
+    <brush name="banana trees" />
+    <brush name="pawpaw trees" />
+    <brush name="mango trees" />
+    <brush name="peach trees" />
+    <brush name="mangrove mixed (land)" />
+    <brush name="mangrove mixed (water)" />
+    <brush name="mangrove green (land)" />
+    <brush name="mangrove dry (land)" />
+    <brush name="mangrove green (water)" />
+    <brush name="mangrove dry (water)" />
+    <brush name="straw" />
+    <brush name="fern trees" />
+    <item id="4015" />
+    <brush name="purple kiss plants" />
+    <brush name="small jungle plants" />
+    <brush name="brown mushroom small" />
+    <brush name="small mushroom" />
+    <item id="4208" />
+    <brush name="mossy spots" />
+</tileset>

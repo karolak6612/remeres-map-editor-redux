@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<tileset name="Others">
+    <item fromid="1" toid="7" />
+    <item fromid="9" toid="13" />
+    <item id="15" />
+    <item id="19" />
+    <item fromid="2354" toid="2355" />
+    <item id="2357" />
+    <item fromid="2360" toid="2363" />
+    <item id="2433" />
+    <item fromid="2680" toid="2696" />
+    <item fromid="2787" toid="2797" />
+    <item id="3424" />
+    <item fromid="20001" toid="20007" />
+    <item fromid="20009" toid="20013" />
+    <item id="20015" />
+    <item id="20019" />
+    <item id="20026" />
+    <item id="20028" />
+</tileset>

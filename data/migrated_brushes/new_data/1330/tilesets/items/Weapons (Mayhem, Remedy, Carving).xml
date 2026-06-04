@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<tileset name="Weapons (Mayhem, Remedy, Carving)">
+    <item fromid="25879" toid="25998" />
+    <item fromid="26233" toid="26258" />
+    <item fromid="26260" toid="26323" />
+</tileset>

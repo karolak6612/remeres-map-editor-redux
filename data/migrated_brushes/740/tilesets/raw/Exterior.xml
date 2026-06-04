@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<tileset name="Exterior">
+    <item fromid="486" />
+    <item fromid="1280" toid="1283" />
+    <item fromid="1360" toid="1385" />
+    <item fromid="1406" toid="1420" />
+    <item fromid="1421" toid="1428" />
+    <item fromid="1429" toid="1486" />
+    <item fromid="2219" toid="2259" />
+    <item fromid="2334" />
+    <item fromid="2555" />
+    <item fromid="2593" />
+    <item fromid="2601" toid="2605" />
+    <item fromid="2610" toid="2613" />
+    <item fromid="2616" toid="2623" />
+</tileset>

@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8"?>
+<tileset name="Borders (deprecated)">
+    <item fromid="110" toid="193" />
+    <item fromid="195" toid="230" />
+    <item fromid="232" toid="279" />
+    <item fromid="281" toid="292" />
+    <item fromid="295" toid="350" />
+    <item fromid="393" toid="404" />
+    <item fromid="494" toid="597" />
+    <item fromid="606" toid="617" />
+    <item fromid="630" toid="669" />
+    <item fromid="672" toid="707" />
+    <item fromid="712" toid="723" />
+    <item fromid="725" toid="776" />
+    <item fromid="792" toid="803" />
+    <item id="805" />
+    <item fromid="807" toid="872" />
+    <item fromid="879" toid="890" />
+    <item fromid="3246" toid="3257" />
+    <item fromid="3259" toid="3262" />
+    <item fromid="3266" toid="3281" />
+    <item fromid="3553" toid="3568" />
+    <item fromid="3575" toid="3586" />
+</tileset>

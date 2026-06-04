@@ -1,0 +1,63 @@
+<?xml version="1.0" encoding="utf-8"?>
+<tileset name="Creature Products">
+    <item fromid="5876" toid="5883" />
+    <item id="5890" />
+    <item fromid="5893" toid="5899" />
+    <item id="5902" />
+    <item fromid="5904" toid="5906" />
+    <item fromid="5920" toid="5925" />
+    <item id="5930" />
+    <item fromid="6097" toid="6098" />
+    <item fromid="5909" toid="5914" />
+    <item fromid="5943" toid="5944" />
+    <item id="5948" />
+    <item id="5954" />
+    <item id="6126" />
+    <item id="4843" />
+    <item id="6500" />
+    <item id="2328" />
+    <item id="7250" />
+    <item id="7289" />
+    <item id="8710" />
+    <item id="8859" />
+    <item fromid="10548" toid="10585" />
+    <item fromid="10600" toid="10611" />
+    <item id="11113" />
+    <item fromid="11189" toid="11200" />
+    <item fromid="11208" toid="11238" />
+    <item fromid="11245" toid="11246" />
+    <item fromid="11321" toid="11322" />
+    <item fromid="11324" toid="11337" />
+    <item id="11361" />
+    <item fromid="11366" toid="11373" />
+    <item fromid="12399" toid="12423" />
+    <item fromid="12425" toid="12449" />
+    <item fromid="12466" toid="12471" />
+    <item fromid="12614" toid="12629" />
+    <item fromid="12636" toid="12641" />
+    <item fromid="12658" toid="12659" />
+    <item id="13530" />
+    <item fromid="13533" toid="13534" />
+    <item fromid="13540" toid="13545" />
+    <item fromid="24236" toid="24238" />
+    <item id="13879" />
+    <item fromid="15421" toid="15426" />
+    <item fromid="15430" toid="15433" />
+    <item id="15452" />
+    <item id="15455" />
+    <item fromid="15479" toid="15488" />
+    <item fromid="18424" toid="18434" />
+    <item fromid="19737" toid="19738" />
+    <item fromid="19741" toid="19743" />
+    <item id="20089" />
+    <item fromid="20097" toid="20107" />
+    <item fromid="20110" toid="20111" />
+    <item fromid="20127" toid="20138" />
+    <item fromid="21241" toid="21251" />
+    <item fromid="21310" toid="21314" />
+    <item fromid="21427" toid="21428" />
+    <item id="22517" />
+    <item fromid="22532" toid="22535" />
+    <item fromid="22538" toid="22542" />
+    <item id="23461" />
+</tileset>

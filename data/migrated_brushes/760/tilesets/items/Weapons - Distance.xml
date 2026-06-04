@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<tileset name="Weapons - Distance">
+    <item id="1294" />
+    <item id="2389" />
+    <item id="2399" />
+    <item id="2410" />
+    <item id="2455" />
+    <item id="2456" />
+    <item id="3965" />
+</tileset>

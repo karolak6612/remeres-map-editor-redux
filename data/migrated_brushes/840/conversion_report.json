@@ -1,0 +1,2104 @@
+{
+  "version": "840",
+  "issues": [
+    {
+      "path": "materials.xml",
+      "messages": [
+        "removed NUL bytes"
+      ]
+    }
+  ],
+  "validation": {
+    "legacy_counts": {
+      "borders": 70,
+      "brushes": 464,
+      "metaitems": 10,
+      "creatures": 341,
+      "items": 7997,
+      "item_coverage": 7893,
+      "tilesets_by_wrapper": {
+        "raw": 18,
+        "terrain": 6,
+        "doodad": 12,
+        "items_and_raw": 13,
+        "items": 2,
+        "doodad_and_raw": 1
+      }
+    },
+    "normalized_counts": {
+      "borders": 70,
+      "brushes": 464,
+      "metaitems": 10,
+      "creatures": 341,
+      "items": 7997,
+      "item_coverage": 7893,
+      "tilesets_by_wrapper": {
+        "raw": 19,
+        "terrain": 6,
+        "doodad": 12,
+        "items_and_raw": 13,
+        "items": 2,
+        "doodad_and_raw": 1,
+        "creatures": 1
+      },
+      "palettes": {
+        "Terrain": 6,
+        "Doodad": 13,
+        "Collection": 0,
+        "Item": 15,
+        "Creature": 1,
+        "Raw": 33
+      },
+      "assigned_raw_items": 8030,
+      "assigned_creatures": 0
+    },
+    "messages": [
+      "created fallback creature tilesets because the legacy data had no explicit creature palette"
+    ],
+    "unresolved": {
+      "tileset_brush_references": [],
+      "tileset_creature_references": [],
+      "tileset_item_references": [
+        {
+          "tileset": "Grounds",
+          "missing_ids": [
+            9192,
+            9193,
+            9194,
+            9195,
+            9196,
+            9197,
+            9198,
+            9199,
+            9200,
+            9201,
+            9202,
+            9203,
+            9204,
+            9205,
+            9206
+          ]
+        },
+        {
+          "tileset": "Grounds",
+          "missing_ids": [
+            9224,
+            9225,
+            9226,
+            9227,
+            9228,
+            9229,
+            9230,
+            9231,
+            9232
+          ]
+        },
+        {
+          "tileset": "Grounds",
+          "missing_ids": [
+            9144,
+            9145,
+            9146
+          ]
+        },
+        {
+          "tileset": "Grounds",
+          "missing_ids": [
+            9535,
+            9536
+          ]
+        },
+        {
+          "tileset": "Grounds",
+          "missing_ids": [
+            9611,
+            9612
+          ]
+        },
+        {
+          "tileset": "Grounds",
+          "missing_ids": [
+            9671,
+            9672,
+            9673
+          ]
+        },
+        {
+          "tileset": "Grounds",
+          "missing_ids": [
+            9682,
+            9683,
+            9684,
+            9685
+          ]
+        },
+        {
+          "tileset": "Grounds",
+          "missing_ids": [
+            9800
+          ]
+        },
+        {
+          "tileset": "Grounds",
+          "missing_ids": [
+            9883
+          ]
+        },
+        {
+          "tileset": "Grounds",
+          "missing_ids": [
+            9833,
+            9834
+          ]
+        },
+        {
+          "tileset": "Nature",
+          "missing_ids": [
+            8140,
+            8141,
+            8142,
+            8143,
+            8144,
+            8145,
+            8146,
+            8147,
+            8148,
+            8149,
+            8150,
+            8151,
+            8152,
+            8153,
+            8154,
+            8155,
+            8156,
+            8157,
+            8158,
+            8159
+          ]
+        },
+        {
+          "tileset": "Nature",
+          "missing_ids": [
+            8166,
+            8167
+          ]
+        },
+        {
+          "tileset": "Nature",
+          "missing_ids": [
+            7549,
+            7550
+          ]
+        },
+        {
+          "tileset": "Nature",
+          "missing_ids": [
+            7551
+          ]
+        },
+        {
+          "tileset": "Nature",
+          "missing_ids": [
+            7552
+          ]
+        },
+        {
+          "tileset": "Nature",
+          "missing_ids": [
+            7553
+          ]
+        },
+        {
+          "tileset": "Nature",
+          "missing_ids": [
+            8324,
+            8325
+          ]
+        },
+        {
+          "tileset": "Nature",
+          "missing_ids": [
+            8214,
+            8215,
+            8216,
+            8217,
+            8218,
+            8219,
+            8220,
+            8221,
+            8222,
+            8223,
+            8224,
+            8225,
+            8226,
+            8227,
+            8228,
+            8229,
+            8230,
+            8231,
+            8232,
+            8240
+          ]
+        },
+        {
+          "tileset": "Roofs",
+          "missing_ids": [
+            9092,
+            9093,
+            9094,
+            9095,
+            9096,
+            9097,
+            9098,
+            9099
+          ]
+        },
+        {
+          "tileset": "Roofs",
+          "missing_ids": [
+            9100,
+            9101,
+            9102,
+            9103,
+            9104,
+            9105,
+            9106
+          ]
+        },
+        {
+          "tileset": "Roofs",
+          "missing_ids": [
+            9400,
+            9401,
+            9402,
+            9403,
+            9404
+          ]
+        },
+        {
+          "tileset": "Roofs",
+          "missing_ids": [
+            9537,
+            9538,
+            9539,
+            9540,
+            9541,
+            9542,
+            9543,
+            9544,
+            9545,
+            9546,
+            9547,
+            9548,
+            9549,
+            9550,
+            9551,
+            9552,
+            9553,
+            9554,
+            9555,
+            9556
+          ]
+        },
+        {
+          "tileset": "Roofs",
+          "missing_ids": [
+            9759,
+            9760,
+            9761,
+            9762,
+            9763,
+            9764,
+            9765,
+            9766
+          ]
+        },
+        {
+          "tileset": "Hangables",
+          "missing_ids": [
+            9415,
+            9416
+          ]
+        },
+        {
+          "tileset": "Hangables",
+          "missing_ids": [
+            9424,
+            9425,
+            9426,
+            9427,
+            9428,
+            9429,
+            9430,
+            9431,
+            9432,
+            9433
+          ]
+        },
+        {
+          "tileset": "Hangables",
+          "missing_ids": [
+            9449,
+            9450,
+            9451,
+            9452,
+            9453,
+            9454,
+            9455,
+            9456,
+            9457,
+            9458,
+            9459
+          ]
+        },
+        {
+          "tileset": "Hangables",
+          "missing_ids": [
+            9495,
+            9496,
+            9497,
+            9498,
+            9499,
+            9500,
+            9501,
+            9502,
+            9503,
+            9504,
+            9505,
+            9506,
+            9507,
+            9508,
+            9509,
+            9510,
+            9511,
+            9512,
+            9513,
+            9514
+          ]
+        },
+        {
+          "tileset": "Hangables",
+          "missing_ids": [
+            9583,
+            9584,
+            9585
+          ]
+        },
+        {
+          "tileset": "Hangables",
+          "missing_ids": [
+            9605
+          ]
+        },
+        {
+          "tileset": "Hangables",
+          "missing_ids": [
+            9637,
+            9638
+          ]
+        },
+        {
+          "tileset": "Hangables",
+          "missing_ids": [
+            9656,
+            9657
+          ]
+        },
+        {
+          "tileset": "Hangables",
+          "missing_ids": [
+            9669,
+            9670
+          ]
+        },
+        {
+          "tileset": "Hangables",
+          "missing_ids": [
+            9835,
+            9836
+          ]
+        },
+        {
+          "tileset": "Hangables",
+          "missing_ids": [
+            9838,
+            9839,
+            9840,
+            9841,
+            9842,
+            9843,
+            9844,
+            9845
+          ]
+        },
+        {
+          "tileset": "Interior",
+          "missing_ids": [
+            9435,
+            9436,
+            9437,
+            9438,
+            9439,
+            9440
+          ]
+        },
+        {
+          "tileset": "Interior",
+          "missing_ids": [
+            9443,
+            9444,
+            9445,
+            9446,
+            9447
+          ]
+        },
+        {
+          "tileset": "Interior",
+          "missing_ids": [
+            9611,
+            9612,
+            9613,
+            9614,
+            9615,
+            9616,
+            9617,
+            9618,
+            9619,
+            9620,
+            9621,
+            9622,
+            9623
+          ]
+        },
+        {
+          "tileset": "Interior",
+          "missing_ids": [
+            9626,
+            9627,
+            9628,
+            9629,
+            9630
+          ]
+        },
+        {
+          "tileset": "Interior",
+          "missing_ids": [
+            9837
+          ]
+        },
+        {
+          "tileset": "Interior",
+          "missing_ids": [
+            9941,
+            9942
+          ]
+        },
+        {
+          "tileset": "Interior",
+          "missing_ids": [
+            9956,
+            9957,
+            9958,
+            9959
+          ]
+        },
+        {
+          "tileset": "Interior",
+          "missing_ids": [
+            9972,
+            9973
+          ]
+        },
+        {
+          "tileset": "Interior",
+          "missing_ids": [
+            9975,
+            9976,
+            9977,
+            9978,
+            9979
+          ]
+        },
+        {
+          "tileset": "Interior",
+          "missing_ids": [
+            9982,
+            9983,
+            9984,
+            9985,
+            9986,
+            9987,
+            9988,
+            9989,
+            9990,
+            9991
+          ]
+        },
+        {
+          "tileset": "Exterior",
+          "missing_ids": [
+            8033,
+            8034,
+            8035,
+            8036,
+            8037,
+            8038,
+            8039,
+            8040,
+            8041,
+            8042,
+            8043,
+            8044,
+            8045
+          ]
+        },
+        {
+          "tileset": "Exterior",
+          "missing_ids": [
+            8724,
+            8725,
+            8726,
+            8727
+          ]
+        },
+        {
+          "tileset": "Exterior",
+          "missing_ids": [
+            9588,
+            9589,
+            9590,
+            9591,
+            9592,
+            9593,
+            9594,
+            9595,
+            9596,
+            9597,
+            9598,
+            9599,
+            9600,
+            9601,
+            9602,
+            9603,
+            9604
+          ]
+        },
+        {
+          "tileset": "Exterior",
+          "missing_ids": [
+            9235,
+            9236,
+            9237,
+            9238
+          ]
+        },
+        {
+          "tileset": "Exterior",
+          "missing_ids": [
+            9239,
+            9240,
+            9241,
+            9242,
+            9243,
+            9244
+          ]
+        },
+        {
+          "tileset": "Exterior",
+          "missing_ids": [
+            9441,
+            9442
+          ]
+        },
+        {
+          "tileset": "Exterior",
+          "missing_ids": [
+            9460,
+            9461,
+            9462,
+            9463,
+            9464,
+            9465,
+            9466,
+            9467,
+            9468,
+            9469
+          ]
+        },
+        {
+          "tileset": "Exterior",
+          "missing_ids": [
+            9487,
+            9488,
+            9489,
+            9490,
+            9491,
+            9492,
+            9493,
+            9494
+          ]
+        },
+        {
+          "tileset": "Exterior",
+          "missing_ids": [
+            9531
+          ]
+        },
+        {
+          "tileset": "Exterior",
+          "missing_ids": [
+            9534
+          ]
+        },
+        {
+          "tileset": "Exterior",
+          "missing_ids": [
+            9571,
+            9572
+          ]
+        },
+        {
+          "tileset": "Exterior",
+          "missing_ids": [
+            9575,
+            9576,
+            9577,
+            9578,
+            9579,
+            9580,
+            9581,
+            9582
+          ]
+        },
+        {
+          "tileset": "Exterior",
+          "missing_ids": [
+            9751,
+            9752
+          ]
+        },
+        {
+          "tileset": "Exterior",
+          "missing_ids": [
+            9768,
+            9769,
+            9770,
+            9771
+          ]
+        },
+        {
+          "tileset": "Exterior",
+          "missing_ids": [
+            9825,
+            9826,
+            9827,
+            9828
+          ]
+        },
+        {
+          "tileset": "Exterior",
+          "missing_ids": [
+            9884,
+            9885,
+            9886,
+            9887,
+            9888,
+            9889,
+            9890,
+            9891,
+            9892,
+            9893,
+            9894,
+            9895,
+            9896,
+            9897,
+            9898,
+            9899,
+            9900,
+            9901,
+            9902,
+            9903
+          ]
+        },
+        {
+          "tileset": "Exterior",
+          "missing_ids": [
+            9948,
+            9949
+          ]
+        },
+        {
+          "tileset": "Exterior",
+          "missing_ids": [
+            9953,
+            9954
+          ]
+        },
+        {
+          "tileset": "Exterior",
+          "missing_ids": [
+            9304,
+            9305,
+            9306
+          ]
+        },
+        {
+          "tileset": "Equipment",
+          "missing_ids": [
+            9778
+          ]
+        },
+        {
+          "tileset": "Equipment",
+          "missing_ids": [
+            9820,
+            9821,
+            9822
+          ]
+        },
+        {
+          "tileset": "Equipment",
+          "missing_ids": [
+            9927
+          ]
+        },
+        {
+          "tileset": "Equipment",
+          "missing_ids": [
+            9776
+          ]
+        },
+        {
+          "tileset": "Equipment",
+          "missing_ids": [
+            9808,
+            9809,
+            9810
+          ]
+        },
+        {
+          "tileset": "Equipment",
+          "missing_ids": [
+            9928
+          ]
+        },
+        {
+          "tileset": "Equipment",
+          "missing_ids": [
+            9777
+          ]
+        },
+        {
+          "tileset": "Equipment",
+          "missing_ids": [
+            9811,
+            9812,
+            9813
+          ]
+        },
+        {
+          "tileset": "Equipment",
+          "missing_ids": [
+            9929
+          ]
+        },
+        {
+          "tileset": "Equipment",
+          "missing_ids": [
+            9817,
+            9818,
+            9819
+          ]
+        },
+        {
+          "tileset": "Equipment",
+          "missing_ids": [
+            9930,
+            9931,
+            9932,
+            9933
+          ]
+        },
+        {
+          "tileset": "Weapons",
+          "missing_ids": [
+            8209
+          ]
+        },
+        {
+          "tileset": "Weapons",
+          "missing_ids": [
+            8293
+          ]
+        },
+        {
+          "tileset": "Shields",
+          "missing_ids": [
+            9814,
+            9815,
+            9816
+          ]
+        },
+        {
+          "tileset": "Trinkets",
+          "missing_ids": [
+            7934,
+            7935,
+            7937
+          ]
+        },
+        {
+          "tileset": "Trinkets",
+          "missing_ids": [
+            8261
+          ]
+        },
+        {
+          "tileset": "Trinkets",
+          "missing_ids": [
+            8188
+          ]
+        },
+        {
+          "tileset": "Containers",
+          "missing_ids": [
+            7960,
+            7961,
+            7962
+          ]
+        },
+        {
+          "tileset": "Containers",
+          "missing_ids": [
+            9774,
+            9775
+          ]
+        },
+        {
+          "tileset": "Writeables",
+          "missing_ids": [
+            8267
+          ]
+        },
+        {
+          "tileset": "Corpses",
+          "missing_ids": [
+            2812
+          ]
+        },
+        {
+          "tileset": "Corpses",
+          "missing_ids": [
+            9654
+          ]
+        },
+        {
+          "tileset": "Corpses",
+          "missing_ids": [
+            9656,
+            9657,
+            9658,
+            9659,
+            9660
+          ]
+        },
+        {
+          "tileset": "Corpses",
+          "missing_ids": [
+            9780,
+            9781,
+            9782,
+            9783
+          ]
+        },
+        {
+          "tileset": "Corpses",
+          "missing_ids": [
+            9801,
+            9802,
+            9803,
+            9804
+          ]
+        },
+        {
+          "tileset": "Corpses",
+          "missing_ids": [
+            9823,
+            9824
+          ]
+        },
+        {
+          "tileset": "Corpses",
+          "missing_ids": [
+            9829,
+            9830,
+            9831,
+            9832
+          ]
+        },
+        {
+          "tileset": "Corpses",
+          "missing_ids": [
+            9867,
+            9868,
+            9869,
+            9870,
+            9871,
+            9872,
+            9873,
+            9874,
+            9875,
+            9876,
+            9877,
+            9878,
+            9879,
+            9880,
+            9881,
+            9882
+          ]
+        },
+        {
+          "tileset": "Corpses",
+          "missing_ids": [
+            9909,
+            9910,
+            9911,
+            9912,
+            9913,
+            9914,
+            9915,
+            9916,
+            9917,
+            9918,
+            9919,
+            9920,
+            9921,
+            9922,
+            9923,
+            9924,
+            9925,
+            9926
+          ]
+        },
+        {
+          "tileset": "Corpses",
+          "missing_ids": [
+            9935,
+            9936,
+            9937,
+            9938
+          ]
+        },
+        {
+          "tileset": "Corpses",
+          "missing_ids": [
+            9960,
+            9961,
+            9962,
+            9963,
+            9964,
+            9965,
+            9966,
+            9967,
+            9968
+          ]
+        },
+        {
+          "tileset": "Corpses",
+          "missing_ids": [
+            10002,
+            10003,
+            10004,
+            10005
+          ]
+        },
+        {
+          "tileset": "Corpses",
+          "missing_ids": [
+            10007,
+            10008,
+            10009
+          ]
+        },
+        {
+          "tileset": "Stairs / Ramps / Ladders",
+          "missing_ids": [
+            9574
+          ]
+        },
+        {
+          "tileset": "Stairs / Ramps / Ladders",
+          "missing_ids": [
+            9606
+          ]
+        },
+        {
+          "tileset": "Stairs / Ramps / Ladders",
+          "missing_ids": [
+            9846
+          ]
+        },
+        {
+          "tileset": "Stairs / Ramps / Ladders",
+          "missing_ids": [
+            9573
+          ]
+        },
+        {
+          "tileset": "Addon and Quest Items",
+          "missing_ids": [
+            6103
+          ]
+        },
+        {
+          "tileset": "Architecture",
+          "missing_ids": [
+            9084,
+            9085,
+            9086,
+            9087,
+            9088,
+            9089,
+            9090,
+            9091
+          ]
+        },
+        {
+          "tileset": "Architecture",
+          "missing_ids": [
+            9434
+          ]
+        },
+        {
+          "tileset": "Architecture",
+          "missing_ids": [
+            9779
+          ]
+        },
+        {
+          "tileset": "Architecture",
+          "missing_ids": [
+            9784,
+            9785,
+            9786,
+            9787,
+            9788,
+            9789,
+            9790,
+            9791
+          ]
+        },
+        {
+          "tileset": "Walls",
+          "missing_ids": [
+            1094
+          ]
+        },
+        {
+          "tileset": "Walls",
+          "missing_ids": [
+            9118,
+            9119,
+            9120,
+            9121,
+            9122,
+            9123,
+            9124,
+            9125,
+            9126,
+            9127,
+            9128,
+            9129,
+            9130,
+            9131,
+            9132,
+            9133
+          ]
+        },
+        {
+          "tileset": "Walls",
+          "missing_ids": [
+            9135,
+            9136,
+            9137,
+            9138,
+            9139
+          ]
+        },
+        {
+          "tileset": "Walls",
+          "missing_ids": [
+            9142,
+            9143
+          ]
+        },
+        {
+          "tileset": "Walls",
+          "missing_ids": [
+            9147,
+            9148,
+            9149,
+            9150,
+            9151,
+            9152,
+            9153,
+            9154,
+            9155,
+            9156,
+            9157,
+            9158,
+            9159,
+            9160,
+            9161,
+            9162,
+            9163,
+            9164,
+            9165,
+            9166
+          ]
+        },
+        {
+          "tileset": "Walls",
+          "missing_ids": [
+            9207,
+            9208,
+            9209,
+            9210,
+            9211,
+            9212,
+            9213,
+            9214,
+            9215,
+            9216,
+            9217,
+            9218,
+            9219,
+            9220,
+            9221,
+            9222,
+            9223
+          ]
+        },
+        {
+          "tileset": "Walls",
+          "missing_ids": [
+            9249,
+            9250,
+            9251
+          ]
+        },
+        {
+          "tileset": "Walls",
+          "missing_ids": [
+            9252,
+            9253,
+            9254,
+            9255,
+            9256,
+            9257,
+            9258,
+            9259,
+            9260,
+            9261,
+            9262,
+            9263,
+            9264,
+            9265,
+            9266,
+            9267,
+            9268,
+            9269,
+            9270,
+            9271
+          ]
+        },
+        {
+          "tileset": "Walls",
+          "missing_ids": [
+            9307,
+            9308,
+            9309,
+            9310,
+            9311,
+            9312,
+            9313,
+            9314,
+            9315,
+            9316,
+            9317,
+            9318,
+            9319,
+            9320,
+            9321,
+            9322,
+            9323,
+            9324,
+            9325,
+            9326
+          ]
+        },
+        {
+          "tileset": "Walls",
+          "missing_ids": [
+            9335,
+            9336,
+            9337,
+            9338,
+            9339,
+            9340
+          ]
+        },
+        {
+          "tileset": "Walls",
+          "missing_ids": [
+            9353,
+            9354,
+            9355,
+            9356,
+            9357,
+            9358,
+            9359,
+            9360,
+            9361,
+            9362,
+            9363,
+            9364,
+            9365,
+            9366,
+            9367,
+            9368
+          ]
+        },
+        {
+          "tileset": "Walls",
+          "missing_ids": [
+            9370,
+            9371,
+            9372,
+            9373,
+            9374,
+            9375,
+            9376,
+            9377,
+            9378,
+            9379,
+            9380,
+            9381,
+            9382,
+            9383,
+            9384,
+            9385,
+            9386,
+            9387,
+            9388,
+            9389
+          ]
+        },
+        {
+          "tileset": "Walls",
+          "missing_ids": [
+            9405,
+            9406,
+            9407,
+            9408,
+            9409,
+            9410,
+            9411,
+            9412,
+            9413,
+            9414
+          ]
+        },
+        {
+          "tileset": "Walls",
+          "missing_ids": [
+            9423
+          ]
+        },
+        {
+          "tileset": "Walls",
+          "missing_ids": [
+            9140
+          ]
+        },
+        {
+          "tileset": "Walls",
+          "missing_ids": [
+            9470,
+            9471,
+            9472,
+            9473,
+            9474,
+            9475,
+            9476,
+            9477,
+            9478,
+            9479,
+            9480,
+            9481,
+            9482,
+            9483,
+            9484,
+            9485,
+            9486
+          ]
+        },
+        {
+          "tileset": "Walls",
+          "missing_ids": [
+            9523,
+            9524,
+            9525,
+            9526,
+            9527,
+            9528,
+            9529,
+            9530
+          ]
+        },
+        {
+          "tileset": "Walls",
+          "missing_ids": [
+            9532,
+            9533
+          ]
+        },
+        {
+          "tileset": "Walls",
+          "missing_ids": [
+            9607,
+            9608,
+            9609,
+            9610
+          ]
+        },
+        {
+          "tileset": "Walls",
+          "missing_ids": [
+            9639,
+            9640,
+            9641,
+            9642,
+            9643,
+            9644,
+            9645,
+            9646,
+            9647,
+            9648,
+            9649,
+            9650,
+            9651,
+            9652
+          ]
+        },
+        {
+          "tileset": "Walls",
+          "missing_ids": [
+            9681
+          ]
+        },
+        {
+          "tileset": "Walls",
+          "missing_ids": [
+            9714,
+            9715,
+            9716,
+            9717,
+            9718,
+            9719,
+            9720,
+            9721,
+            9722,
+            9723,
+            9724,
+            9725
+          ]
+        },
+        {
+          "tileset": "Walls",
+          "missing_ids": [
+            9847,
+            9848,
+            9849,
+            9850,
+            9851,
+            9852,
+            9853,
+            9854,
+            9855,
+            9856,
+            9857,
+            9858,
+            9859,
+            9860,
+            9861,
+            9862,
+            9863,
+            9864,
+            9865,
+            9866
+          ]
+        },
+        {
+          "tileset": "Borders",
+          "missing_ids": [
+            4328,
+            4329,
+            4330,
+            4331,
+            4332,
+            4333,
+            4334,
+            4335,
+            4336,
+            4337,
+            4338,
+            4339,
+            4340,
+            4341,
+            4342,
+            4343,
+            4344,
+            4345,
+            4346,
+            4347
+          ]
+        },
+        {
+          "tileset": "Borders",
+          "missing_ids": [
+            4630,
+            4631
+          ]
+        },
+        {
+          "tileset": "Borders",
+          "missing_ids": [
+            4841
+          ]
+        },
+        {
+          "tileset": "Borders",
+          "missing_ids": [
+            4844
+          ]
+        },
+        {
+          "tileset": "Borders",
+          "missing_ids": [
+            5090
+          ]
+        },
+        {
+          "tileset": "Borders",
+          "missing_ids": [
+            5730
+          ]
+        },
+        {
+          "tileset": "Borders",
+          "missing_ids": [
+            5742
+          ]
+        },
+        {
+          "tileset": "Borders",
+          "missing_ids": [
+            5775
+          ]
+        },
+        {
+          "tileset": "Borders",
+          "missing_ids": [
+            5776
+          ]
+        },
+        {
+          "tileset": "Borders",
+          "missing_ids": [
+            5864
+          ]
+        },
+        {
+          "tileset": "Borders",
+          "missing_ids": [
+            5923
+          ]
+        },
+        {
+          "tileset": "Borders",
+          "missing_ids": [
+            5955
+          ]
+        },
+        {
+          "tileset": "Borders",
+          "missing_ids": [
+            6288
+          ]
+        },
+        {
+          "tileset": "Borders",
+          "missing_ids": [
+            7287
+          ]
+        },
+        {
+          "tileset": "Borders",
+          "missing_ids": [
+            7182
+          ]
+        },
+        {
+          "tileset": "Borders",
+          "missing_ids": [
+            6352
+          ]
+        },
+        {
+          "tileset": "Borders",
+          "missing_ids": [
+            6554
+          ]
+        },
+        {
+          "tileset": "Borders",
+          "missing_ids": [
+            6555
+          ]
+        },
+        {
+          "tileset": "Borders",
+          "missing_ids": [
+            6559
+          ]
+        },
+        {
+          "tileset": "Borders",
+          "missing_ids": [
+            6868
+          ]
+        },
+        {
+          "tileset": "Borders",
+          "missing_ids": [
+            6938
+          ]
+        },
+        {
+          "tileset": "Borders",
+          "missing_ids": [
+            7179
+          ]
+        },
+        {
+          "tileset": "Borders",
+          "missing_ids": [
+            7180
+          ]
+        },
+        {
+          "tileset": "Borders",
+          "missing_ids": [
+            7181
+          ]
+        },
+        {
+          "tileset": "Borders",
+          "missing_ids": [
+            8021,
+            8022,
+            8023,
+            8024,
+            8025,
+            8026,
+            8027,
+            8028
+          ]
+        },
+        {
+          "tileset": "Borders",
+          "missing_ids": [
+            8030,
+            8031,
+            8032
+          ]
+        },
+        {
+          "tileset": "Borders",
+          "missing_ids": [
+            9100,
+            9101,
+            9102,
+            9103,
+            9104,
+            9105,
+            9106
+          ]
+        },
+        {
+          "tileset": "Borders",
+          "missing_ids": [
+            9233,
+            9234
+          ]
+        },
+        {
+          "tileset": "Borders",
+          "missing_ids": [
+            9537,
+            9538,
+            9539,
+            9540,
+            9541,
+            9542,
+            9543,
+            9544,
+            9545,
+            9546,
+            9547,
+            9548,
+            9549,
+            9550,
+            9551,
+            9552,
+            9553,
+            9554,
+            9555,
+            9556
+          ]
+        },
+        {
+          "tileset": "Borders",
+          "missing_ids": [
+            9569,
+            9570
+          ]
+        },
+        {
+          "tileset": "Borders",
+          "missing_ids": [
+            9792,
+            9793,
+            9794,
+            9795,
+            9796,
+            9797,
+            9798,
+            9799
+          ]
+        },
+        {
+          "tileset": "Blank",
+          "missing_ids": [
+            1934
+          ]
+        },
+        {
+          "tileset": "Blank",
+          "missing_ids": [
+            1938
+          ]
+        },
+        {
+          "tileset": "Blank",
+          "missing_ids": [
+            4328,
+            4329,
+            4330,
+            4331,
+            4332,
+            4333,
+            4334,
+            4335,
+            4336,
+            4337,
+            4338,
+            4339,
+            4340,
+            4341,
+            4342,
+            4343,
+            4344,
+            4345,
+            4346,
+            4347
+          ]
+        },
+        {
+          "tileset": "Blank",
+          "missing_ids": [
+            4626,
+            4627,
+            4628,
+            4629,
+            4630,
+            4631
+          ]
+        },
+        {
+          "tileset": "Blank",
+          "missing_ids": [
+            4841
+          ]
+        },
+        {
+          "tileset": "Blank",
+          "missing_ids": [
+            4844
+          ]
+        },
+        {
+          "tileset": "Blank",
+          "missing_ids": [
+            5090
+          ]
+        },
+        {
+          "tileset": "Blank",
+          "missing_ids": [
+            5742
+          ]
+        },
+        {
+          "tileset": "Blank",
+          "missing_ids": [
+            5730
+          ]
+        },
+        {
+          "tileset": "Blank",
+          "missing_ids": [
+            5775,
+            5776
+          ]
+        },
+        {
+          "tileset": "Blank",
+          "missing_ids": [
+            5864
+          ]
+        },
+        {
+          "tileset": "Blank",
+          "missing_ids": [
+            5923
+          ]
+        },
+        {
+          "tileset": "Blank",
+          "missing_ids": [
+            5959
+          ]
+        },
+        {
+          "tileset": "Blank",
+          "missing_ids": [
+            5955
+          ]
+        },
+        {
+          "tileset": "Blank",
+          "missing_ids": [
+            6554,
+            6555
+          ]
+        },
+        {
+          "tileset": "Blank",
+          "missing_ids": [
+            7287,
+            7288
+          ]
+        },
+        {
+          "tileset": "Blank",
+          "missing_ids": [
+            7972,
+            7973,
+            7974
+          ]
+        },
+        {
+          "tileset": "Blank",
+          "missing_ids": [
+            8060,
+            8061
+          ]
+        },
+        {
+          "tileset": "Blank",
+          "missing_ids": [
+            8063,
+            8064,
+            8065,
+            8066,
+            8067,
+            8068,
+            8069,
+            8070,
+            8071
+          ]
+        },
+        {
+          "tileset": "Blank",
+          "missing_ids": [
+            8073,
+            8074
+          ]
+        },
+        {
+          "tileset": "Blank",
+          "missing_ids": [
+            8079,
+            8080,
+            8081,
+            8082,
+            8083,
+            8084,
+            8085,
+            8086,
+            8087,
+            8088,
+            8089,
+            8090,
+            8091,
+            8092,
+            8093,
+            8094,
+            8095,
+            8096,
+            8097,
+            8098
+          ]
+        },
+        {
+          "tileset": "Blank",
+          "missing_ids": [
+            8113,
+            8114,
+            8115,
+            8116
+          ]
+        },
+        {
+          "tileset": "Blank",
+          "missing_ids": [
+            8134
+          ]
+        },
+        {
+          "tileset": "Blank",
+          "missing_ids": [
+            8160,
+            8161,
+            8162,
+            8163,
+            8164,
+            8165
+          ]
+        },
+        {
+          "tileset": "Blank",
+          "missing_ids": [
+            8171,
+            8172,
+            8173
+          ]
+        },
+        {
+          "tileset": "Blank",
+          "missing_ids": [
+            8177,
+            8178,
+            8179,
+            8180,
+            8181
+          ]
+        },
+        {
+          "tileset": "Blank",
+          "missing_ids": [
+            8183,
+            8184,
+            8185
+          ]
+        },
+        {
+          "tileset": "Blank",
+          "missing_ids": [
+            8191,
+            8192,
+            8193
+          ]
+        },
+        {
+          "tileset": "Blank",
+          "missing_ids": [
+            8195,
+            8196,
+            8197,
+            8198,
+            8199,
+            8200
+          ]
+        },
+        {
+          "tileset": "Blank",
+          "missing_ids": [
+            8206,
+            8207
+          ]
+        },
+        {
+          "tileset": "Blank",
+          "missing_ids": [
+            8259
+          ]
+        },
+        {
+          "tileset": "Blank",
+          "missing_ids": [
+            8270
+          ]
+        },
+        {
+          "tileset": "Blank",
+          "missing_ids": [
+            9726
+          ]
+        }
+      ],
+      "brush_border_references": [],
+      "brush_name_references": []
+    }
+  },
+  "generated_files": [
+    "borders/borders.xml",
+    "brushes/brushes.xml",
+    "creatures/creatures.xml",
+    "items.otb",
+    "items/items.xml",
+    "materials.xml",
+    "palettes.xml",
+    "tilesets/creatures/Others.xml",
+    "tilesets/doodad/Architecture.xml",
+    "tilesets/doodad/Beds.xml",
+    "tilesets/doodad/Exterior.xml",
+    "tilesets/doodad/Hangables.xml",
+    "tilesets/doodad/Interior.xml",
+    "tilesets/doodad/Magic Fields.xml",
+    "tilesets/doodad/Nature.xml",
+    "tilesets/doodad/Signs.xml",
+    "tilesets/doodad/Snow.xml",
+    "tilesets/doodad/Splash.xml",
+    "tilesets/doodad/Statues.xml",
+    "tilesets/doodad/Trash.xml",
+    "tilesets/doodad_and_raw/Corpses.xml",
+    "tilesets/items/Tools.xml",
+    "tilesets/items/Weapons (Magic).xml",
+    "tilesets/items_and_raw/Addon and Quest Items.xml",
+    "tilesets/items_and_raw/Containers.xml",
+    "tilesets/items_and_raw/Equipment.xml",
+    "tilesets/items_and_raw/Fluid Containers.xml",
+    "tilesets/items_and_raw/Food.xml",
+    "tilesets/items_and_raw/Jewelry.xml",
+    "tilesets/items_and_raw/Ornaments.xml",
+    "tilesets/items_and_raw/Runes.xml",
+    "tilesets/items_and_raw/Shields.xml",
+    "tilesets/items_and_raw/Tools.xml",
+    "tilesets/items_and_raw/Trinkets.xml",
+    "tilesets/items_and_raw/Weapons.xml",
+    "tilesets/items_and_raw/Writeables.xml",
+    "tilesets/raw/Architecture.xml",
+    "tilesets/raw/Blank.xml",
+    "tilesets/raw/Boats.xml",
+    "tilesets/raw/Borders.xml",
+    "tilesets/raw/Exterior.xml",
+    "tilesets/raw/Grounds.xml",
+    "tilesets/raw/Hangables.xml",
+    "tilesets/raw/Interior.xml",
+    "tilesets/raw/Magic Fields.xml",
+    "tilesets/raw/Nature.xml",
+    "tilesets/raw/Others.xml",
+    "tilesets/raw/Roofs.xml",
+    "tilesets/raw/Sea.xml",
+    "tilesets/raw/Splash.xml",
+    "tilesets/raw/Stairs Ramps Ladders.xml",
+    "tilesets/raw/Tools.xml",
+    "tilesets/raw/Trinkets.xml",
+    "tilesets/raw/Walls.xml",
+    "tilesets/raw/Weapons.xml",
+    "tilesets/terrain/Cave.xml",
+    "tilesets/terrain/Nature.xml",
+    "tilesets/terrain/Roofs.xml",
+    "tilesets/terrain/Snow.xml",
+    "tilesets/terrain/Stairs.xml",
+    "tilesets/terrain/Town.xml"
+  ],
+  "smoke_test": {
+    "parsed_files": [
+      "borders/borders.xml",
+      "brushes/brushes.xml",
+      "creatures/creatures.xml",
+      "items/items.xml",
+      "materials.xml",
+      "palettes.xml",
+      "tilesets/creatures/Others.xml",
+      "tilesets/doodad/Architecture.xml",
+      "tilesets/doodad/Beds.xml",
+      "tilesets/doodad/Exterior.xml",
+      "tilesets/doodad/Hangables.xml",
+      "tilesets/doodad/Interior.xml",
+      "tilesets/doodad/Magic Fields.xml",
+      "tilesets/doodad/Nature.xml",
+      "tilesets/doodad/Signs.xml",
+      "tilesets/doodad/Snow.xml",
+      "tilesets/doodad/Splash.xml",
+      "tilesets/doodad/Statues.xml",
+      "tilesets/doodad/Trash.xml",
+      "tilesets/doodad_and_raw/Corpses.xml",
+      "tilesets/items/Tools.xml",
+      "tilesets/items/Weapons (Magic).xml",
+      "tilesets/items_and_raw/Addon and Quest Items.xml",
+      "tilesets/items_and_raw/Containers.xml",
+      "tilesets/items_and_raw/Equipment.xml",
+      "tilesets/items_and_raw/Fluid Containers.xml",
+      "tilesets/items_and_raw/Food.xml",
+      "tilesets/items_and_raw/Jewelry.xml",
+      "tilesets/items_and_raw/Ornaments.xml",
+      "tilesets/items_and_raw/Runes.xml",
+      "tilesets/items_and_raw/Shields.xml",
+      "tilesets/items_and_raw/Tools.xml",
+      "tilesets/items_and_raw/Trinkets.xml",
+      "tilesets/items_and_raw/Weapons.xml",
+      "tilesets/items_and_raw/Writeables.xml",
+      "tilesets/raw/Architecture.xml",
+      "tilesets/raw/Blank.xml",
+      "tilesets/raw/Boats.xml",
+      "tilesets/raw/Borders.xml",
+      "tilesets/raw/Exterior.xml",
+      "tilesets/raw/Grounds.xml",
+      "tilesets/raw/Hangables.xml",
+      "tilesets/raw/Interior.xml",
+      "tilesets/raw/Magic Fields.xml",
+      "tilesets/raw/Nature.xml",
+      "tilesets/raw/Others.xml",
+      "tilesets/raw/Roofs.xml",
+      "tilesets/raw/Sea.xml",
+      "tilesets/raw/Splash.xml",
+      "tilesets/raw/Stairs Ramps Ladders.xml",
+      "tilesets/raw/Tools.xml",
+      "tilesets/raw/Trinkets.xml",
+      "tilesets/raw/Walls.xml",
+      "tilesets/raw/Weapons.xml",
+      "tilesets/terrain/Cave.xml",
+      "tilesets/terrain/Nature.xml",
+      "tilesets/terrain/Roofs.xml",
+      "tilesets/terrain/Snow.xml",
+      "tilesets/terrain/Stairs.xml",
+      "tilesets/terrain/Town.xml"
+    ],
+    "failures": []
+  }
+}

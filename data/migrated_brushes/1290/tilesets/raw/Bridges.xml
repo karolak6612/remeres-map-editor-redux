@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<tileset name="Bridges">
+    <item id="5769" />
+    <item id="1284" />
+    <item id="5768" />
+    <item id="5770" />
+    <item fromid="3506" toid="3507" />
+    <item fromid="3756" toid="3757" />
+    <item fromid="3762" toid="3765" />
+    <item fromid="3758" toid="3761" />
+    <item fromid="3768" toid="3791" />
+    <item fromid="6210" toid="6215" />
+    <item fromid="11856" toid="11907" />
+</tileset>

@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="utf-8"?>
+<tileset name="Special">
+    <item id="416" />
+    <item id="417" />
+    <item id="421" />
+    <item id="422" />
+    <item id="425" />
+    <item id="426" />
+    <item id="446" />
+    <item id="447" />
+    <item id="460" />
+    <item id="464" />
+    <item id="465" />
+    <item id="466" />
+    <item id="467" />
+    <item id="471" />
+    <item id="472" />
+    <item id="473" />
+    <item id="474" />
+    <item id="489" />
+    <item fromid="1509" toid="1513" />
+    <item id="1548" />
+    <item id="1811" />
+    <item id="1818" />
+    <item id="1945" />
+    <item id="1946" />
+    <item id="2057" />
+    <item fromid="2589" toid="2599" />
+    <item id="3216" />
+    <item id="3217" />
+    <item id="3957" />
+    <item id="3960" />
+    <item id="3981" />
+    <item fromid="4620" toid="4625" />
+    <item fromid="4820" toid="4825" />
+    <item fromid="4828" toid="4831" />
+    <item id="5022" />
+</tileset>

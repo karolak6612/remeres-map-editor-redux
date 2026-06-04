@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="utf-8"?>
+<tileset name="Nature">
+    <brush name="mountain" />
+    <brush name="sea" />
+    <brush item="3311" />
+    <brush name="grass" />
+    <brush name="grass open stone pile" />
+    <brush name="grass closed stone pile" />
+    <brush name="grass pitfall" />
+    <brush name="dry earth" />
+    <brush name="sand" />
+    <brush name="sand open stone pile" />
+    <brush name="sand closed stone pile" />
+    <brush name="sand scarab hole" />
+    <brush name="swamp" />
+    <brush name="light dirt" />
+    <brush name="dirt" />
+    <brush name="tar pit" />
+    <brush name="white gravel" />
+    <brush name="mountain ground" />
+    <item fromid="107" />
+    <brush name="snow" />
+    <brush name="ice" />
+    <brush name="ice open stone pile" />
+    <brush name="ice closed stone pile" />
+    <brush name="hole in the ice" />
+    <item id="486" />
+</tileset>

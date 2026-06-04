@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8"?>
+<tileset name="Architecture">
+    <item id="1515" />
+    <item id="1514" />
+    <item id="3766" />
+    <item id="3767" />
+    <item id="3792" />
+    <item id="3793" />
+    <item id="3709" />
+    <item id="3710" />
+    <item id="3728" />
+    <item id="3737" />
+    <item id="3738" />
+    <item id="3900" />
+    <item id="1549" />
+    <item id="1550" />
+    <item id="1551" />
+    <item id="1560" />
+    <item id="1561" />
+    <item id="463" />
+    <brush name="rope bridge" />
+    <brush name="bamboo columns (rotatable)" />
+    <item id="1480" />
+</tileset>

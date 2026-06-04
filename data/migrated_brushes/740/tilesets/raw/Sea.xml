@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<tileset name="Sea">
+    <item fromid="2226" />
+    <item fromid="2240" />
+</tileset>

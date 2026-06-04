@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="utf-8"?>
+<tileset name="Humanoid">
+    <creature name="amazon" type="monster" looktype="137" lookhead="113" lookbody="120" looklegs="114" lookfeet="132" />
+    <creature name="assassin" type="monster" looktype="129" lookhead="95" lookbody="95" looklegs="95" lookfeet="95" />
+    <creature name="bandit" type="monster" looktype="129" lookhead="58" lookbody="59" looklegs="45" lookfeet="114" />
+    <creature name="black knight" type="monster" looktype="131" lookhead="95" lookbody="95" looklegs="95" lookfeet="95" />
+    <creature name="dark monk" type="monster" looktype="225" />
+    <creature name="dwarf" type="monster" looktype="69" />
+    <creature name="dwarf geomancer" type="monster" looktype="66" />
+    <creature name="dwarf guard" type="monster" looktype="70" />
+    <creature name="dwarf soldier" type="monster" looktype="71" />
+    <creature name="dworc fleshhunter" type="monster" looktype="215" />
+    <creature name="dworc venomsniper" type="monster" looktype="216" />
+    <creature name="dworc voodoomaster" type="monster" looktype="214" />
+    <creature name="elf" type="monster" looktype="62" />
+    <creature name="elf arcanist" type="monster" looktype="63" />
+    <creature name="elf Scout" type="monster" looktype="64" />
+    <creature name="frost troll" type="monster" looktype="53" />
+    <creature name="goblin" type="monster" looktype="61" />
+    <creature name="hero" type="monster" looktype="73" />
+    <creature name="hunter" type="monster" looktype="129" lookhead="95" lookbody="116" looklegs="121" lookfeet="115" />
+    <creature name="lizard sentinel" type="monster" looktype="114" />
+    <creature name="lizard snakecharmer" type="monster" looktype="115" />
+    <creature name="lizard templar" type="monster" looktype="113" />
+    <creature name="minotaur" type="monster" looktype="25" />
+    <creature name="minotaur archer" type="monster" looktype="24" />
+    <creature name="minotaur guard" type="monster" looktype="29" />
+    <creature name="minotaur mage" type="monster" looktype="23" />
+    <creature name="monk" type="monster" looktype="57" />
+    <creature name="necromancer" type="monster" looktype="9" />
+    <creature name="orc" type="monster" looktype="5" />
+    <creature name="orc berserker" type="monster" looktype="8" />
+    <creature name="orc leader" type="monster" looktype="59" />
+    <creature name="orc rider" type="monster" looktype="4" />
+    <creature name="orc shaman" type="monster" looktype="6" />
+    <creature name="orc spearman" type="monster" looktype="50" />
+    <creature name="orc warlord" type="monster" looktype="2" />
+    <creature name="orc warrior" type="monster" looktype="7" />
+    <creature name="priestess" type="monster" looktype="58" />
+    <creature name="smuggler" type="monster" looktype="134" lookhead="95" looklegs="113" lookfeet="115" />
+    <creature name="stalker" type="monster" looktype="128" lookhead="95" lookbody="116" looklegs="95" lookfeet="114" />
+    <creature name="swamp troll" type="monster" looktype="76" />
+    <creature name="troll" type="monster" looktype="15" />
+    <creature name="valkyrie" type="monster" looktype="139" lookhead="113" lookbody="57" looklegs="95" lookfeet="113" />
+    <creature name="warlock" type="monster" looktype="130" lookhead="19" lookbody="71" looklegs="128" lookfeet="128" />
+    <creature name="wild warrior" type="monster" looktype="131" lookhead="57" lookbody="57" looklegs="57" lookfeet="57" />
+    <creature name="witch" type="monster" looktype="54" />
+</tileset>

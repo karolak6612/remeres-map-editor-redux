@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<tileset name="Statues">
+    <item fromid="1444" toid="1445" />
+    <item fromid="1448" toid="1449" />
+    <brush name="knight statue" />
+    <brush name="minotaur statue" />
+    <brush name="goblin statue" />
+    <brush name="gargoyle statue" />
+    <brush name="gargoyle statue pedestal" />
+    <brush name="cobra statue" />
+    <brush name="cobra statue pedestal" />
+    <item fromid="1450" toid="1451" />
+</tileset>

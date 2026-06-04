@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<tileset name="Cake">
+    <item fromid="13099" toid="13100" />
+    <item fromid="13072" toid="13076" />
+    <item id="13092" />
+    <item id="13094" />
+    <item id="13096" />
+    <item id="13098" />
+    <item fromid="13134" toid="13142" />
+    <item fromid="13083" toid="13091" />
+    <item id="13093" />
+    <item id="13095" />
+    <item id="13097" />
+</tileset>

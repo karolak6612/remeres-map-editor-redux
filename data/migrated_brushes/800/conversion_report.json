@@ -1,0 +1,902 @@
+{
+  "version": "800",
+  "issues": [],
+  "validation": {
+    "legacy_counts": {
+      "borders": 95,
+      "brushes": 620,
+      "metaitems": 0,
+      "creatures": 301,
+      "items": 3407,
+      "item_coverage": 6649,
+      "tilesets_by_wrapper": {
+        "creatures": 7,
+        "raw": 26,
+        "doodad_and_raw": 1,
+        "items_and_raw": 1,
+        "items": 20,
+        "terrain": 8,
+        "doodad": 11,
+        "collections_and_terrain": 2,
+        "collections": 5
+      }
+    },
+    "normalized_counts": {
+      "borders": 95,
+      "brushes": 620,
+      "metaitems": 0,
+      "creatures": 301,
+      "items": 3407,
+      "item_coverage": 6649,
+      "tilesets_by_wrapper": {
+        "creatures": 8,
+        "raw": 27,
+        "doodad_and_raw": 1,
+        "items_and_raw": 1,
+        "items": 20,
+        "terrain": 8,
+        "doodad": 11,
+        "collections_and_terrain": 2,
+        "collections": 5
+      },
+      "palettes": {
+        "Terrain": 10,
+        "Doodad": 12,
+        "Collection": 7,
+        "Item": 21,
+        "Creature": 8,
+        "Raw": 29
+      },
+      "assigned_raw_items": 5968,
+      "assigned_creatures": 151
+    },
+    "messages": [],
+    "unresolved": {
+      "tileset_brush_references": [],
+      "tileset_creature_references": [
+        {
+          "tileset": "Animals",
+          "creature": "panda"
+        },
+        {
+          "tileset": "Animals",
+          "creature": "parrot"
+        },
+        {
+          "tileset": "Animals",
+          "creature": "war wolf"
+        },
+        {
+          "tileset": "Animals",
+          "creature": "winter wolf"
+        },
+        {
+          "tileset": "Humanoid",
+          "creature": "assassin"
+        },
+        {
+          "tileset": "Humanoid",
+          "creature": "elf"
+        },
+        {
+          "tileset": "Humanoid",
+          "creature": "elf arcanist"
+        },
+        {
+          "tileset": "Humanoid",
+          "creature": "elf Scout"
+        },
+        {
+          "tileset": "Magic",
+          "creature": "demon"
+        },
+        {
+          "tileset": "Magic",
+          "creature": "yeti"
+        },
+        {
+          "tileset": "Traps",
+          "creature": "deathslicer"
+        },
+        {
+          "tileset": "Traps",
+          "creature": "flamethrower"
+        },
+        {
+          "tileset": "Traps",
+          "creature": "magicthrower"
+        },
+        {
+          "tileset": "Traps",
+          "creature": "plaguethrower"
+        },
+        {
+          "tileset": "Traps",
+          "creature": "shredderthrower"
+        },
+        {
+          "tileset": "Undead",
+          "creature": "bonebeast"
+        },
+        {
+          "tileset": "Undead",
+          "creature": "lich"
+        },
+        {
+          "tileset": "Bosses",
+          "creature": "Morguthis"
+        }
+      ],
+      "tileset_item_references": [
+        {
+          "tileset": "Borders (deprecated)",
+          "missing_ids": [
+            110,
+            111,
+            112,
+            113,
+            114,
+            115,
+            116,
+            117,
+            118,
+            119,
+            120,
+            121,
+            122,
+            123,
+            124,
+            125,
+            126,
+            127,
+            128,
+            129
+          ]
+        },
+        {
+          "tileset": "Borders (deprecated)",
+          "missing_ids": [
+            195,
+            196,
+            197,
+            198,
+            199,
+            200,
+            201,
+            202,
+            203,
+            204,
+            205,
+            206,
+            207,
+            208,
+            209,
+            210,
+            211,
+            212,
+            213,
+            214
+          ]
+        },
+        {
+          "tileset": "Borders (deprecated)",
+          "missing_ids": [
+            232,
+            233,
+            234,
+            235,
+            236,
+            237,
+            238,
+            239,
+            240,
+            241,
+            242,
+            243,
+            244,
+            245,
+            246,
+            247,
+            248,
+            249,
+            250,
+            251
+          ]
+        },
+        {
+          "tileset": "Borders (deprecated)",
+          "missing_ids": [
+            281,
+            282,
+            283,
+            284,
+            285,
+            286,
+            287,
+            288,
+            289,
+            290,
+            291,
+            292
+          ]
+        },
+        {
+          "tileset": "Borders (deprecated)",
+          "missing_ids": [
+            295,
+            296,
+            297,
+            298,
+            299,
+            300,
+            301,
+            302,
+            303,
+            304,
+            305,
+            306,
+            307,
+            308,
+            309,
+            310,
+            311,
+            312,
+            313,
+            314
+          ]
+        },
+        {
+          "tileset": "Borders (deprecated)",
+          "missing_ids": [
+            393,
+            394,
+            395,
+            396,
+            397,
+            398,
+            399,
+            400,
+            401,
+            402,
+            403,
+            404
+          ]
+        },
+        {
+          "tileset": "Borders (deprecated)",
+          "missing_ids": [
+            494,
+            495,
+            496,
+            497,
+            498,
+            499,
+            500,
+            501,
+            502,
+            503,
+            504,
+            505,
+            506,
+            507,
+            508,
+            509,
+            510,
+            511,
+            512,
+            513
+          ]
+        },
+        {
+          "tileset": "Borders (deprecated)",
+          "missing_ids": [
+            606,
+            607,
+            608,
+            609,
+            610,
+            611,
+            612,
+            613,
+            614,
+            615,
+            616,
+            617
+          ]
+        },
+        {
+          "tileset": "Borders (deprecated)",
+          "missing_ids": [
+            630,
+            631,
+            632,
+            633,
+            634,
+            635,
+            636,
+            637,
+            638,
+            639,
+            640,
+            641,
+            642,
+            643,
+            644,
+            645,
+            646,
+            647,
+            648,
+            649
+          ]
+        },
+        {
+          "tileset": "Borders (deprecated)",
+          "missing_ids": [
+            672,
+            673,
+            674,
+            675,
+            676,
+            677,
+            678,
+            679,
+            680,
+            681,
+            682,
+            683,
+            684,
+            685,
+            686,
+            687,
+            688,
+            689,
+            690,
+            691
+          ]
+        },
+        {
+          "tileset": "Borders (deprecated)",
+          "missing_ids": [
+            712,
+            713,
+            714,
+            715,
+            716,
+            717,
+            718,
+            719,
+            720,
+            721,
+            722,
+            723
+          ]
+        },
+        {
+          "tileset": "Borders (deprecated)",
+          "missing_ids": [
+            725,
+            726,
+            727,
+            728,
+            729,
+            730,
+            731,
+            732,
+            733,
+            734,
+            735,
+            736,
+            737,
+            738,
+            739,
+            740,
+            741,
+            742,
+            743,
+            744
+          ]
+        },
+        {
+          "tileset": "Borders (deprecated)",
+          "missing_ids": [
+            792,
+            793,
+            794,
+            795,
+            796,
+            797,
+            798,
+            799,
+            800,
+            801,
+            802,
+            803
+          ]
+        },
+        {
+          "tileset": "Borders (deprecated)",
+          "missing_ids": [
+            805
+          ]
+        },
+        {
+          "tileset": "Borders (deprecated)",
+          "missing_ids": [
+            807,
+            808,
+            809,
+            810,
+            811,
+            812,
+            813,
+            814,
+            815,
+            816,
+            817,
+            818,
+            819,
+            820,
+            821,
+            822,
+            823,
+            824,
+            825,
+            826
+          ]
+        },
+        {
+          "tileset": "Borders (deprecated)",
+          "missing_ids": [
+            879,
+            880,
+            881,
+            882,
+            883,
+            884,
+            885,
+            886,
+            887,
+            888,
+            889,
+            890
+          ]
+        },
+        {
+          "tileset": "Borders (deprecated)",
+          "missing_ids": [
+            3246,
+            3247,
+            3248,
+            3249,
+            3250,
+            3251,
+            3252,
+            3253,
+            3254,
+            3255,
+            3256,
+            3257
+          ]
+        },
+        {
+          "tileset": "Borders (deprecated)",
+          "missing_ids": [
+            3259,
+            3260,
+            3261,
+            3262
+          ]
+        },
+        {
+          "tileset": "Borders (deprecated)",
+          "missing_ids": [
+            3266,
+            3267,
+            3268,
+            3269,
+            3270,
+            3271,
+            3272,
+            3273,
+            3274,
+            3275,
+            3276,
+            3277,
+            3278,
+            3279,
+            3280,
+            3281
+          ]
+        },
+        {
+          "tileset": "Borders (deprecated)",
+          "missing_ids": [
+            3553,
+            3554,
+            3555,
+            3556,
+            3557,
+            3558,
+            3559,
+            3560,
+            3561,
+            3562,
+            3563,
+            3564,
+            3565,
+            3566,
+            3567,
+            3568
+          ]
+        },
+        {
+          "tileset": "Borders (deprecated)",
+          "missing_ids": [
+            3575,
+            3576,
+            3577,
+            3578,
+            3579,
+            3580,
+            3581,
+            3582,
+            3583,
+            3584,
+            3585,
+            3586
+          ]
+        },
+        {
+          "tileset": "Grounds (deprecated)",
+          "missing_ids": [
+            102
+          ]
+        },
+        {
+          "tileset": "Grounds (deprecated)",
+          "missing_ids": [
+            105
+          ]
+        },
+        {
+          "tileset": "Grounds (deprecated)",
+          "missing_ids": [
+            107
+          ]
+        },
+        {
+          "tileset": "Grounds (deprecated)",
+          "missing_ids": [
+            490,
+            491,
+            492
+          ]
+        },
+        {
+          "tileset": "Grounds (deprecated)",
+          "missing_ids": [
+            602,
+            603,
+            604,
+            605
+          ]
+        },
+        {
+          "tileset": "Grounds (deprecated)",
+          "missing_ids": [
+            618,
+            619,
+            620,
+            621,
+            622,
+            623,
+            624,
+            625,
+            626,
+            627,
+            628,
+            629
+          ]
+        },
+        {
+          "tileset": "Grounds (deprecated)",
+          "missing_ids": [
+            3258
+          ]
+        },
+        {
+          "tileset": "Grounds (deprecated)",
+          "missing_ids": [
+            3282,
+            3283,
+            3284,
+            3285,
+            3286,
+            3287,
+            3288,
+            3289,
+            3290,
+            3291,
+            3292,
+            3293,
+            3294,
+            3295,
+            3296,
+            3297
+          ]
+        },
+        {
+          "tileset": "Grounds (deprecated)",
+          "missing_ids": [
+            4422,
+            4423,
+            4424,
+            4425,
+            4426,
+            4427,
+            4428,
+            4429,
+            4430,
+            4431,
+            4432,
+            4433,
+            4434,
+            4435,
+            4436,
+            4437,
+            4438,
+            4439,
+            4440,
+            4441
+          ]
+        },
+        {
+          "tileset": "Grounds (deprecated)",
+          "missing_ids": [
+            4567,
+            4568,
+            4569
+          ]
+        },
+        {
+          "tileset": "Grounds (deprecated)",
+          "missing_ids": [
+            4756,
+            4757,
+            4758,
+            4759
+          ]
+        },
+        {
+          "tileset": "Blank",
+          "missing_ids": [
+            4374
+          ]
+        },
+        {
+          "tileset": "Blank",
+          "missing_ids": [
+            4626,
+            4627,
+            4628,
+            4629,
+            4630,
+            4631
+          ]
+        },
+        {
+          "tileset": "Blank",
+          "missing_ids": [
+            4841
+          ]
+        },
+        {
+          "tileset": "Blank",
+          "missing_ids": [
+            4844
+          ]
+        },
+        {
+          "tileset": "Corpses",
+          "missing_ids": [
+            2812
+          ]
+        },
+        {
+          "tileset": "Walls",
+          "missing_ids": [
+            5009
+          ]
+        }
+      ],
+      "brush_border_references": [],
+      "brush_name_references": []
+    }
+  },
+  "generated_files": [
+    "borders/borders.xml",
+    "brushes/brushes.xml",
+    "creatures/creatures.xml",
+    "items.otb",
+    "items/items.xml",
+    "materials.xml",
+    "palettes.xml",
+    "tilesets/collections/Cave Dungeon.xml",
+    "tilesets/collections/Desert.xml",
+    "tilesets/collections/Forest.xml",
+    "tilesets/collections/Jungle.xml",
+    "tilesets/collections/Tropical.xml",
+    "tilesets/collections_and_terrain/Sea.xml",
+    "tilesets/collections_and_terrain/Snow.xml",
+    "tilesets/creatures/Animals.xml",
+    "tilesets/creatures/Bosses.xml",
+    "tilesets/creatures/Bugs and Spiders.xml",
+    "tilesets/creatures/Humanoid.xml",
+    "tilesets/creatures/Magic.xml",
+    "tilesets/creatures/Others.xml",
+    "tilesets/creatures/Traps.xml",
+    "tilesets/creatures/Undead.xml",
+    "tilesets/doodad/Architecture.xml",
+    "tilesets/doodad/Beds.xml",
+    "tilesets/doodad/Exterior.xml",
+    "tilesets/doodad/Hangables.xml",
+    "tilesets/doodad/Interior.xml",
+    "tilesets/doodad/Magic Fields.xml",
+    "tilesets/doodad/Nature.xml",
+    "tilesets/doodad/Signs.xml",
+    "tilesets/doodad/Splash.xml",
+    "tilesets/doodad/Statues.xml",
+    "tilesets/doodad/Trash.xml",
+    "tilesets/doodad_and_raw/Corpses.xml",
+    "tilesets/items/Amulets and Rings.xml",
+    "tilesets/items/Containers - Fluid.xml",
+    "tilesets/items/Containers.xml",
+    "tilesets/items/Creature Products.xml",
+    "tilesets/items/Decorations.xml",
+    "tilesets/items/Equipment.xml",
+    "tilesets/items/Food.xml",
+    "tilesets/items/Furniture Kits.xml",
+    "tilesets/items/Herbs.xml",
+    "tilesets/items/Keys.xml",
+    "tilesets/items/Light Sources.xml",
+    "tilesets/items/Runes.xml",
+    "tilesets/items/Tools.xml",
+    "tilesets/items/Trash.xml",
+    "tilesets/items/Valuables.xml",
+    "tilesets/items/Weapons - Ammunition.xml",
+    "tilesets/items/Weapons - Distance.xml",
+    "tilesets/items/Weapons - Magic.xml",
+    "tilesets/items/Weapons - Melee.xml",
+    "tilesets/items/Writeables.xml",
+    "tilesets/items_and_raw/Musical Instruments.xml",
+    "tilesets/raw/Architecture.xml",
+    "tilesets/raw/Blank.xml",
+    "tilesets/raw/Board Games.xml",
+    "tilesets/raw/Boats and Ships.xml",
+    "tilesets/raw/Borders (deprecated).xml",
+    "tilesets/raw/Borders.xml",
+    "tilesets/raw/Bridges.xml",
+    "tilesets/raw/Carpets.xml",
+    "tilesets/raw/Exterior.xml",
+    "tilesets/raw/Grounds (deprecated).xml",
+    "tilesets/raw/Grounds.xml",
+    "tilesets/raw/House Furniture.xml",
+    "tilesets/raw/Interior.xml",
+    "tilesets/raw/Magic Fields.xml",
+    "tilesets/raw/Mountains.xml",
+    "tilesets/raw/Musical Instruments.xml",
+    "tilesets/raw/Nature.xml",
+    "tilesets/raw/Others.xml",
+    "tilesets/raw/Quest Assets.xml",
+    "tilesets/raw/Roofs.xml",
+    "tilesets/raw/Signs and Flags.xml",
+    "tilesets/raw/Special.xml",
+    "tilesets/raw/Splash.xml",
+    "tilesets/raw/Stairs.xml",
+    "tilesets/raw/Statues.xml",
+    "tilesets/raw/Wall Decorations.xml",
+    "tilesets/raw/Walls.xml",
+    "tilesets/terrain/Cave.xml",
+    "tilesets/terrain/Nature.xml",
+    "tilesets/terrain/Roofs.xml",
+    "tilesets/terrain/Stairs.xml",
+    "tilesets/terrain/Town.xml",
+    "tilesets/terrain/Walls - Archways.xml",
+    "tilesets/terrain/Walls - Details.xml",
+    "tilesets/terrain/Walls.xml"
+  ],
+  "smoke_test": {
+    "parsed_files": [
+      "borders/borders.xml",
+      "brushes/brushes.xml",
+      "creatures/creatures.xml",
+      "items/items.xml",
+      "materials.xml",
+      "palettes.xml",
+      "tilesets/collections/Cave Dungeon.xml",
+      "tilesets/collections/Desert.xml",
+      "tilesets/collections/Forest.xml",
+      "tilesets/collections/Jungle.xml",
+      "tilesets/collections/Tropical.xml",
+      "tilesets/collections_and_terrain/Sea.xml",
+      "tilesets/collections_and_terrain/Snow.xml",
+      "tilesets/creatures/Animals.xml",
+      "tilesets/creatures/Bosses.xml",
+      "tilesets/creatures/Bugs and Spiders.xml",
+      "tilesets/creatures/Humanoid.xml",
+      "tilesets/creatures/Magic.xml",
+      "tilesets/creatures/Others.xml",
+      "tilesets/creatures/Traps.xml",
+      "tilesets/creatures/Undead.xml",
+      "tilesets/doodad/Architecture.xml",
+      "tilesets/doodad/Beds.xml",
+      "tilesets/doodad/Exterior.xml",
+      "tilesets/doodad/Hangables.xml",
+      "tilesets/doodad/Interior.xml",
+      "tilesets/doodad/Magic Fields.xml",
+      "tilesets/doodad/Nature.xml",
+      "tilesets/doodad/Signs.xml",
+      "tilesets/doodad/Splash.xml",
+      "tilesets/doodad/Statues.xml",
+      "tilesets/doodad/Trash.xml",
+      "tilesets/doodad_and_raw/Corpses.xml",
+      "tilesets/items/Amulets and Rings.xml",
+      "tilesets/items/Containers - Fluid.xml",
+      "tilesets/items/Containers.xml",
+      "tilesets/items/Creature Products.xml",
+      "tilesets/items/Decorations.xml",
+      "tilesets/items/Equipment.xml",
+      "tilesets/items/Food.xml",
+      "tilesets/items/Furniture Kits.xml",
+      "tilesets/items/Herbs.xml",
+      "tilesets/items/Keys.xml",
+      "tilesets/items/Light Sources.xml",
+      "tilesets/items/Runes.xml",
+      "tilesets/items/Tools.xml",
+      "tilesets/items/Trash.xml",
+      "tilesets/items/Valuables.xml",
+      "tilesets/items/Weapons - Ammunition.xml",
+      "tilesets/items/Weapons - Distance.xml",
+      "tilesets/items/Weapons - Magic.xml",
+      "tilesets/items/Weapons - Melee.xml",
+      "tilesets/items/Writeables.xml",
+      "tilesets/items_and_raw/Musical Instruments.xml",
+      "tilesets/raw/Architecture.xml",
+      "tilesets/raw/Blank.xml",
+      "tilesets/raw/Board Games.xml",
+      "tilesets/raw/Boats and Ships.xml",
+      "tilesets/raw/Borders (deprecated).xml",
+      "tilesets/raw/Borders.xml",
+      "tilesets/raw/Bridges.xml",
+      "tilesets/raw/Carpets.xml",
+      "tilesets/raw/Exterior.xml",
+      "tilesets/raw/Grounds (deprecated).xml",
+      "tilesets/raw/Grounds.xml",
+      "tilesets/raw/House Furniture.xml",
+      "tilesets/raw/Interior.xml",
+      "tilesets/raw/Magic Fields.xml",
+      "tilesets/raw/Mountains.xml",
+      "tilesets/raw/Musical Instruments.xml",
+      "tilesets/raw/Nature.xml",
+      "tilesets/raw/Others.xml",
+      "tilesets/raw/Quest Assets.xml",
+      "tilesets/raw/Roofs.xml",
+      "tilesets/raw/Signs and Flags.xml",
+      "tilesets/raw/Special.xml",
+      "tilesets/raw/Splash.xml",
+      "tilesets/raw/Stairs.xml",
+      "tilesets/raw/Statues.xml",
+      "tilesets/raw/Wall Decorations.xml",
+      "tilesets/raw/Walls.xml",
+      "tilesets/terrain/Cave.xml",
+      "tilesets/terrain/Nature.xml",
+      "tilesets/terrain/Roofs.xml",
+      "tilesets/terrain/Stairs.xml",
+      "tilesets/terrain/Town.xml",
+      "tilesets/terrain/Walls - Archways.xml",
+      "tilesets/terrain/Walls - Details.xml",
+      "tilesets/terrain/Walls.xml"
+    ],
+    "failures": []
+  }
+}

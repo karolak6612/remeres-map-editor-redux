@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<tileset name="Light">
+    <item fromid="1479" toid="1480" />
+    <brush name="wall lamp" />
+    <brush name="wall lamp - lit" />
+    <brush name="wall torch" />
+    <brush name="wooden wall lamp" />
+    <brush name="wooden wall lamps" />
+    <brush name="wall torch - lit" />
+    <item fromid="1481" toid="1486" />
+    <item fromid="2064" toid="2065" />
+    <item fromid="2044" toid="2045" />
+</tileset>

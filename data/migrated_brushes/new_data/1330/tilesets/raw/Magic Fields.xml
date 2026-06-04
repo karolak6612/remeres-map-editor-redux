@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<tileset name="Magic Fields">
+    <item id="1397" />
+    <item id="8058" />
+    <item fromid="1487" toid="1508" />
+    <item fromid="7465" toid="7473" />
+    <item fromid="8753" toid="8759" />
+    <item fromid="8046" toid="8047" />
+    <item id="11796" />
+    <item id="11798" />
+</tileset>

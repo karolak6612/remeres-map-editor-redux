@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<tileset name="Boats">
+    <item fromid="4883" toid="4918" />
+    <item id="13024" />
+    <item fromid="4893" toid="4899" />
+    <item id="13025" />
+    <item fromid="4900" toid="4918" />
+    <item fromid="5745" toid="5749" />
+    <item fromid="4919" toid="4930" />
+    <item id="13042" />
+    <item fromid="4931" toid="4935" />
+    <item id="13041" />
+    <item fromid="4936" toid="4947" />
+    <item fromid="4403" />
+    <item fromid="3601" toid="3602" />
+    <item fromid="4948" toid="4991" />
+    <item fromid="4998" toid="5008" />
+    <item fromid="5082" toid="5085" />
+    <item fromid="1277" toid="1284" />
+    <item fromid="3587" toid="3600" />
+    <item fromid="7213" toid="7231" />
+    <item fromid="7262" toid="7263" />
+</tileset>

@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<tileset name="Hangables">
+    <item fromid="1809" toid="1902" />
+    <item fromid="2037" toid="2040" />
+    <item fromid="2058" toid="2061" />
+    <item fromid="2066" toid="2069" />
+</tileset>

@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="utf-8"?>
+<tileset name="Quest Assets">
+    <item id="2317" />
+    <item id="2318" />
+    <item id="2319" />
+    <item id="2320" />
+    <item id="2321" />
+    <item id="2325" />
+    <item fromid="2327" toid="2341" />
+    <item fromid="2344" toid="2354" />
+    <item id="2356" />
+    <item id="2359" />
+    <item id="2360" />
+    <item id="2362" />
+    <item id="2363" />
+    <item id="2364" />
+    <item fromid="2367" toid="2375" />
+    <item id="4838" />
+    <item id="4839" />
+    <item id="4840" />
+    <item id="4842" />
+    <item id="4843" />
+    <item id="4845" />
+    <item id="4846" />
+    <item id="4847" />
+    <item id="4848" />
+    <item id="4849" />
+    <item fromid="4851" toid="4874" />
+    <item id="4995" />
+    <item id="4996" />
+    <item id="4997" />
+    <item id="5089" />
+</tileset>

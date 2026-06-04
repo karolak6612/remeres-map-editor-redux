@@ -1,0 +1,295 @@
+<?xml version="1.0" encoding="utf-8"?>
+<tileset name="Redundant">
+    <item fromid="19149" toid="19331" />
+    <item fromid="20977" toid="21078" />
+    <item fromid="21234" toid="21240" />
+    <item fromid="20677" toid="20684" />
+    <item fromid="873" toid="878" />
+    <item id="906" />
+    <item fromid="908" toid="913" />
+    <item fromid="4480" toid="4513" />
+    <item id="8000" />
+    <item fromid="8002" toid="8008" />
+    <item fromid="8460" toid="8471" />
+    <item fromid="15079" toid="15113" />
+    <item fromid="17704" toid="17709" />
+    <item fromid="17899" toid="17933" />
+    <item fromid="17952" toid="17985" />
+    <item fromid="19073" toid="19140" />
+    <item fromid="20702" toid="20715" />
+    <item id="20723" />
+    <item fromid="21079" toid="21112" />
+    <item fromid="21315" toid="21348" />
+    <item fromid="21714" toid="21719" />
+    <item fromid="22723" toid="22724" />
+    <item fromid="22738" toid="22743" />
+    <item fromid="23889" toid="23922" />
+    <item id="1028" />
+    <item fromid="1030" toid="1035" />
+    <item id="1039" />
+    <item fromid="1041" toid="1046" />
+    <item id="1052" />
+    <item fromid="1054" toid="1059" />
+    <item id="1063" />
+    <item fromid="1065" toid="1070" />
+    <item id="1103" />
+    <item fromid="1105" toid="1110" />
+    <item id="1092" />
+    <item fromid="1094" toid="1099" />
+    <item id="5009" />
+    <item id="1114" />
+    <item fromid="1116" toid="1119" />
+    <item fromid="5010" toid="5011" />
+    <item fromid="1174" toid="1175" />
+    <item id="1199" />
+    <item fromid="1201" toid="1204" />
+    <item fromid="5012" toid="5013" />
+    <item id="5519" />
+    <item fromid="3364" toid="3369" />
+    <item id="3426" />
+    <item fromid="3428" toid="3433" />
+    <item id="5264" />
+    <item fromid="5266" toid="5271" />
+    <item fromid="6143" toid="6147" />
+    <item id="6398" />
+    <item fromid="6400" toid="6405" />
+    <item id="6241" />
+    <item fromid="6243" toid="6248" />
+    <item fromid="5068" toid="5069" />
+    <item id="6731" />
+    <item fromid="6733" toid="6738" />
+    <item id="6742" />
+    <item fromid="6744" toid="6749" />
+    <item id="6776" />
+    <item fromid="6778" toid="6779" />
+    <item id="6781" />
+    <item id="6785" />
+    <item id="6787" />
+    <item id="6842" />
+    <item fromid="6844" toid="6849" />
+    <item id="8478" />
+    <item fromid="8480" toid="8485" />
+    <item fromid="9060" toid="9066" />
+    <item id="9121" />
+    <item fromid="9123" toid="9128" />
+    <item id="9214" />
+    <item fromid="9216" toid="9221" />
+    <item id="9373" />
+    <item fromid="9375" toid="9381" />
+    <item fromid="10180" toid="10187" />
+    <item fromid="10229" toid="10238" />
+    <item id="10252" />
+    <item fromid="10254" toid="10259" />
+    <item id="10653" />
+    <item fromid="10655" toid="10656" />
+    <item id="10660" />
+    <item fromid="10664" toid="10665" />
+    <item fromid="10668" toid="10690" />
+    <item id="11836" />
+    <item fromid="11838" toid="11843" />
+    <item id="11940" />
+    <item id="11944" />
+    <item id="11946" />
+    <item fromid="12073" toid="12079" />
+    <item id="12231" />
+    <item id="12233" />
+    <item id="12516" />
+    <item id="12525" />
+    <item id="12537" />
+    <item fromid="12678" toid="12679" />
+    <item fromid="12682" toid="12684" />
+    <item fromid="12886" toid="12888" />
+    <item fromid="12909" toid="12911" />
+    <item id="12961" />
+    <item fromid="12963" toid="12968" />
+    <item fromid="13177" toid="13186" />
+    <item id="13647" />
+    <item fromid="13649" toid="13654" />
+    <item fromid="17270" toid="17301" />
+    <item fromid="17363" toid="17394" />
+    <item fromid="17433" toid="17434" />
+    <item id="18242" />
+    <item fromid="18244" toid="18249" />
+    <item fromid="18537" toid="18546" />
+    <item id="18616" />
+    <item fromid="18618" toid="18628" />
+    <item id="18643" />
+    <item fromid="18645" toid="18646" />
+    <item fromid="18633" toid="18640" />
+    <item fromid="18649" toid="18652" />
+    <item id="19335" />
+    <item fromid="19337" toid="19342" />
+    <item id="19346" />
+    <item fromid="19349" toid="19353" />
+    <item id="19357" />
+    <item fromid="19359" toid="19364" />
+    <item fromid="19368" toid="19375" />
+    <item id="19379" />
+    <item fromid="19381" toid="19388" />
+    <item fromid="19403" toid="19404" />
+    <item fromid="19406" toid="19409" />
+    <item fromid="19411" toid="19420" />
+    <item fromid="19475" toid="19480" />
+    <item id="19486" />
+    <item fromid="19490" toid="19504" />
+    <item id="20175" />
+    <item fromid="20193" toid="20196" />
+    <item id="21751" />
+    <item fromid="21754" toid="21755" />
+    <item fromid="21758" toid="21770" />
+    <item id="21773" />
+    <item fromid="21779" toid="21782" />
+    <item id="21786" />
+    <item id="21789" />
+    <item fromid="21828" toid="21829" />
+    <item id="21842" />
+    <item fromid="21845" toid="21847" />
+    <item id="22555" />
+    <item id="22557" />
+    <item fromid="22771" toid="22777" />
+    <item fromid="22817" toid="22822" />
+    <item fromid="22826" toid="22831" />
+    <item fromid="22847" toid="22848" />
+    <item fromid="22954" toid="22955" />
+    <item fromid="22957" toid="22966" />
+    <item id="22993" />
+    <item id="23005" />
+    <item fromid="23036" toid="23039" />
+    <item id="23511" />
+    <item id="23668" />
+    <item fromid="8605" toid="8612" />
+    <item fromid="8696" toid="8697" />
+    <item id="19348" />
+    <item fromid="6838" />
+    <item fromid="7348" />
+    <item fromid="7350" toid="7358" />
+    <item id="8578" />
+    <item id="8579" />
+    <item fromid="8591" toid="8592" />
+    <item id="8287" />
+    <item fromid="8567" toid="8568" />
+    <item id="8570" />
+    <item id="8590" />
+    <item id="8594" />
+    <item fromid="8597" toid="8598" />
+    <item id="8695" />
+    <item id="8714" />
+    <item id="8959" />
+    <item id="9059" />
+    <item id="9067" />
+    <item id="9073" />
+    <item fromid="9682" toid="9685" />
+    <item id="9800" />
+    <item id="9883" />
+    <item id="10019" />
+    <item id="10065" />
+    <item fromid="10175" toid="10176" />
+    <item id="10208" />
+    <item id="10222" />
+    <item id="11114" />
+    <item id="11436" />
+    <item id="13261" />
+    <item id="13223" />
+    <item fromid="13272" toid="13280" />
+    <item id="13505" />
+    <item fromid="13553" toid="13558" />
+    <item fromid="13843" toid="13854" />
+    <item fromid="13980" toid="13981" />
+    <item id="14319" />
+    <item fromid="15791" toid="15792" />
+    <item id="18233" />
+    <item id="18464" />
+    <item fromid="18493" toid="18494" />
+    <item id="19145" />
+    <item id="19596" />
+    <item id="19946" />
+    <item id="20217" />
+    <item id="20230" />
+    <item id="20248" />
+    <item id="20262" />
+    <item id="20265" />
+    <item id="20293" />
+    <item id="21416" />
+    <item id="21459" />
+    <item id="21461" />
+    <item id="21463" />
+    <item fromid="21884" toid="21891" />
+    <item id="22459" />
+    <item id="22470" />
+    <item fromid="22671" toid="22672" />
+    <item fromid="22674" toid="22676" />
+    <item fromid="22679" toid="22685" />
+    <item fromid="22704" toid="22705" />
+    <item id="23509" />
+    <item fromid="23673" toid="23678" />
+    <item fromid="23682" toid="23693" />
+    <item fromid="23716" toid="23717" />
+    <item fromid="23778" toid="23780" />
+    <item id="23785" />
+    <item fromid="23811" toid="23813" />
+    <item id="23846" />
+    <item fromid="23848" toid="23851" />
+    <item fromid="23853" toid="23868" />
+    <item fromid="23944" toid="23954" />
+    <item fromid="24045" toid="24050" />
+    <item fromid="24062" toid="24063" />
+    <item fromid="24065" toid="24106" />
+    <item id="24186" />
+    <item fromid="7481" toid="7484" />
+    <item fromid="8075" toid="8078" />
+    <item fromid="8175" toid="8176" />
+    <item id="8720" />
+    <item id="8970" />
+    <item id="9561" />
+    <item id="9661" />
+    <item fromid="9686" toid="9689" />
+    <item fromid="11052" toid="11056" />
+    <item fromid="13131" toid="13133" />
+    <item fromid="13234" toid="13235" />
+    <item id="13246" />
+    <item id="13248" />
+    <item fromid="13269" toid="13271" />
+    <item fromid="13281" toid="13287" />
+    <item id="13290" />
+    <item fromid="10079" toid="10088" />
+    <item id="10307" />
+    <item id="11111" />
+    <item id="11164" />
+    <item id="11965" />
+    <item id="12291" />
+    <item fromid="12386" toid="12387" />
+    <item id="12496" />
+    <item fromid="12673" toid="12676" />
+    <item fromid="13011" toid="13018" />
+    <item fromid="15568" toid="15569" />
+    <item id="15634" />
+    <item fromid="15820" toid="15823" />
+    <item id="19957" />
+    <item fromid="20295" toid="20300" />
+    <item id="22425" />
+    <item id="22550" />
+    <item fromid="23526" toid="23527" />
+    <item id="23667" />
+    <item id="23786" />
+    <item fromid="23871" toid="23872" />
+    <item id="24118" />
+    <item id="24171" />
+    <item fromid="24203" toid="24204" />
+    <item id="24243" />
+    <item fromid="13123" toid="13125" />
+    <item id="13127" />
+    <item fromid="13225" toid="13232" />
+    <item fromid="13572" toid="13577" />
+    <item id="13579" />
+    <item fromid="19801" toid="19802" />
+    <item fromid="21456" toid="21457" />
+    <item fromid="21477" toid="21481" />
+    <item fromid="22426" toid="22427" />
+    <item fromid="22511" toid="22512" />
+    <item fromid="22650" toid="22653" />
+    <item fromid="22717" toid="22720" />
+    <item id="23765" />
+    <item id="24163" />
+    <item fromid="24190" toid="24194" />
+    <item fromid="24215" toid="24218" />
+</tileset>

@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+<tileset name="Statues">
+    <item id="1443" />
+    <item id="1444" />
+    <item id="1445" />
+    <item id="1448" />
+    <item id="1449" />
+    <item id="1450" />
+    <item id="1451" />
+    <brush name="gargoyle statue" />
+    <brush name="gargoyle statue pedestal" />
+    <brush name="cobra statue" />
+    <brush name="cobra statue pedestal" />
+    <brush name="female statue" />
+    <brush name="broken lizard statue" />
+    <brush name="lizard statue" />
+    <brush name="giant snake head statue" />
+    <brush name="giant snake head statue (open)" />
+    <brush name="giant hand statue" />
+    <brush name="hunter statue" />
+</tileset>

@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<tileset name="Borders">
+    <item fromid="110" toid="279" />
+    <item fromid="281" toid="292" />
+    <item fromid="295" toid="350" />
+    <item fromid="393" toid="404" />
+    <item fromid="494" toid="597" />
+    <item fromid="606" toid="617" />
+    <item fromid="630" toid="707" />
+    <item fromid="712" toid="723" />
+    <item fromid="725" toid="776" />
+    <item fromid="792" toid="872" />
+    <item fromid="879" toid="902" />
+    <item fromid="434" toid="445" />
+</tileset>

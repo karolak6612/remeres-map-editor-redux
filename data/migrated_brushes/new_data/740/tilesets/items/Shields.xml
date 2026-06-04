@@ -1,0 +1,4 @@
+<?xml version="1.0" encoding="utf-8"?>
+<tileset name="Shields">
+    <item fromid="2509" toid="2542" />
+</tileset>

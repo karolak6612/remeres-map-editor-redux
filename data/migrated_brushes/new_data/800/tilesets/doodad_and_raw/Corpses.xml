@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="utf-8"?>
+<tileset name="Corpses">
+    <item fromid="2806" toid="3121" />
+    <item fromid="3128" toid="3134" />
+    <item fromid="4251" toid="4327" />
+    <item fromid="4992" toid="4994" />
+    <item id="5014" />
+    <item fromid="5522" toid="5538" />
+    <item fromid="5540" toid="5542" />
+    <item fromid="5565" toid="5568" />
+    <item fromid="5625" toid="5630" />
+    <item fromid="5666" toid="5668" />
+    <item fromid="5688" toid="5690" />
+    <item fromid="5727" toid="5729" />
+    <item id="5762" />
+    <item id="5765" />
+    <item id="5766" />
+    <item id="5767" />
+    <item fromid="5931" toid="5936" />
+    <item fromid="5960" toid="6084" />
+    <item fromid="6302" toid="6351" />
+    <item fromid="6354" toid="6355" />
+    <item fromid="6364" toid="6367" />
+    <item id="6516" />
+    <item fromid="6520" toid="6522" />
+    <item id="6560" />
+    <item fromid="7091" toid="7094" />
+    <item fromid="7256" toid="7258" />
+    <item id="7260" />
+    <item fromid="7282" toid="7285" />
+    <item fromid="7316" toid="7341" />
+    <item fromid="7344" toid="7347" />
+    <item id="7349" />
+</tileset>

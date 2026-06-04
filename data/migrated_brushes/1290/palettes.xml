@@ -1,0 +1,95 @@
+<?xml version="1.0" encoding="utf-8"?>
+<palettes>
+    <palette name="Terrain">
+        <tileset>
+            <include file="tilesets/terrain/Nature.xml" />
+            <include file="tilesets/terrain/Nature - Tiny Borders.xml" />
+            <include file="tilesets/terrain/City Grounds - Tiny Borders.xml" />
+            <include file="tilesets/terrain/Snow.xml" />
+            <include file="tilesets/terrain/City Grounds.xml" />
+            <include file="tilesets/terrain/City Walls.xml" />
+            <include file="tilesets/terrain/Roofs.xml" />
+            <include file="tilesets/terrain/Stairs Ramps Ladders.xml" />
+        </tileset>
+    </palette>
+    <palette name="Doodad">
+        <tileset>
+            <include file="tilesets/doodad/Nature.xml" />
+            <include file="tilesets/doodad/Snow.xml" />
+            <include file="tilesets/doodad/Hangables.xml" />
+            <include file="tilesets/doodad/Interior.xml" />
+            <include file="tilesets/doodad/Statues.xml" />
+            <include file="tilesets/doodad/Exterior.xml" />
+            <include file="tilesets/doodad/Signs.xml" />
+            <include file="tilesets/doodad/Splash.xml" />
+            <include file="tilesets/doodad/Magic Fields.xml" />
+            <include file="tilesets/doodad/Trash.xml" />
+            <include file="tilesets/doodad_and_raw/Corpses.xml" />
+            <include file="tilesets/doodad/Architecture.xml" />
+            <include file="tilesets/doodad/Sea.xml" />
+        </tileset>
+    </palette>
+    <palette name="Collection">
+        <tileset />
+    </palette>
+    <palette name="Item">
+        <tileset>
+            <include file="tilesets/items/Equipment.xml" />
+            <include file="tilesets/items/Ornaments.xml" />
+            <include file="tilesets/items/Tools.xml" />
+            <include file="tilesets/items/Tools_2.xml" />
+            <include file="tilesets/items/Weapons.xml" />
+            <include file="tilesets/items/Weapons (Magic).xml" />
+            <include file="tilesets/items/Weapons (Mayhem, Remedy, Carving).xml" />
+            <include file="tilesets/items/Shields.xml" />
+            <include file="tilesets/items/Dolls.xml" />
+            <include file="tilesets/items/Trinkets.xml" />
+            <include file="tilesets/items/Fluid Containers.xml" />
+            <include file="tilesets/items/Jewelry.xml" />
+            <include file="tilesets/items/Taming Items.xml" />
+            <include file="tilesets/items/Containers.xml" />
+            <include file="tilesets/items/Creature Products.xml" />
+            <include file="tilesets/items_and_raw/Writeables Signs Other.xml" />
+            <include file="tilesets/items/Food.xml" />
+            <include file="tilesets/items/Runes.xml" />
+            <include file="tilesets/items/Addon and Quest Items.xml" />
+        </tileset>
+    </palette>
+    <palette name="Creature">
+        <tileset>
+            <include file="tilesets/creatures/Others.xml" />
+        </tileset>
+    </palette>
+    <palette name="Raw">
+        <tileset>
+            <include file="tilesets/raw/Grounds.xml" />
+            <include file="tilesets/raw/Nature.xml" />
+            <include file="tilesets/raw/Roofs.xml" />
+            <include file="tilesets/raw/Boats.xml" />
+            <include file="tilesets/raw/Sea.xml" />
+            <include file="tilesets/raw/Hangables.xml" />
+            <include file="tilesets/raw/Interior.xml" />
+            <include file="tilesets/raw/Exterior.xml" />
+            <include file="tilesets/raw/Splash.xml" />
+            <include file="tilesets/raw/Magic Fields.xml" />
+            <include file="tilesets/items_and_raw/Writeables Signs Other.xml" />
+            <include file="tilesets/doodad_and_raw/Corpses.xml" />
+            <include file="tilesets/raw/Stairs Ramps Ladders.xml" />
+            <include file="tilesets/raw/Architecture.xml" />
+            <include file="tilesets/raw/Walls.xml" />
+            <include file="tilesets/raw/Borders.xml" />
+            <include file="tilesets/raw/Blank.xml" />
+            <include file="tilesets/raw/Mountains.xml" />
+            <include file="tilesets/raw/Banners.xml" />
+            <include file="tilesets/raw/Bridges.xml" />
+            <include file="tilesets/raw/Redundant.xml" />
+            <include file="tilesets/raw/Creature Figures.xml" />
+            <include file="tilesets/raw/Desert.xml" />
+            <include file="tilesets/raw/Pipes.xml" />
+            <include file="tilesets/raw/Skulls Bones Undead.xml" />
+            <include file="tilesets/raw/Cake.xml" />
+            <include file="tilesets/raw/Crystals.xml" />
+            <include file="tilesets/raw/Others.xml" />
+        </tileset>
+    </palette>
+</palettes>

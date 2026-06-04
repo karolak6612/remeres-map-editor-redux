@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<tileset name="Statues">
+    <item id="1443" />
+    <item id="1444" />
+    <item id="1445" />
+    <item fromid="1448" toid="1459" />
+    <item fromid="1466" toid="1475" />
+    <item fromid="3697" toid="3708" />
+    <item fromid="3715" toid="3726" />
+    <item fromid="3729" toid="3736" />
+    <item fromid="3739" toid="3742" />
+</tileset>

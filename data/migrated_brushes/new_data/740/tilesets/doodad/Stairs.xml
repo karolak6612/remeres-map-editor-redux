@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<tileset name="Stairs">
+    <brush name="wooden ladder hole" />
+    <brush name="wooden trapdoor" />
+    <brush name="stairs down" />
+    <brush name="trapdoor down" />
+    <brush name="trapdoor ladder down" />
+    <brush name="trapdoor ladder down" />
+    <item fromid="1385" toid="1386" />
+    <item fromid="1396" />
+    <item fromid="432" toid="433" />
+    <brush name="ramp" />
+</tileset>

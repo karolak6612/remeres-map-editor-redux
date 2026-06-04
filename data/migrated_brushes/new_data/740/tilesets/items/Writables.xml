@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<tileset name="Writables">
+    <item fromid="1947" toid="1986" />
+    <item id="2345" />
+    <item id="2347" />
+    <item id="2597" />
+    <item id="2598" />
+    <item id="2599" />
+    <item id="2175" />
+    <item id="2217" />
+</tileset>
