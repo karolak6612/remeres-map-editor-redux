@@ -375,6 +375,11 @@ void EditorManager::DoCut() {
 		return;
 	}
 
+	LiveClient* liveClient = editor->live_manager.GetClient();
+	if (liveClient && !liveClient->isAllowCopy()) {
+		return;
+	}
+
 	editor->copybuffer.cut(*editor, g_gui.GetCurrentFloor());
 	g_gui.RefreshView();
 	g_gui.root->UpdateMenubar();
@@ -387,6 +392,11 @@ void EditorManager::DoCopy() {
 
 	Editor* editor = GetCurrentEditor();
 	if (!editor) {
+		return;
+	}
+
+	LiveClient* liveClient = editor->live_manager.GetClient();
+	if (liveClient && !liveClient->isAllowCopy()) {
 		return;
 	}
 

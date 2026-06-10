@@ -60,6 +60,7 @@ std::string LivePeer::getHostName() const {
 
 void LivePeer::receiveHeader() {
 	readMessage.position = 0;
+	readMessage.buffer.resize(4);
 	boost::asio::async_read(socket, boost::asio::buffer(readMessage.buffer, 4), [this](const boost::system::error_code& error, size_t bytesReceived) -> void {
 		if (error) {
 			if (!handleError(error)) {
@@ -240,6 +241,7 @@ void LivePeer::parseReady(NetworkMessage& message) {
 	outMessage.write<std::string>(map.getName());
 	outMessage.write<uint16_t>(map.getWidth());
 	outMessage.write<uint16_t>(map.getHeight());
+	outMessage.write<uint8_t>(server->isAllowCopy() ? 1 : 0);
 
 	send(outMessage);
 }

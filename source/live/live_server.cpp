@@ -28,7 +28,7 @@
 LiveServer::LiveServer(Editor& editor) :
 	LiveSocket(),
 	clients(), acceptor(nullptr), socket(nullptr), editor(&editor),
-	clientIds(0), port(0), stopped(false) {
+	clientIds(0), port(0), allowCopy(false), stopped(false) {
 	//
 }
 
@@ -103,6 +103,7 @@ void LiveServer::acceptClient() {
 		} else {
 			auto peer = std::make_unique<LivePeer>(this, std::move(*socket));
 			peer->log = log;
+			peer->id = id;
 			peer->receiveHeader();
 
 			std::lock_guard<std::mutex> lock(clientMutex);
@@ -146,7 +147,9 @@ void LiveServer::updateCursor(const Position& position) {
 
 void LiveServer::updateClientList() const {
 	std::lock_guard<std::mutex> lock(clientMutex);
-	log->UpdateClientList(clients);
+	if (log) {
+		log->UpdateClientList(clients);
+	}
 }
 
 uint16_t LiveServer::getPort() const {
@@ -236,6 +239,10 @@ void LiveServer::broadcastCursor(const LiveCursor& cursor) {
 			peer->send(message);
 		}
 	}
+}
+
+void LiveServer::sendChatMessage(const wxString& message) {
+	broadcastChat(name, message);
 }
 
 void LiveServer::broadcastChat(const wxString& speaker, const wxString& chatMessage) {

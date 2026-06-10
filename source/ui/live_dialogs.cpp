@@ -76,6 +76,7 @@ void LiveDialogs::ShowHostDialog(wxWindow* parent, Editor* editor) {
 			liveServer->setName(hostname->GetValue());
 			liveServer->setPassword(password->GetValue());
 			liveServer->setPort(port->GetValue());
+			liveServer->setAllowCopy(allow_copy->GetValue());
 
 			const wxString& error = liveServer->getLastError();
 			if (!error.empty()) {

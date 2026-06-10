@@ -45,6 +45,7 @@ public:
 	void send(NetworkMessage& message) { }
 
 	//
+	void sendChatMessage(const wxString& message) override;
 	void updateCursor(const Position& position);
 	void updateClientList() const;
 
@@ -54,6 +55,9 @@ public:
 	//
 	uint16_t getPort() const;
 	bool setPort(int32_t newPort);
+
+	bool isAllowCopy() const { return allowCopy; }
+	void setAllowCopy(bool value) { allowCopy = value; }
 
 	Editor* getEditor() const {
 		return editor;
@@ -80,6 +84,7 @@ protected:
 
 	uint32_t clientIds;
 	uint16_t port;
+	bool allowCopy;
 
 	mutable std::mutex clientMutex;
 	bool stopped;
