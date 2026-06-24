@@ -65,6 +65,7 @@ public:
 	virtual void send(NetworkMessage& message) = 0;
 
 	//
+	virtual void sendChatMessage(const wxString& message) { }
 	virtual void updateCursor(const Position& position) = 0;
 
 protected:

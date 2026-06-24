@@ -32,7 +32,7 @@
 LiveClient::LiveClient() :
 	LiveSocket(),
 	readMessage(), queryNodeList(), currentOperation(),
-	resolver(nullptr), socket(nullptr), editor(nullptr), stopped(false) {
+	resolver(nullptr), socket(nullptr), editor(nullptr), allowCopy(false), stopped(false) {
 	//
 }
 
@@ -172,6 +172,7 @@ std::string LiveClient::getHostName() const {
 
 void LiveClient::receiveHeader() {
 	readMessage.position = 0;
+	readMessage.buffer.resize(4);
 	boost::asio::async_read(*socket, boost::asio::buffer(readMessage.buffer, 4), [this](const boost::system::error_code& error, size_t bytesReceived) -> void {
 		if (error) {
 			if (!handleError(error)) {
@@ -308,6 +309,10 @@ void LiveClient::sendChanges(DirtyList& dirtyList) {
 	send(message);
 }
 
+void LiveClient::sendChatMessage(const wxString& message) {
+	sendChat(message);
+}
+
 void LiveClient::sendChat(const wxString& chatMessage) {
 	NetworkMessage message;
 	message.write<uint8_t>(PACKET_CLIENT_TALK);
@@ -379,6 +384,7 @@ void LiveClient::parseHello(NetworkMessage& message) {
 	map.setName("Live Map - " + message.read<std::string>());
 	map.setWidth(message.read<uint16_t>());
 	map.setHeight(message.read<uint16_t>());
+	allowCopy = message.read<uint8_t>() != 0;
 
 	createEditorWindow();
 }

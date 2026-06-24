@@ -81,12 +81,12 @@ LiveLogTab::LiveLogTab(MapTabbook* aui, LiveSocket* server) :
 
 	left_sizer->Add(log, 1, wxEXPAND);
 
-	input = newd wxTextCtrl(left_pane, LIVE_CHAT_TEXTBOX, wxEmptyString, wxDefaultPosition, wxDefaultSize);
+	input = newd wxTextCtrl(left_pane, LIVE_CHAT_TEXTBOX, wxEmptyString, wxDefaultPosition, wxDefaultSize, wxTE_PROCESS_ENTER);
 	left_sizer->Add(input, 0, wxEXPAND);
 
 	input->Bind(wxEVT_SET_FOCUS, &LiveLogTab::OnSelectChatbox, this);
 	input->Bind(wxEVT_KILL_FOCUS, &LiveLogTab::OnDeselectChatbox, this);
-	input->Bind(wxEVT_TEXT, &LiveLogTab::OnChat, this);
+	input->Bind(wxEVT_TEXT_ENTER, &LiveLogTab::OnChat, this);
 
 	left_pane->SetSizerAndFit(left_sizer);
 
@@ -181,6 +181,15 @@ void LiveLogTab::Chat(const wxString& speaker, const wxString& str) {
 }
 
 void LiveLogTab::OnChat(wxCommandEvent& evt) {
+	if (!socket) {
+		return;
+	}
+	wxString text = input->GetValue().Trim();
+	if (text.empty()) {
+		return;
+	}
+	socket->sendChatMessage(text);
+	input->Clear();
 }
 
 void LiveLogTab::OnResizeChat(wxSizeEvent& evt) {

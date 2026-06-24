@@ -41,12 +41,15 @@ public:
 	//
 	std::string getHostName() const;
 
+	bool isAllowCopy() const { return allowCopy; }
+
 	//
 	void receiveHeader();
 	void receive(uint32_t packetSize);
 	void send(NetworkMessage& message);
 
 	//
+	void sendChatMessage(const wxString& message) override;
 	void updateCursor(const Position& position);
 
 	LiveLogTab* createLogWindow(wxWindow* parent);
@@ -87,6 +90,7 @@ protected:
 
 	std::unique_ptr<Editor> editor;
 
+	bool allowCopy;
 	bool stopped;
 };
 
