@@ -25,6 +25,7 @@
 #include "app/updater.h"
 #include "ui/map/export_tilesets_window.h"
 #include "ui/tile_properties/tile_properties_panel.h"
+#include "palette/panels/tileset_move_queue_panel.h"
 #include <wx/stattext.h>
 #include <wx/slider.h>
 
@@ -75,6 +76,12 @@ MainFrame::MainFrame(const wxString& title, const wxPoint& pos, const wxSize& si
 
 	g_gui.tile_properties_panel = newd TilePropertiesPanel(this);
 	g_gui.aui_manager->AddPane(g_gui.tile_properties_panel, wxAuiPaneInfo().Name("TileProperties").Caption("Tile Properties").Right().Layer(1).Position(1).CloseButton(true).MaximizeButton(true).Hide());
+
+	g_gui.tileset_move_queue_panel = newd TilesetMoveQueuePanel(this);
+	g_gui.aui_manager->AddPane(
+		g_gui.tileset_move_queue_panel,
+		wxAuiPaneInfo().Name("TilesetMoveQueue").Caption("Move Queue").Right().Layer(1).Position(2).CloseButton(true).MaximizeButton(false).MinimizeButton(false).BestSize(260, 400).Hide()
+	);
 
 	// Create Script Manager panel (dockable)
 	LuaScriptsWindow* scriptsWindow = newd LuaScriptsWindow(this);

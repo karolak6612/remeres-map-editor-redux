@@ -24,6 +24,7 @@
 #include "ui/managers/search_manager.h"
 #include "ui/managers/welcome_manager.h"
 #include "ui/managers/gl_context_manager.h"
+#include "tileset_move_queue/tileset_move_queue.h"
 
 class BaseMap;
 class Map;
@@ -58,6 +59,7 @@ class LiveSocket;
 class SidebarWindow;
 class ToolOptionsWindow;
 class TilePropertiesPanel;
+class TilesetMoveQueuePanel;
 
 wxDECLARE_EVENT(EVT_UPDATE_MENUS, wxCommandEvent);
 
@@ -205,6 +207,8 @@ public:
 	void SetDrawingMode();
 	bool IsSelectionMode() const;
 	bool IsDrawingMode() const;
+	void SetPaletteMultiSelectionCount(size_t count);
+	bool HasPaletteMultiSelection() const;
 
 	// Brushes
 	void FillDoodadPreviewBuffer();
@@ -348,6 +352,17 @@ public:
 
 	void DestroyPalettes();
 	PaletteWindow* CreatePalette();
+	TilesetMoveQueue& GetTilesetMoveQueue() {
+		return tileset_move_queue;
+	}
+	const TilesetMoveQueue& GetTilesetMoveQueue() const {
+		return tileset_move_queue;
+	}
+	TilesetMoveQueuePanel* GetTilesetMoveQueuePanel() const {
+		return tileset_move_queue_panel;
+	}
+	void RefreshTilesetMoveQueuePanel(bool auto_show = false);
+	void ShowTilesetMoveQueuePanel(bool show = true);
 
 protected:
 	//=========================================================================
@@ -365,6 +380,7 @@ public:
 
 	ToolOptionsWindow* tool_options;
 	TilePropertiesPanel* tile_properties_panel;
+	TilesetMoveQueuePanel* tileset_move_queue_panel;
 
 	bool pasting;
 
@@ -375,9 +391,11 @@ protected:
 	wxWindowDisabler* winDisabler;
 
 	int disabled_counter;
+	size_t palette_multi_selection_count = 0;
 
 	std::mutex pending_live_clients_mutex;
 	std::vector<std::unique_ptr<LiveClient>> pending_live_clients;
+	TilesetMoveQueue tileset_move_queue;
 
 	friend class RenderingLock;
 	friend class MapTab;
